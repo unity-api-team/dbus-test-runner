@@ -51,6 +51,7 @@ Makefile
 po/Makefile.in
 src/Makefile
 data/Makefile
+tests/Makefile
 ])
 
 ###########################
