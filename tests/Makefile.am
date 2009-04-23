@@ -1,6 +1,6 @@
 check: tests
 
-DBUS_RUNNER=../src/dbus-test-runner --dbus-config ../data/session.conf
+DBUS_RUNNER=../src/dbus-test-runner --dbus-config $(srcdir)/../data/session.conf
 
 tests: test-simple test-manytask test-ignore test-ignore-second test-invert test-invert-second
 
