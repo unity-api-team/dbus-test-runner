@@ -1,4 +1,8 @@
 
+all:
+
+check: tests
+
 DBUS_RUNNER=../src/dbus-test-runner --dbus-config ../data/session.conf
 
 tests: test-simple test-manytask test-ignore test-ignore-second test-invert test-invert-second

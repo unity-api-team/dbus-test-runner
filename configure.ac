@@ -20,6 +20,19 @@ AC_SUBST(VERSION)
 AC_CONFIG_MACRO_DIR([m4])
 
 ###########################
+# Dependencies 
+###########################
+
+GLIB_REQUIRED_VERSION=2.12
+DBUS_REQUIRED_VERSION=0.76
+
+PKG_CHECK_MODULES(DBUS_TEST_RUNNER, glib-2.0 >= $GLIB_REQUIRED_VERSION
+                                    dbus-glib-1 >= $DBUS_REQUIRED_VERSION)
+AC_SUBST(DBUS_TEST_RUNNER_CFLAGS)
+AC_SUBST(DBUS_TEST_RUNNER_LIBS)
+
+
+###########################
 # Internationalization
 ###########################
 
