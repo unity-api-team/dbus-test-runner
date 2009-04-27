@@ -1,5 +1,5 @@
 dbus-test-runner (0.0.1~bzr11-0ubuntu1) jaunty; urgency=low
 
-  * Upstream update
+  * First packaging version.
 
  -- Ted Gould <ted@ubuntu.com>  Wed, 22 Apr 2009 23:34:21 -0500
