@@ -1,8 +1,6 @@
 
 #include <glib.h>
 
-#define DBUSCONFIG    "./session.conf"
-
 static GList * tasks = NULL;
 static gboolean global_success = TRUE;
 static GMainLoop * global_mainloop;
@@ -253,7 +251,7 @@ normalize_name_length (void)
 static gchar * dbus_configfile = NULL;
 
 static GOptionEntry general_options[] = {
-	{"dbus-config",  'd',   G_OPTION_FLAG_FILENAME,  G_OPTION_ARG_FILENAME,  &dbus_configfile, "Configuration file for newly created DBus server.  Defaults to ./session.conf", "config_file"},
+	{"dbus-config",  'd',   G_OPTION_FLAG_FILENAME,  G_OPTION_ARG_FILENAME,  &dbus_configfile, "Configuration file for newly created DBus server.  Defaults to '" DEFAULT_SESSION_CONF "'.", "config_file"},
 	{NULL}
 };
 
@@ -288,7 +286,7 @@ main (int argc, char * argv[])
 	normalize_name_length();
 
 	if (dbus_configfile == NULL) {
-		dbus_configfile = DBUSCONFIG;
+		dbus_configfile = DEFAULT_SESSION_CONF;
 	}
 
 	gint dbus_stdout;
