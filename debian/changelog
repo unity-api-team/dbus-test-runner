@@ -1,4 +1,4 @@
-dbus-test-runner (0.0.1~bzr11-0ubuntu1) jaunty; urgency=low
+dbus-test-runner (0.0.1-0ubuntu1) jaunty; urgency=low
 
   * First packaging version.
 
