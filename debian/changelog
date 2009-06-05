@@ -1,3 +1,9 @@
+dbus-test-runner (0.0.2~bzr14-0ubuntu2) jaunty; urgency=low
+
+  * Version bump for PPA.
+
+ -- Ted Gould <ted@ubuntu.com>  Fri, 05 Jun 2009 16:59:29 -0500
+
 dbus-test-runner (0.0.2~bzr14-0ubuntu1) jaunty; urgency=low
 
   * Handles environment variables more sensably.
