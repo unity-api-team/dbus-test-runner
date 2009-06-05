@@ -66,21 +66,16 @@ void
 start_task (gpointer data, gpointer userdata)
 {
 	task_t * task = (task_t *)data;
-	gchar * dbusaddr = (gchar *)userdata;
 
 	gchar * argv[2];
-	gchar * env[2];
 
 	argv[0] = task->executable;
 	argv[1] = NULL;
 
-	env[0] = dbusaddr;
-	env[1] = NULL;
-
 	gint proc_stdout;
 	g_spawn_async_with_pipes(g_get_current_dir(),
 	                         argv, /* argv */
-	                         env, /* envp */
+	                         NULL, /* envp */
 	                         G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD, /* flags */
 	                         NULL, /* child setup func */
 	                         NULL, /* child setup data */
@@ -116,12 +111,10 @@ dbus_writes (GIOChannel * channel, GIOCondition condition, gpointer data)
 	line[termloc] = '\0';
 
 	g_print("DBus address: %s\n", line);
-	gchar * dbusenv = g_strdup_printf("DBUS_SESSION_BUS_ADDRESS=%s", line);
-
-	g_list_foreach(tasks, start_task, dbusenv);
-
-	g_free(dbusenv);
+	g_setenv("DBUS_SESSION_BUS_ADDRESS", line, TRUE);
 	g_free(line);
+
+	g_list_foreach(tasks, start_task, NULL);
 
 	return TRUE;
 }
