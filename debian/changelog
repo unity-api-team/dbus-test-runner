@@ -1,3 +1,11 @@
+dbus-test-runner (0.0.2~bzr14-0ubuntu2) UNRELEASED; urgency=low
+
+  * Handles environment variables more sensably.
+  * Now has better default config file management.  And puts that
+    in the help string.
+
+ -- Ted Gould <ted@ubuntu.com>  Fri, 05 Jun 2009 16:54:43 -0500
+
 dbus-test-runner (0.0.1-0ubuntu1) jaunty; urgency=low
 
   * First packaging version.

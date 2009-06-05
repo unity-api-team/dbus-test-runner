@@ -1,8 +1,6 @@
 
 #include <glib.h>
 
-#define DBUSCONFIG    "./session.conf"
-
 static GList * tasks = NULL;
 static gboolean global_success = TRUE;
 static GMainLoop * global_mainloop;
@@ -68,21 +66,16 @@ void
 start_task (gpointer data, gpointer userdata)
 {
 	task_t * task = (task_t *)data;
-	gchar * dbusaddr = (gchar *)userdata;
 
 	gchar * argv[2];
-	gchar * env[2];
 
 	argv[0] = task->executable;
 	argv[1] = NULL;
 
-	env[0] = dbusaddr;
-	env[1] = NULL;
-
 	gint proc_stdout;
 	g_spawn_async_with_pipes(g_get_current_dir(),
 	                         argv, /* argv */
-	                         env, /* envp */
+	                         NULL, /* envp */
 	                         G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD, /* flags */
 	                         NULL, /* child setup func */
 	                         NULL, /* child setup data */
@@ -118,12 +111,10 @@ dbus_writes (GIOChannel * channel, GIOCondition condition, gpointer data)
 	line[termloc] = '\0';
 
 	g_print("DBus address: %s\n", line);
-	gchar * dbusenv = g_strdup_printf("DBUS_SESSION_BUS_ADDRESS=%s", line);
-
-	g_list_foreach(tasks, start_task, dbusenv);
-
-	g_free(dbusenv);
+	g_setenv("DBUS_SESSION_BUS_ADDRESS", line, TRUE);
 	g_free(line);
+
+	g_list_foreach(tasks, start_task, NULL);
 
 	return TRUE;
 }
@@ -253,7 +244,7 @@ normalize_name_length (void)
 static gchar * dbus_configfile = NULL;
 
 static GOptionEntry general_options[] = {
-	{"dbus-config",  'd',   G_OPTION_FLAG_FILENAME,  G_OPTION_ARG_FILENAME,  &dbus_configfile, "Configuration file for newly created DBus server.  Defaults to ./session.conf", "config_file"},
+	{"dbus-config",  'd',   G_OPTION_FLAG_FILENAME,  G_OPTION_ARG_FILENAME,  &dbus_configfile, "Configuration file for newly created DBus server.  Defaults to '" DEFAULT_SESSION_CONF "'.", "config_file"},
 	{NULL}
 };
 
@@ -288,7 +279,7 @@ main (int argc, char * argv[])
 	normalize_name_length();
 
 	if (dbus_configfile == NULL) {
-		dbus_configfile = DBUSCONFIG;
+		dbus_configfile = DEFAULT_SESSION_CONF;
 	}
 
 	gint dbus_stdout;
