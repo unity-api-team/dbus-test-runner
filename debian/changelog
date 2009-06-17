@@ -1,9 +1,9 @@
-dbus-test-runner (0.0.2~bzr16-0ubuntu1) UNRELEASED; urgency=low
+dbus-test-runner (0.0.2~bzr16-0ubuntu1) jaunty; urgency=low
 
   * Update from trunk
   	* Support for --parameter to pass parameters to tasks.
 
- -- Ted Gould <ted@ubuntu.com>  Wed, 17 Jun 2009 16:27:20 -0500
+ -- Ted Gould <ted@ubuntu.com>  Wed, 17 Jun 2009 16:28:02 -0500
 
 dbus-test-runner (0.0.2~bzr14-0ubuntu2) jaunty; urgency=low
 
