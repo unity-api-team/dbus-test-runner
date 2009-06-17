@@ -18,6 +18,7 @@ typedef struct {
 	GPid pid;
 	guint watcher;
 	guint number;
+	GList * parameters;
 } task_t;
 
 static void
@@ -67,10 +68,14 @@ start_task (gpointer data, gpointer userdata)
 {
 	task_t * task = (task_t *)data;
 
-	gchar * argv[2];
+	gchar ** argv;
+	argv = g_new0(gchar *, g_list_length(task->parameters) + 2);
 
 	argv[0] = task->executable;
-	argv[1] = NULL;
+	int i;
+	for (i = 0; i < g_list_length(task->parameters); i++) {
+		argv[i + 1] = (gchar *)g_list_nth(task->parameters, i)->data;
+	}
 
 	gint proc_stdout;
 	g_spawn_async_with_pipes(g_get_current_dir(),
@@ -84,6 +89,7 @@ start_task (gpointer data, gpointer userdata)
 	                         &proc_stdout, /* stdout */
 	                         NULL, /* stderr */
 	                         NULL); /* error */
+	g_free(argv);
 
 	GIOChannel * iochan = g_io_channel_unix_new(proc_stdout);
 	g_io_add_watch(iochan,
@@ -125,6 +131,7 @@ option_task (const gchar * arg, const gchar * value, gpointer data, GError ** er
 	task_t * task = g_new0(task_t, 1);
 	task->executable = g_strdup(value);
 	task->number = g_list_length(tasks);
+	task->parameters = NULL;
 	tasks = g_list_prepend(tasks, task);
 	return TRUE;
 }
@@ -180,6 +187,20 @@ option_invert (const gchar * arg, const gchar * value, gpointer data, GError ** 
 	}
 
 	task->returntype = TASK_RETURN_INVERT;
+	return TRUE;
+}
+
+static gboolean
+option_param (const gchar * arg, const gchar * value, gpointer data, GError ** error)
+{
+	if (tasks == NULL) {
+		g_set_error(error, G_OPTION_ERROR, G_OPTION_ERROR_BAD_VALUE, "No task to put adjust return on.");
+		return FALSE;
+	}
+
+	task_t * task = (task_t *)tasks->data;
+	task->parameters = g_list_append(task->parameters, g_strdup(value));
+
 	return TRUE;
 }
 
@@ -249,10 +270,11 @@ static GOptionEntry general_options[] = {
 };
 
 static GOptionEntry task_options[] = {
-	{"task",       't',  G_OPTION_FLAG_FILENAME,   G_OPTION_ARG_CALLBACK,  option_task,     "Defines a new task to run under our private DBus session.", "executable"},
-	{"task-name",  'n',  0,                        G_OPTION_ARG_CALLBACK,  option_taskname, "A string to label output from the previously defined task.  Defaults to taskN.", "name"},
-	{"ignore-return", 'r', G_OPTION_FLAG_NO_ARG,   G_OPTION_ARG_CALLBACK,  option_noreturn, "Do not use the return value of the task to calculate whether the test passes or fails.", NULL},
-	{"invert-return", 'i', G_OPTION_FLAG_NO_ARG,   G_OPTION_ARG_CALLBACK,  option_invert,   "Invert the return value of the task before calculating whether the test passes or fails.", NULL},
+	{"task",          't',  G_OPTION_FLAG_FILENAME,   G_OPTION_ARG_CALLBACK,  option_task,     "Defines a new task to run under our private DBus session.", "executable"},
+	{"task-name",     'n',  0,                        G_OPTION_ARG_CALLBACK,  option_taskname, "A string to label output from the previously defined task.  Defaults to taskN.", "name"},
+	{"ignore-return", 'r',  G_OPTION_FLAG_NO_ARG,     G_OPTION_ARG_CALLBACK,  option_noreturn, "Do not use the return value of the task to calculate whether the test passes or fails.", NULL},
+	{"invert-return", 'i',  G_OPTION_FLAG_NO_ARG,     G_OPTION_ARG_CALLBACK,  option_invert,   "Invert the return value of the task before calculating whether the test passes or fails.", NULL},
+	{"parameter",     'p',  0,                        G_OPTION_ARG_CALLBACK,  option_param,    "Add a parameter to the call of this utility.  May be called as many times as you'd like.", NULL},
 	{NULL}
 };
 

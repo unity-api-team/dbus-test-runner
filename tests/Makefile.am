@@ -2,7 +2,7 @@ check: tests
 
 DBUS_RUNNER=../src/dbus-test-runner --dbus-config $(srcdir)/../data/session.conf
 
-tests: test-simple test-manytask test-ignore test-ignore-second test-invert test-invert-second
+tests: test-simple test-manytask test-ignore test-ignore-second test-invert test-invert-second test-param
 
 test-simple:
 	$(DBUS_RUNNER) --task true
@@ -21,4 +21,7 @@ test-invert:
 
 test-invert-second:
 	$(DBUS_RUNNER) --task true --task false --invert-return
+
+test-param:
+	$(DBUS_RUNNER) --task rm --parameter bob --task touch --parameter bob --ignore-return
 
