@@ -1,8 +1,8 @@
-dbus-test-runner (0.0.2~bzr16-0ubuntu2) UNRELEASED; urgency=low
+dbus-test-runner (0.0.2~bzr16-0ubuntu2) karmic; urgency=low
 
   * Karmic, whoo! hoo!
 
- -- Ted Gould <ted@ubuntu.com>  Fri, 17 Jul 2009 21:39:30 -0500
+ -- Ted Gould <ted@ubuntu.com>  Fri, 17 Jul 2009 21:39:53 -0500
 
 dbus-test-runner (0.0.2~bzr16-0ubuntu1) jaunty; urgency=low
 
