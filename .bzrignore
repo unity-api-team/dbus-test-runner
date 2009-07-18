@@ -1,1 +1,10 @@
 dbus-test-runner
+compile
+config.guess.cdbs-orig
+config.sub.cdbs-orig
+m4
+debian/dbus-test-runner.debhelper.log
+debian/dbus-test-runner.substvars
+debian/files
+debian/stamp-autotools-files
+debian/stamp-makefile-build
