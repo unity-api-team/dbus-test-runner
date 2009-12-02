@@ -42,6 +42,8 @@ test-invert-second:
 TESTS += test-param
 test-param:
 	@echo "#!/bin/sh" > $@
-	@echo $(DBUS_RUNNER) --task rm --parameter bob --task touch --parameter bob --ignore-return >> $@
+	@echo $(DBUS_RUNNER) --task \"$(srcdir)/delayrm.sh\" --parameter \"$(builddir)/bob\" --task touch --parameter \"$(builddir)/bob\" --ignore-return >> $@
 	@chmod +x $@
 
+EXTRA_DIST = \
+	delayrm.sh
