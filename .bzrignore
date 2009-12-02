@@ -1,1 +1,11 @@
 dbus-test-runner
+compile
+dbus-test-runner-*.tar.gz
+m4
+tests/test-ignore
+tests/test-ignore-second
+tests/test-invert
+tests/test-invert-second
+tests/test-manytask
+tests/test-param
+tests/test-simple
