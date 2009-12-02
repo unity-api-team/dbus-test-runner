@@ -118,6 +118,8 @@ dbus_writes (GIOChannel * channel, GIOCondition condition, gpointer data)
 
 	g_print("DBus address: %s\n", line);
 	g_setenv("DBUS_SESSION_BUS_ADDRESS", line, TRUE);
+	g_setenv("DBUS_STARTER_ADDRESS", line, TRUE);
+	g_setenv("DBUS_STARTER_BUS_TYPE", "session", TRUE);
 	g_free(line);
 
 	g_list_foreach(tasks, start_task, NULL);
