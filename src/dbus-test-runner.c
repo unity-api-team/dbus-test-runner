@@ -331,5 +331,7 @@ main (int argc, char * argv[])
 	global_mainloop = g_main_loop_new(NULL, FALSE);
 	g_main_loop_run(global_mainloop);
 
+	g_spawn_close_pid(dbus);
+
 	return !global_success;
 }
