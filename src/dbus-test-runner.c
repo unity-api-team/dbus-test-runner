@@ -94,22 +94,25 @@ proc_writes (GIOChannel * channel, GIOCondition condition, gpointer data)
 	task_t * task = (task_t *)data;
 	gchar * line;
 	gsize termloc;
-	GIOStatus status = g_io_channel_read_line (channel, &line, NULL, &termloc, NULL);
 
-	if (status == G_IO_STATUS_EOF) {
-		task->text_die = TRUE;
-		check_task_cleanup(task, FALSE);
-		return;
-	}
+	do {
+		GIOStatus status = g_io_channel_read_line (channel, &line, NULL, &termloc, NULL);
 
-	if (status != G_IO_STATUS_NORMAL) {
-		return;
-	}
+		if (status == G_IO_STATUS_EOF) {
+			task->text_die = TRUE;
+			check_task_cleanup(task, FALSE);
+			continue;
+		}
 
-	line[termloc] = '\0';
+		if (status != G_IO_STATUS_NORMAL) {
+			continue;
+		}
 
-	g_print("%s: %s\n", task->name, line);
-	g_free(line);
+		line[termloc] = '\0';
+
+		g_print("%s: %s\n", task->name, line);
+		g_free(line);
+	} while (G_IO_IN & g_io_channel_get_buffer_condition(channel));
 
 	return TRUE;
 }
@@ -143,6 +146,7 @@ start_task (gpointer data, gpointer userdata)
 	g_free(argv);
 
 	GIOChannel * iochan = g_io_channel_unix_new(proc_stdout);
+	g_io_channel_set_buffer_size(iochan, 10 * 1024 * 1024); /* 10 MB should be enough for anyone */
 	task->io_watch = g_io_add_watch(iochan,
 	                                G_IO_IN, /* conditions */
 	                                proc_writes, /* func */
