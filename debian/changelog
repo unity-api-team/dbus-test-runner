@@ -1,8 +1,8 @@
-dbus-test-runner (0.0.2~bzr16-0ubuntu4~reftasks2) UNRELEASED; urgency=low
+dbus-test-runner (0.0.2~bzr16-0ubuntu4~reftasks2) karmic; urgency=low
 
   * Removing proc watcher as well.
 
- -- Ted Gould <ted@ubuntu.com>  Thu, 03 Dec 2009 12:53:14 -0600
+ -- Ted Gould <ted@ubuntu.com>  Thu, 03 Dec 2009 12:54:10 -0600
 
 dbus-test-runner (0.0.2~bzr16-0ubuntu4~reftasks1) karmic; urgency=low
 
