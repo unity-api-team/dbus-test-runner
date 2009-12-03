@@ -96,9 +96,13 @@ proc_writes (GIOChannel * channel, GIOCondition condition, gpointer data)
 	gsize termloc;
 	GIOStatus status = g_io_channel_read_line (channel, &line, NULL, &termloc, NULL);
 
-	if (status != G_IO_STATUS_NORMAL) {
+	if (status == G_IO_STATUS_EOF) {
 		task->text_die = TRUE;
 		check_task_cleanup(task, FALSE);
+		return;
+	}
+
+	if (status != G_IO_STATUS_NORMAL) {
 		return;
 	}
 
