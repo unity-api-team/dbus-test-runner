@@ -175,13 +175,20 @@ dbus_writes (GIOChannel * channel, GIOCondition condition, gpointer data)
 	g_return_val_if_fail(status == G_IO_STATUS_NORMAL, FALSE);
 	line[termloc] = '\0';
 
-	g_print("DBus address: %s\n", line);
-	g_setenv("DBUS_SESSION_BUS_ADDRESS", line, TRUE);
-	g_setenv("DBUS_STARTER_ADDRESS", line, TRUE);
-	g_setenv("DBUS_STARTER_BUS_TYPE", "session", TRUE);
-	g_free(line);
+	static gboolean first_time = TRUE;
+	g_print("DBus daemon: %s\n", line);
 
-	g_list_foreach(tasks, start_task, NULL);
+	if (first_time) {
+		first_time = FALSE;
+
+		g_setenv("DBUS_SESSION_BUS_ADDRESS", line, TRUE);
+		g_setenv("DBUS_STARTER_ADDRESS", line, TRUE);
+		g_setenv("DBUS_STARTER_BUS_TYPE", "session", TRUE);
+
+		g_list_foreach(tasks, start_task, NULL);
+	}
+
+	g_free(line);
 
 	return TRUE;
 }

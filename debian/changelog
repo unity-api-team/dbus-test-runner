@@ -1,3 +1,10 @@
+dbus-test-runner (0.0.2~bzr16-0ubuntu4~reftasks3) UNRELEASED; urgency=low
+
+  * Making sure we only use the first line from dbus daemon for
+    the address.
+
+ -- Ted Gould <ted@ubuntu.com>  Thu, 03 Dec 2009 13:00:23 -0600
+
 dbus-test-runner (0.0.2~bzr16-0ubuntu4~reftasks2) karmic; urgency=low
 
   * Removing proc watcher as well.
