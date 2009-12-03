@@ -1,9 +1,9 @@
-dbus-test-runner (0.0.2~bzr16-0ubuntu4~reftasks1) UNRELEASED; urgency=low
+dbus-test-runner (0.0.2~bzr16-0ubuntu4~reftasks1) karmic; urgency=low
 
   * Improving the lifecycle management of all of the tasks
     that are running to improve stability.
 
- -- Ted Gould <ted@ubuntu.com>  Thu, 03 Dec 2009 12:42:03 -0600
+ -- Ted Gould <ted@ubuntu.com>  Thu, 03 Dec 2009 12:43:13 -0600
 
 dbus-test-runner (0.0.2~bzr16-0ubuntu3) karmic; urgency=low
 
