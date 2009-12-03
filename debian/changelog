@@ -1,8 +1,8 @@
-dbus-test-runner (0.0.2~bzr16-0ubuntu3~killdbus1) UNRELEASED; urgency=low
+dbus-test-runner (0.0.2~bzr16-0ubuntu3~killdbus1) karmic; urgency=low
 
   * Forcibly killing the dbus-daemon
 
- -- Ted Gould <ted@ubuntu.com>  Thu, 03 Dec 2009 10:19:20 -0600
+ -- Ted Gould <ted@ubuntu.com>  Thu, 03 Dec 2009 10:20:32 -0600
 
 dbus-test-runner (0.0.2~bzr16-0ubuntu2) karmic; urgency=low
 
