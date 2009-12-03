@@ -1,27 +1,49 @@
-check: tests
 
 DBUS_RUNNER=../src/dbus-test-runner --dbus-config $(srcdir)/../data/session.conf
+TESTS = 
+DISTCLEANFILES = $(TESTS)
 
-tests: test-simple test-manytask test-ignore test-ignore-second test-invert test-invert-second test-param
-
+TESTS += test-simple
 test-simple:
-	$(DBUS_RUNNER) --task true
+	@echo "#!/bin/sh" > $@
+	@echo $(DBUS_RUNNER) --task true >> $@
+	@chmod +x $@
 
+TESTS += test-manytask
 test-manytask:
-	$(DBUS_RUNNER) --task true --task true --task true --task true --task true --task true --task true --task true --task true --task true --task true --task true --task true --task true --task true --task true --task true --task true --task true --task true --task true --task true --task true --task true --task true --task true --task true
+	@echo "#!/bin/sh" > $@
+	@echo $(DBUS_RUNNER) --task true --task true --task true --task true --task true --task true --task true --task true --task true --task true --task true --task true --task true --task true --task true --task true --task true --task true --task true --task true --task true --task true --task true --task true --task true --task true --task true >> $@
+	@chmod +x $@
 
+TESTS += test-ignore
 test-ignore:
-	$(DBUS_RUNNER) --task false --ignore-return
+	@echo "#!/bin/sh" > $@
+	@echo $(DBUS_RUNNER) --task false --ignore-return >> $@
+	@chmod +x $@
 
+TESTS += test-ignore-second
 test-ignore-second:
-	$(DBUS_RUNNER) --task true --task false --ignore-return
+	@echo "#!/bin/sh" > $@
+	@echo $(DBUS_RUNNER) --task true --task false --ignore-return >> $@
+	@chmod +x $@
 
+TESTS += test-invert
 test-invert:
-	$(DBUS_RUNNER) --task false --invert-return
+	@echo "#!/bin/sh" > $@
+	@echo $(DBUS_RUNNER) --task false --invert-return >> $@
+	@chmod +x $@
 
+TESTS += test-invert-second
 test-invert-second:
-	$(DBUS_RUNNER) --task true --task false --invert-return
+	@echo "#!/bin/sh" > $@
+	@echo $(DBUS_RUNNER) --task true --task false --invert-return >> $@
+	@chmod +x $@
 
+TESTS += test-param
 test-param:
-	$(DBUS_RUNNER) --task rm --parameter bob --task touch --parameter bob --ignore-return
+	@echo "#!/bin/sh" > $@
+	@echo $(DBUS_RUNNER) --task \"$(srcdir)/delayrm.sh\" --parameter \"$(builddir)/bob\" --task touch --parameter \"$(builddir)/bob\" --ignore-return >> $@
+	@chmod +x $@
 
+EXTRA_DIST = \
+	delayrm.sh

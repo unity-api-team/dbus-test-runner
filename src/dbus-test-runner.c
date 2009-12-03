@@ -118,6 +118,8 @@ dbus_writes (GIOChannel * channel, GIOCondition condition, gpointer data)
 
 	g_print("DBus address: %s\n", line);
 	g_setenv("DBUS_SESSION_BUS_ADDRESS", line, TRUE);
+	g_setenv("DBUS_STARTER_ADDRESS", line, TRUE);
+	g_setenv("DBUS_STARTER_BUS_TYPE", "session", TRUE);
 	g_free(line);
 
 	g_list_foreach(tasks, start_task, NULL);
@@ -328,6 +330,10 @@ main (int argc, char * argv[])
 
 	global_mainloop = g_main_loop_new(NULL, FALSE);
 	g_main_loop_run(global_mainloop);
+
+	gchar * killline = g_strdup_printf("kill -9 %d", dbus);
+	g_spawn_command_line_sync(killline, NULL, NULL, NULL, NULL);
+	g_free(killline);
 
 	return !global_success;
 }

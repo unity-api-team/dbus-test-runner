@@ -2,9 +2,17 @@ dbus-test-runner
 compile
 config.guess.cdbs-orig
 config.sub.cdbs-orig
+dbus-test-runner-*.tar.gz
 m4
 debian/dbus-test-runner.debhelper.log
 debian/dbus-test-runner.substvars
 debian/files
 debian/stamp-autotools-files
 debian/stamp-makefile-build
+tests/test-ignore
+tests/test-ignore-second
+tests/test-invert
+tests/test-invert-second
+tests/test-manytask
+tests/test-param
+tests/test-simple
