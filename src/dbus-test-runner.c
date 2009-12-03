@@ -54,10 +54,14 @@ check_task_cleanup (task_t * task, gboolean force)
 	if (task->io_watch) {
 		g_source_remove(task->io_watch);
 	}
+	if (task->watcher) {
+		g_source_remove(task->watcher);
+	}
 
 	tasks = g_list_remove(tasks, task);
 	g_free(task->executable);
 	g_free(task->name);
+	g_free(task);
 
 	if (g_list_length(tasks) == 0) {
 		g_main_loop_quit(global_mainloop);
