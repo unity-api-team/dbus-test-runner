@@ -331,5 +331,9 @@ main (int argc, char * argv[])
 	global_mainloop = g_main_loop_new(NULL, FALSE);
 	g_main_loop_run(global_mainloop);
 
+	gchar * killline = g_strdup_printf("kill -9 %d", dbus);
+	g_spawn_command_line_sync(killline, NULL, NULL, NULL, NULL);
+	g_free(killline);
+
 	return !global_success;
 }
