@@ -176,10 +176,11 @@ dbus_writes (GIOChannel * channel, GIOCondition condition, gpointer data)
 	line[termloc] = '\0';
 
 	static gboolean first_time = TRUE;
+	g_print("DBus daemon: %s\n", line);
 
 	if (first_time) {
 		first_time = FALSE;
-		g_print("DBus address: %s\n", line);
+
 		g_setenv("DBUS_SESSION_BUS_ADDRESS", line, TRUE);
 		g_setenv("DBUS_STARTER_ADDRESS", line, TRUE);
 		g_setenv("DBUS_STARTER_BUS_TYPE", "session", TRUE);
