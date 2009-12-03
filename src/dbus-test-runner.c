@@ -22,6 +22,7 @@ typedef struct {
 	gboolean task_die;
 	gboolean text_die;
 	guint idle;
+	guint io_watch;
 } task_t;
 
 static void check_task_cleanup (task_t * task, gboolean force);
@@ -49,6 +50,9 @@ check_task_cleanup (task_t * task, gboolean force)
 
 	if (task->idle) {
 		g_source_remove(task->idle);
+	}
+	if (task->io_watch) {
+		g_source_remove(task->io_watch);
 	}
 
 	tasks = g_list_remove(tasks, task);
@@ -135,10 +139,10 @@ start_task (gpointer data, gpointer userdata)
 	g_free(argv);
 
 	GIOChannel * iochan = g_io_channel_unix_new(proc_stdout);
-	g_io_add_watch(iochan,
-	               G_IO_IN, /* conditions */
-	               proc_writes, /* func */
-	               task); /* func data */
+	task->io_watch = g_io_add_watch(iochan,
+	                                G_IO_IN, /* conditions */
+	                                proc_writes, /* func */
+	                                task); /* func data */
 
 	task->watcher = g_child_watch_add(task->pid, proc_watcher, task);
 
