@@ -19,7 +19,42 @@ typedef struct {
 	guint watcher;
 	guint number;
 	GList * parameters;
+	gboolean task_die;
+	gboolean text_die;
 } task_t;
+
+static void check_task_cleanup (task_t * task, gboolean force);
+
+static gboolean
+force_kill_in_a_bit (gpointer data)
+{
+	check_task_cleanup((task_t *)data, TRUE);
+	return FALSE;
+}
+
+static void
+check_task_cleanup (task_t * task, gboolean force)
+{
+	if (!force) {
+		if (task->task_die) {
+			if (!task->text_die) {
+				g_idle_add(force_kill_in_a_bit, task);
+			}
+		} else  {
+			return;
+		}
+	}
+
+	tasks = g_list_remove(tasks, task);
+	g_free(task->executable);
+	g_free(task->name);
+
+	if (g_list_length(tasks) == 0) {
+		g_main_loop_quit(global_mainloop);
+	}
+
+	return;
+}
 
 static void
 proc_watcher (GPid pid, gint status, gpointer data)
@@ -36,13 +71,9 @@ proc_watcher (GPid pid, gint status, gpointer data)
 
 	g_spawn_close_pid(pid);
 
-	tasks = g_list_remove(tasks, task);
-	g_free(task->executable);
-	g_free(task->name);
+	task->task_die = TRUE;
 
-	if (g_list_length(tasks) == 0) {
-		g_main_loop_quit(global_mainloop);
-	}
+	check_task_cleanup(task, FALSE);
 
 	return;
 }
@@ -54,7 +85,13 @@ proc_writes (GIOChannel * channel, GIOCondition condition, gpointer data)
 	gchar * line;
 	gsize termloc;
 	GIOStatus status = g_io_channel_read_line (channel, &line, NULL, &termloc, NULL);
-	g_return_val_if_fail(status == G_IO_STATUS_NORMAL, FALSE);
+
+	if (status != G_IO_STATUS_NORMAL) {
+		task->text_die = TRUE;
+		check_task_cleanup(task, FALSE);
+		return;
+	}
+
 	line[termloc] = '\0';
 
 	g_print("%s: %s\n", task->name, line);
@@ -134,6 +171,8 @@ option_task (const gchar * arg, const gchar * value, gpointer data, GError ** er
 	task->executable = g_strdup(value);
 	task->number = g_list_length(tasks);
 	task->parameters = NULL;
+	task->task_die = FALSE;
+	task->text_die = FALSE;
 	tasks = g_list_prepend(tasks, task);
 	return TRUE;
 }
