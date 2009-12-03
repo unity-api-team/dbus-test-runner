@@ -21,6 +21,7 @@ typedef struct {
 	GList * parameters;
 	gboolean task_die;
 	gboolean text_die;
+	guint idle;
 } task_t;
 
 static void check_task_cleanup (task_t * task, gboolean force);
@@ -28,6 +29,7 @@ static void check_task_cleanup (task_t * task, gboolean force);
 static gboolean
 force_kill_in_a_bit (gpointer data)
 {
+	g_debug("Forcing cleanup of: %s", ((task_t *)data)->name);
 	check_task_cleanup((task_t *)data, TRUE);
 	return FALSE;
 }
@@ -38,11 +40,15 @@ check_task_cleanup (task_t * task, gboolean force)
 	if (!force) {
 		if (task->task_die) {
 			if (!task->text_die) {
-				g_idle_add(force_kill_in_a_bit, task);
+				task->idle = g_idle_add(force_kill_in_a_bit, task);
 			}
 		} else  {
 			return;
 		}
+	}
+
+	if (task->idle) {
+		g_source_remove(task->idle);
 	}
 
 	tasks = g_list_remove(tasks, task);
