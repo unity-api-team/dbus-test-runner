@@ -9,3 +9,9 @@ tests/test-invert-second
 tests/test-manytask
 tests/test-param
 tests/test-simple
+tests/test-output
+tests/testcat.output.cat1.filtered.txt
+tests/testcat.output.cat1.txt
+tests/testcat.output.cat2.filtered.txt
+tests/testcat.output.cat2.txt
+tests/testcat.output.txt
