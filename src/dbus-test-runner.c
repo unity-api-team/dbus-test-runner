@@ -19,7 +19,56 @@ typedef struct {
 	guint watcher;
 	guint number;
 	GList * parameters;
+	gboolean task_die;
+	gboolean text_die;
+	guint idle;
+	guint io_watch;
 } task_t;
+
+static void check_task_cleanup (task_t * task, gboolean force);
+
+static gboolean
+force_kill_in_a_bit (gpointer data)
+{
+	g_debug("Forcing cleanup of: %s", ((task_t *)data)->name);
+	check_task_cleanup((task_t *)data, TRUE);
+	return FALSE;
+}
+
+static void
+check_task_cleanup (task_t * task, gboolean force)
+{
+	if (!force) {
+		if (task->task_die) {
+			if (!task->text_die) {
+				task->idle = g_idle_add(force_kill_in_a_bit, task);
+			}
+		} else  {
+			return;
+		}
+	}
+
+	if (task->idle) {
+		g_source_remove(task->idle);
+	}
+	if (task->io_watch) {
+		g_source_remove(task->io_watch);
+	}
+	if (task->watcher) {
+		g_source_remove(task->watcher);
+	}
+
+	tasks = g_list_remove(tasks, task);
+	g_free(task->executable);
+	g_free(task->name);
+	g_free(task);
+
+	if (g_list_length(tasks) == 0) {
+		g_main_loop_quit(global_mainloop);
+	}
+
+	return;
+}
 
 static void
 proc_watcher (GPid pid, gint status, gpointer data)
@@ -36,13 +85,9 @@ proc_watcher (GPid pid, gint status, gpointer data)
 
 	g_spawn_close_pid(pid);
 
-	tasks = g_list_remove(tasks, task);
-	g_free(task->executable);
-	g_free(task->name);
+	task->task_die = TRUE;
 
-	if (g_list_length(tasks) == 0) {
-		g_main_loop_quit(global_mainloop);
-	}
+	check_task_cleanup(task, FALSE);
 
 	return;
 }
@@ -53,12 +98,25 @@ proc_writes (GIOChannel * channel, GIOCondition condition, gpointer data)
 	task_t * task = (task_t *)data;
 	gchar * line;
 	gsize termloc;
-	GIOStatus status = g_io_channel_read_line (channel, &line, NULL, &termloc, NULL);
-	g_return_val_if_fail(status == G_IO_STATUS_NORMAL, FALSE);
-	line[termloc] = '\0';
 
-	g_print("%s: %s\n", task->name, line);
-	g_free(line);
+	do {
+		GIOStatus status = g_io_channel_read_line (channel, &line, NULL, &termloc, NULL);
+
+		if (status == G_IO_STATUS_EOF) {
+			task->text_die = TRUE;
+			check_task_cleanup(task, FALSE);
+			continue;
+		}
+
+		if (status != G_IO_STATUS_NORMAL) {
+			continue;
+		}
+
+		line[termloc] = '\0';
+
+		g_print("%s: %s\n", task->name, line);
+		g_free(line);
+	} while (G_IO_IN & g_io_channel_get_buffer_condition(channel));
 
 	return TRUE;
 }
@@ -92,10 +150,11 @@ start_task (gpointer data, gpointer userdata)
 	g_free(argv);
 
 	GIOChannel * iochan = g_io_channel_unix_new(proc_stdout);
-	g_io_add_watch(iochan,
-	               G_IO_IN, /* conditions */
-	               proc_writes, /* func */
-	               task); /* func data */
+	g_io_channel_set_buffer_size(iochan, 10 * 1024 * 1024); /* 10 MB should be enough for anyone */
+	task->io_watch = g_io_add_watch(iochan,
+	                                G_IO_IN, /* conditions */
+	                                proc_writes, /* func */
+	                                task); /* func data */
 
 	task->watcher = g_child_watch_add(task->pid, proc_watcher, task);
 
@@ -116,13 +175,20 @@ dbus_writes (GIOChannel * channel, GIOCondition condition, gpointer data)
 	g_return_val_if_fail(status == G_IO_STATUS_NORMAL, FALSE);
 	line[termloc] = '\0';
 
-	g_print("DBus address: %s\n", line);
-	g_setenv("DBUS_SESSION_BUS_ADDRESS", line, TRUE);
-	g_setenv("DBUS_STARTER_ADDRESS", line, TRUE);
-	g_setenv("DBUS_STARTER_BUS_TYPE", "session", TRUE);
-	g_free(line);
+	static gboolean first_time = TRUE;
+	g_print("DBus daemon: %s\n", line);
 
-	g_list_foreach(tasks, start_task, NULL);
+	if (first_time) {
+		first_time = FALSE;
+
+		g_setenv("DBUS_SESSION_BUS_ADDRESS", line, TRUE);
+		g_setenv("DBUS_STARTER_ADDRESS", line, TRUE);
+		g_setenv("DBUS_STARTER_BUS_TYPE", "session", TRUE);
+
+		g_list_foreach(tasks, start_task, NULL);
+	}
+
+	g_free(line);
 
 	return TRUE;
 }
@@ -134,6 +200,8 @@ option_task (const gchar * arg, const gchar * value, gpointer data, GError ** er
 	task->executable = g_strdup(value);
 	task->number = g_list_length(tasks);
 	task->parameters = NULL;
+	task->task_die = FALSE;
+	task->text_die = FALSE;
 	tasks = g_list_prepend(tasks, task);
 	return TRUE;
 }
