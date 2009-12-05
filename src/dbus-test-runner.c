@@ -333,9 +333,11 @@ normalize_name_length (void)
 }
 
 static gchar * dbus_configfile = NULL;
+static gchar * bustle_datafile = NULL;
 
 static GOptionEntry general_options[] = {
 	{"dbus-config",  'd',   G_OPTION_FLAG_FILENAME,  G_OPTION_ARG_FILENAME,  &dbus_configfile, "Configuration file for newly created DBus server.  Defaults to '" DEFAULT_SESSION_CONF "'.", "config_file"},
+	{"bustle-data",  'b',   G_OPTION_FLAG_FILENAME,  G_OPTION_ARG_FILENAME,  &bustle_datafile, "A file to write out data from the bustle logger to.", "data_file"},
 	{NULL}
 };
 
