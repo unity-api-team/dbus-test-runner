@@ -185,7 +185,12 @@ dbus_writes (GIOChannel * channel, GIOCondition condition, gpointer data)
 		g_setenv("DBUS_STARTER_ADDRESS", line, TRUE);
 		g_setenv("DBUS_STARTER_BUS_TYPE", "session", TRUE);
 
-		g_list_foreach(tasks, start_task, NULL);
+		if (tasks != NULL) {
+			g_list_foreach(tasks, start_task, NULL);
+		} else {
+			g_print("No tasks!\n");
+			g_main_loop_quit(global_mainloop);
+		}
 	}
 
 	g_free(line);
