@@ -81,8 +81,8 @@ start_bustling (void)
 		return;
 	}
 
-	guint bustle_stdout_num = 0;
-	char * argv[1] = {"bustle-dbus-monitor"};
+	guint bustle_stdout_num;
+	char * argv[2] = {"bustle-dbus-monitor", NULL};
 
 	g_spawn_async_with_pipes(g_get_current_dir(),
 	                         argv, /* argv */
