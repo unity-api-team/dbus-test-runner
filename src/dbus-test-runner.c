@@ -32,7 +32,14 @@ static GPid bustle_pid = 0;
 static GIOChannel * bustle_stdout = NULL;
 static GIOChannel * bustle_file = NULL;
 
-gboolean
+static gboolean
+bustle_error (GIOChannel * channel, GIOCondition condition, gpointer data)
+{
+	g_debug("Bustle IO Channel Error: %d", condition);
+	return TRUE;
+}
+
+static gboolean
 bustle_writes (GIOChannel * channel, GIOCondition condition, gpointer data)
 {
 	g_debug("Bustle write");
@@ -87,7 +94,8 @@ start_bustling (void)
 	g_spawn_async_with_pipes(g_get_current_dir(),
 	                         argv, /* argv */
 	                         NULL, /* envp */
-	                         G_SPAWN_SEARCH_PATH | G_SPAWN_STDERR_TO_DEV_NULL, /* flags */
+	                         /* G_SPAWN_SEARCH_PATH | G_SPAWN_STDERR_TO_DEV_NULL, */ /* flags */
+	                         G_SPAWN_SEARCH_PATH, /* flags */
 	                         NULL, /* child setup func */
 	                         NULL, /* child setup data */
 							 &bustle_pid, /* PID */
@@ -96,10 +104,19 @@ start_bustling (void)
 	                         NULL, /* stderr */
 	                         &error); /* error */
 
+	if (error != NULL) {
+		g_warning("Unable to start bustling data: %s", error->message);
+		return;
+	}
+
 	bustle_stdout = g_io_channel_unix_new(bustle_stdout_num);
 	g_io_add_watch(bustle_stdout,
 	               G_IO_IN, /* conditions */
 	               bustle_writes, /* func */
+	               bustle_file); /* func data */
+	g_io_add_watch(bustle_stdout,
+	               G_IO_ERR | G_IO_HUP, /* conditions */
+	               bustle_error, /* func */
 	               bustle_file); /* func data */
 
 	return;
@@ -108,9 +125,14 @@ start_bustling (void)
 void
 stop_bustling (void)
 {
+	g_debug("Stopping bustling");
+
 	if (bustle_datafile == NULL) {
 		return;
 	}
+
+	g_io_channel_shutdown(bustle_stdout, TRUE, NULL);
+	g_io_channel_shutdown(bustle_file, TRUE, NULL);
 
 	return;
 }
