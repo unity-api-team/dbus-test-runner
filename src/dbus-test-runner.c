@@ -30,12 +30,34 @@ static void check_task_cleanup (task_t * task, gboolean force);
 static gchar * bustle_datafile = NULL;
 static GPid bustle_pid = 0;
 static GIOChannel * bustle_stdout = NULL;
+static GIOChannel * bustle_stderr = NULL;
 static GIOChannel * bustle_file = NULL;
 
+#define BUSTLE_ERROR  "Bustle"
+
 static gboolean
-bustle_error (GIOChannel * channel, GIOCondition condition, gpointer data)
+bustle_write_error (GIOChannel * channel, GIOCondition condition, gpointer data)
 {
-	g_debug("Bustle IO Channel Error: %d", condition);
+	gchar * line;
+	gsize termloc;
+
+	do {
+		GIOStatus status = g_io_channel_read_line (channel, &line, NULL, &termloc, NULL);
+
+		if (status == G_IO_STATUS_EOF) {
+			return FALSE;
+		}
+
+		if (status != G_IO_STATUS_NORMAL) {
+			continue;
+		}
+
+		line[termloc] = '\0';
+
+		g_print("%s: %s\n", BUSTLE_ERROR, line);
+		g_free(line);
+	} while (G_IO_IN & g_io_channel_get_buffer_condition(channel));
+
 	return TRUE;
 }
 
@@ -62,14 +84,19 @@ bustle_writes (GIOChannel * channel, GIOCondition condition, gpointer data)
 		                         termloc,
 		                         NULL,
 		                         NULL);
+		g_io_channel_write_chars((GIOChannel *)data,
+		                         "\n",
+		                         1,
+		                         NULL,
+		                         NULL);
 
 		g_free(line);
-	} while (G_IO_IN & g_io_channel_get_buffer_condition(channel));
+	} while ((G_IO_IN | G_IO_PRI) & g_io_channel_get_buffer_condition(channel));
 
 	return TRUE;
 }
 
-void
+static void
 start_bustling (void)
 {
 	if (bustle_datafile == NULL) {
@@ -88,20 +115,21 @@ start_bustling (void)
 		return;
 	}
 
-	guint bustle_stdout_num;
-	char * argv[2] = {"bustle-dbus-monitor", NULL};
+	gint bustle_stdout_num;
+	gint bustle_stderr_num;
+	gchar * bustle_monitor[] = {"bustle-dbus-monitor", NULL};
 
 	g_spawn_async_with_pipes(g_get_current_dir(),
-	                         argv, /* argv */
+	                         bustle_monitor, /* argv */
 	                         NULL, /* envp */
 	                         /* G_SPAWN_SEARCH_PATH | G_SPAWN_STDERR_TO_DEV_NULL, */ /* flags */
-	                         G_SPAWN_SEARCH_PATH, /* flags */
+	                         G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD, /* flags */
 	                         NULL, /* child setup func */
 	                         NULL, /* child setup data */
 							 &bustle_pid, /* PID */
 	                         NULL, /* stdin */
 	                         &bustle_stdout_num, /* stdout */
-	                         NULL, /* stderr */
+	                         &bustle_stderr_num, /* stderr */
 	                         &error); /* error */
 
 	if (error != NULL) {
@@ -110,28 +138,31 @@ start_bustling (void)
 	}
 
 	bustle_stdout = g_io_channel_unix_new(bustle_stdout_num);
+	g_io_channel_set_buffer_size(bustle_stdout, 10 * 1024 * 1024); /* 10 MB should be enough for anyone */
+
 	g_io_add_watch(bustle_stdout,
-	               G_IO_IN, /* conditions */
+	               G_IO_IN | G_IO_PRI, /* conditions */
 	               bustle_writes, /* func */
 	               bustle_file); /* func data */
-	g_io_add_watch(bustle_stdout,
-	               G_IO_ERR | G_IO_HUP, /* conditions */
-	               bustle_error, /* func */
-	               bustle_file); /* func data */
+
+	bustle_stderr = g_io_channel_unix_new(bustle_stderr_num);
+	g_io_add_watch(bustle_stderr,
+	               G_IO_IN, /* conditions */
+	               bustle_write_error, /* func */
+	               NULL); /* func data */
 
 	return;
 }
 
-void
+static void
 stop_bustling (void)
 {
-	g_debug("Stopping bustling");
-
 	if (bustle_datafile == NULL) {
 		return;
 	}
 
 	g_io_channel_shutdown(bustle_stdout, TRUE, NULL);
+	g_io_channel_shutdown(bustle_stderr, TRUE, NULL);
 	g_io_channel_shutdown(bustle_file, TRUE, NULL);
 
 	return;
@@ -440,7 +471,7 @@ normalize_name (gpointer data, gpointer udata)
 static void
 normalize_name_length (void)
 {
-	guint maxlen = 0;
+	guint maxlen = g_utf8_strlen(BUSTLE_ERROR, -1);
 
 	g_list_foreach(tasks, set_name, NULL);
 	g_list_foreach(tasks, length_finder, &maxlen);
