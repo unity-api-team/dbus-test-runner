@@ -117,7 +117,7 @@ start_bustling (void)
 
 	gint bustle_stdout_num;
 	gint bustle_stderr_num;
-	gchar * bustle_monitor[] = {"bustle-dbus-monitor", NULL};
+	gchar * bustle_monitor[] = {"bustle-dbus-monitor", "--session", NULL};
 
 	g_spawn_async_with_pipes(g_get_current_dir(),
 	                         bustle_monitor, /* argv */
@@ -326,9 +326,9 @@ dbus_writes (GIOChannel * channel, GIOCondition condition, gpointer data)
 		g_setenv("DBUS_STARTER_ADDRESS", line, TRUE);
 		g_setenv("DBUS_STARTER_BUS_TYPE", "session", TRUE);
 
-		start_bustling();
-
 		if (tasks != NULL) {
+			start_bustling();
+
 			g_list_foreach(tasks, start_task, NULL);
 		} else {
 			g_print("No tasks!\n");
