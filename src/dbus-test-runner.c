@@ -28,7 +28,6 @@ typedef struct {
 static void check_task_cleanup (task_t * task, gboolean force);
 
 static gchar * bustle_datafile = NULL;
-static GPid bustle_pid = 0;
 static GIOChannel * bustle_stdout = NULL;
 static GIOChannel * bustle_stderr = NULL;
 static GIOChannel * bustle_file = NULL;
@@ -126,7 +125,7 @@ start_bustling (void)
 	                         G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD, /* flags */
 	                         NULL, /* child setup func */
 	                         NULL, /* child setup data */
-							 &bustle_pid, /* PID */
+	                         NULL, /* PID */
 	                         NULL, /* stdin */
 	                         &bustle_stdout_num, /* stdout */
 	                         &bustle_stderr_num, /* stderr */
