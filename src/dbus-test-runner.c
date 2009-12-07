@@ -27,6 +27,94 @@ typedef struct {
 
 static void check_task_cleanup (task_t * task, gboolean force);
 
+static gchar * bustle_datafile = NULL;
+static GPid bustle_pid = 0;
+static GIOChannel * bustle_stdout = NULL;
+static GIOChannel * bustle_file = NULL;
+
+gboolean
+bustle_writes (GIOChannel * channel, GIOCondition condition, gpointer data)
+{
+	g_debug("Bustle write");
+	gchar * line;
+	gsize termloc;
+
+	do {
+		GIOStatus status = g_io_channel_read_line (channel, &line, NULL, &termloc, NULL);
+
+		if (status == G_IO_STATUS_EOF) {
+			continue;
+		}
+
+		if (status != G_IO_STATUS_NORMAL) {
+			continue;
+		}
+
+		g_io_channel_write_chars((GIOChannel *)data,
+		                         line,
+		                         termloc,
+		                         NULL,
+		                         NULL);
+
+		g_free(line);
+	} while (G_IO_IN & g_io_channel_get_buffer_condition(channel));
+
+	return TRUE;
+}
+
+void
+start_bustling (void)
+{
+	if (bustle_datafile == NULL) {
+		return;
+	}
+
+	GError * error = NULL;
+
+	bustle_file = g_io_channel_new_file(bustle_datafile, "w", &error);
+
+	if (error != NULL) {
+		g_warning("Unable to open bustle file '%s': %s", bustle_datafile, error->message);
+		g_error_free(error);
+		g_free(bustle_datafile);
+		bustle_datafile = NULL;
+		return;
+	}
+
+	guint bustle_stdout_num = 0;
+	char * argv[1] = {"bustle-dbus-monitor"};
+
+	g_spawn_async_with_pipes(g_get_current_dir(),
+	                         argv, /* argv */
+	                         NULL, /* envp */
+	                         G_SPAWN_SEARCH_PATH | G_SPAWN_STDERR_TO_DEV_NULL, /* flags */
+	                         NULL, /* child setup func */
+	                         NULL, /* child setup data */
+							 &bustle_pid, /* PID */
+	                         NULL, /* stdin */
+	                         &bustle_stdout_num, /* stdout */
+	                         NULL, /* stderr */
+	                         &error); /* error */
+
+	bustle_stdout = g_io_channel_unix_new(bustle_stdout_num);
+	g_io_add_watch(bustle_stdout,
+	               G_IO_IN, /* conditions */
+	               bustle_writes, /* func */
+	               bustle_file); /* func data */
+
+	return;
+}
+
+void
+stop_bustling (void)
+{
+	if (bustle_datafile == NULL) {
+		return;
+	}
+
+	return;
+}
+
 static gboolean
 force_kill_in_a_bit (gpointer data)
 {
@@ -185,6 +273,8 @@ dbus_writes (GIOChannel * channel, GIOCondition condition, gpointer data)
 		g_setenv("DBUS_STARTER_ADDRESS", line, TRUE);
 		g_setenv("DBUS_STARTER_BUS_TYPE", "session", TRUE);
 
+		start_bustling();
+
 		if (tasks != NULL) {
 			g_list_foreach(tasks, start_task, NULL);
 		} else {
@@ -338,7 +428,6 @@ normalize_name_length (void)
 }
 
 static gchar * dbus_configfile = NULL;
-static gchar * bustle_datafile = NULL;
 
 static GOptionEntry general_options[] = {
 	{"dbus-config",  'd',   G_OPTION_FLAG_FILENAME,  G_OPTION_ARG_FILENAME,  &dbus_configfile, "Configuration file for newly created DBus server.  Defaults to '" DEFAULT_SESSION_CONF "'.", "config_file"},
@@ -409,6 +498,8 @@ main (int argc, char * argv[])
 	gchar * killline = g_strdup_printf("kill -9 %d", dbus);
 	g_spawn_command_line_sync(killline, NULL, NULL, NULL, NULL);
 	g_free(killline);
+
+	stop_bustling();
 
 	return !global_success;
 }
