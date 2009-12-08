@@ -138,9 +138,6 @@ start_bustling (void)
 	}
 
 	bustle_stdout = g_io_channel_unix_new(bustle_stdout_num);
-	g_io_channel_set_buffered(bustle_stdout, FALSE); /* 10 MB should be enough for anyone */
-	//g_io_channel_set_buffer_size(bustle_stdout, 10 * 1024 * 1024); /* 10 MB should be enough for anyone */
-
 	g_io_add_watch(bustle_stdout,
 	               G_IO_IN | G_IO_PRI, /* conditions */
 	               bustle_writes, /* func */
@@ -180,11 +177,9 @@ stop_bustling (void)
 	gsize termloc;
 
 	while (!((G_IO_ERR | G_IO_HUP | G_IO_NVAL) & g_io_channel_get_buffer_condition(bustle_stdout))) {
-		g_debug("Buffer read");
 		GIOStatus status = g_io_channel_read_line (bustle_stdout, &line, NULL, &termloc, NULL);
 
 		if (status == G_IO_STATUS_EOF) {
-			g_debug("Bustle stdout EOF");
 			break;
 		}
 
