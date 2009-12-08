@@ -22,3 +22,6 @@ tests/testcat.output.cat1.txt
 tests/testcat.output.cat2.filtered.txt
 tests/testcat.output.cat2.txt
 tests/testcat.output.txt
+tests/test-bustle
+tests/test-bustle.bustle
+tests/test-bustle.filtered
