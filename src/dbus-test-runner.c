@@ -166,7 +166,15 @@ stop_bustling (void)
 	g_spawn_command_line_sync(killline, NULL, NULL, NULL, NULL);
 	g_free(killline);
 
-	g_spawn_command_line_sync("dbus-send --session --print-reply --dest=org.freedesktop.DBus /org/freedesktop/DBus org.freedesktop.DBus.ListNames", NULL, NULL, NULL, NULL);
+	gchar * send_stdout = NULL;
+	gchar * send_stderr = NULL;
+	g_spawn_command_line_sync("dbus-send --session --print-reply --dest=org.freedesktop.DBus /org/freedesktop/DBus org.freedesktop.DBus.ListNames", &send_stdout, &send_stderr, NULL, NULL);
+	if (send_stdout != NULL) {
+		g_free(send_stdout);
+	}
+	if (send_stderr != NULL) {
+		g_free(send_stderr);
+	}
 
 	gchar * line;
 	gsize termloc;
