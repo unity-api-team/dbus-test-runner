@@ -11,7 +11,9 @@ Vcs-Bzr: http://bazaar.launchpad.net/~indicator-applet-developers/dbus-test-runn
 
 Package: dbus-test-runner
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${shlibs:Depends},
+         ${misc:Depends},
+         bustle
 Description: A simple little executable for running a couple
  of programs under a new DBus session.  
 
