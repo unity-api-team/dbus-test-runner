@@ -33,7 +33,8 @@ static GIOChannel * bustle_stderr = NULL;
 static GIOChannel * bustle_file = NULL;
 static GPid bustle_pid = 0;
 
-#define BUSTLE_ERROR  "Bustle"
+#define BUSTLE_ERROR_DEFAULT  "Bustle"
+static gchar * bustle_error = BUSTLE_ERROR_DEFAULT;
 
 static gboolean
 bustle_write_error (GIOChannel * channel, GIOCondition condition, gpointer data)
@@ -54,7 +55,7 @@ bustle_write_error (GIOChannel * channel, GIOCondition condition, gpointer data)
 
 		line[termloc] = '\0';
 
-		g_print("%s: %s\n", BUSTLE_ERROR, line);
+		g_print("%s: %s\n", bustle_error, line);
 		g_free(line);
 	} while (G_IO_IN & g_io_channel_get_buffer_condition(channel));
 
@@ -468,8 +469,7 @@ length_finder (gpointer data, gpointer udata)
 	task_t * task = (task_t *)data;
 	guint * longest = (guint *)udata;
 
-	/* 640 should be enough characters for anyone */
-	guint length = g_utf8_strlen(task->name, 640);
+	guint length = g_utf8_strlen(task->name, -1);
 	if (length > *longest) {
 		*longest = length;
 	}
@@ -495,8 +495,7 @@ normalize_name (gpointer data, gpointer udata)
 	task_t * task = (task_t *)data;
 	guint * target = (guint *)udata;
 
-	/* 640 should be enough characters for anyone */
-	guint length = g_utf8_strlen(task->name, 640);
+	guint length = g_utf8_strlen(task->name, -1);
 	if (length != *target) {
 		gchar * fillstr = g_strnfill(*target - length, ' ');
 		gchar * newname = g_strconcat(task->name, fillstr, NULL);
@@ -509,13 +508,28 @@ normalize_name (gpointer data, gpointer udata)
 }
 
 static void
+normalize_bustle (guint target)
+{
+	guint length = g_utf8_strlen(BUSTLE_ERROR_DEFAULT, -1);
+	if (length != target) {
+		gchar * fillstr = g_strnfill(target - length, ' ');
+		bustle_error = g_strconcat(BUSTLE_ERROR_DEFAULT, fillstr, NULL);
+		g_free(fillstr);
+	}
+
+	return;
+}
+
+static void
 normalize_name_length (void)
 {
-	guint maxlen = g_utf8_strlen(BUSTLE_ERROR, -1);
+	guint maxlen = g_utf8_strlen(BUSTLE_ERROR_DEFAULT, -1);
 
 	g_list_foreach(tasks, set_name, NULL);
 	g_list_foreach(tasks, length_finder, &maxlen);
 	g_list_foreach(tasks, normalize_name, &maxlen);
+
+	normalize_bustle(maxlen);
 
 	return;
 }
