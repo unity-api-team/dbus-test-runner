@@ -525,6 +525,10 @@ normalize_name (gpointer data, gpointer udata)
 static void
 normalize_bustle (guint target)
 {
+	if (bustle_datafile == NULL) {
+		return;
+	}
+
 	guint length = g_utf8_strlen(BUSTLE_ERROR_DEFAULT, -1);
 	if (length != target) {
 		gchar * fillstr = g_strnfill(target - length, ' ');
@@ -538,7 +542,11 @@ normalize_bustle (guint target)
 static void
 normalize_name_length (void)
 {
-	guint maxlen = g_utf8_strlen(BUSTLE_ERROR_DEFAULT, -1);
+	guint maxlen = 0;
+	
+	if (bustle_datafile != NULL) {
+		maxlen = g_utf8_strlen(BUSTLE_ERROR_DEFAULT, -1);
+	}
 
 	g_list_foreach(tasks, set_name, NULL);
 	g_list_foreach(tasks, length_finder, &maxlen);
