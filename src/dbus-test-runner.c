@@ -124,7 +124,7 @@ start_bustling (void)
 	                         bustle_monitor, /* argv */
 	                         NULL, /* envp */
 	                         /* G_SPAWN_SEARCH_PATH | G_SPAWN_STDERR_TO_DEV_NULL, */ /* flags */
-	                         G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD, /* flags */
+	                         G_SPAWN_SEARCH_PATH, /* flags */
 	                         NULL, /* child setup func */
 	                         NULL, /* child setup data */
 	                         &bustle_pid, /* PID */
