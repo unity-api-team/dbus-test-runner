@@ -31,6 +31,7 @@ static gchar * bustle_datafile = NULL;
 static GIOChannel * bustle_stdout = NULL;
 static GIOChannel * bustle_stderr = NULL;
 static GIOChannel * bustle_file = NULL;
+static GPid bustle_pid = 0;
 
 #define BUSTLE_ERROR  "Bustle"
 
@@ -125,7 +126,7 @@ start_bustling (void)
 	                         G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD, /* flags */
 	                         NULL, /* child setup func */
 	                         NULL, /* child setup data */
-	                         NULL, /* PID */
+	                         &bustle_pid, /* PID */
 	                         NULL, /* stdin */
 	                         &bustle_stdout_num, /* stdout */
 	                         &bustle_stderr_num, /* stderr */
@@ -137,7 +138,8 @@ start_bustling (void)
 	}
 
 	bustle_stdout = g_io_channel_unix_new(bustle_stdout_num);
-	g_io_channel_set_buffer_size(bustle_stdout, 10 * 1024 * 1024); /* 10 MB should be enough for anyone */
+	g_io_channel_set_buffered(bustle_stdout, FALSE); /* 10 MB should be enough for anyone */
+	//g_io_channel_set_buffer_size(bustle_stdout, 10 * 1024 * 1024); /* 10 MB should be enough for anyone */
 
 	g_io_add_watch(bustle_stdout,
 	               G_IO_IN | G_IO_PRI, /* conditions */
@@ -158,6 +160,42 @@ stop_bustling (void)
 {
 	if (bustle_datafile == NULL) {
 		return;
+	}
+
+	gchar * killline = g_strdup_printf("kill -INT %d", bustle_pid);
+	g_spawn_command_line_sync(killline, NULL, NULL, NULL, NULL);
+	g_free(killline);
+
+	g_spawn_command_line_sync("dbus-send --session --print-reply --dest=org.freedesktop.DBus /org/freedesktop/DBus org.freedesktop.DBus.ListNames", NULL, NULL, NULL, NULL);
+
+	gchar * line;
+	gsize termloc;
+
+	while (!((G_IO_ERR | G_IO_HUP | G_IO_NVAL) & g_io_channel_get_buffer_condition(bustle_stdout))) {
+		g_debug("Buffer read");
+		GIOStatus status = g_io_channel_read_line (bustle_stdout, &line, NULL, &termloc, NULL);
+
+		if (status == G_IO_STATUS_EOF) {
+			g_debug("Bustle stdout EOF");
+			break;
+		}
+
+		if (status != G_IO_STATUS_NORMAL) {
+			continue;
+		}
+
+		g_io_channel_write_chars((GIOChannel *)bustle_file,
+		                         line,
+		                         termloc,
+		                         NULL,
+		                         NULL);
+		g_io_channel_write_chars((GIOChannel *)bustle_file,
+		                         "\n",
+		                         1,
+		                         NULL,
+		                         NULL);
+
+		g_free(line);
 	}
 
 	g_io_channel_shutdown(bustle_stdout, TRUE, NULL);
@@ -547,11 +585,11 @@ main (int argc, char * argv[])
 	global_mainloop = g_main_loop_new(NULL, FALSE);
 	g_main_loop_run(global_mainloop);
 
+	stop_bustling();
+
 	gchar * killline = g_strdup_printf("kill -9 %d", dbus);
 	g_spawn_command_line_sync(killline, NULL, NULL, NULL, NULL);
 	g_free(killline);
-
-	stop_bustling();
 
 	return !global_success;
 }
