@@ -225,6 +225,34 @@ force_kill_in_a_bit (gpointer data)
 	return FALSE;
 }
 
+/* Checking to see if any of the remaining tasks we care
+   about their return values.  If not, we'll just go ahead
+   and exit. */
+static void
+check_ignored_returns (void)
+{
+	GList * task = NULL;
+
+	/* Look to see if anyone left has us not ignoring their return */
+	for (task = tasks; task != NULL; task = g_list_next(task)) {
+		task_t * taskt = (task_t *)task->data;
+		if (taskt->returntype != TASK_RETURN_IGNORE) {
+			/* If so, just exit */
+			return;
+		}
+	}
+
+	/* Oh, no one does.  Let's tell the user who we're orphaning. */
+	for (task = tasks; task != NULL; task = g_list_next(task)) {
+		task_t * taskt = (task_t *)task->data;
+		g_debug("Not waiting for task '%s' to exit.", taskt->name);
+	}
+
+	/* Quitting */
+	g_main_loop_quit(global_mainloop);
+	return;
+}
+
 static void
 check_task_cleanup (task_t * task, gboolean force)
 {
@@ -253,9 +281,7 @@ check_task_cleanup (task_t * task, gboolean force)
 	g_free(task->name);
 	g_free(task);
 
-	if (g_list_length(tasks) == 0) {
-		g_main_loop_quit(global_mainloop);
-	}
+	check_ignored_returns();
 
 	return;
 }
