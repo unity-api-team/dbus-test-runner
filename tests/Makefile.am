@@ -73,6 +73,24 @@ test-bustle: Makefile.am test-bustle.reference
 	@chmod +x $@
 DISTCLEANFILES += test-bustle.bustle test-bustle.filtered
 
+TESTS += test-bustle-data
+test-bustle-data: Makefile.am
+	@echo "#!/bin/sh -e" > $@
+	@echo "$(DBUS_RUNNER) --bustle-data \"$(builddir)/test-bustle-data.bustle\" \\" >> $@
+	@echo "--task dbus-send -p \"--session\" -p \"--print-reply\" -p \"--dest=org.freedesktop.DBus\" -p \"/org/freedesktop/DBus\" -p \"org.freedesktop.DBus.ListNames\" \\" >> $@
+	@echo "--task dbus-send -p \"--session\" -p \"--print-reply\" -p \"--dest=org.freedesktop.DBus\" -p \"/org/freedesktop/DBus\" -p \"org.freedesktop.DBus.ListNames\" \\" >> $@
+	@echo "--task dbus-send -p \"--session\" -p \"--print-reply\" -p \"--dest=org.freedesktop.DBus\" -p \"/org/freedesktop/DBus\" -p \"org.freedesktop.DBus.ListNames\" \\" >> $@
+	@echo "--task dbus-send -p \"--session\" -p \"--print-reply\" -p \"--dest=org.freedesktop.DBus\" -p \"/org/freedesktop/DBus\" -p \"org.freedesktop.DBus.ListNames\" \\" >> $@
+	@echo "--task dbus-send -p \"--session\" -p \"--print-reply\" -p \"--dest=org.freedesktop.DBus\" -p \"/org/freedesktop/DBus\" -p \"org.freedesktop.DBus.ListNames\" \\" >> $@
+	@echo "--task dbus-send -p \"--session\" -p \"--print-reply\" -p \"--dest=org.freedesktop.DBus\" -p \"/org/freedesktop/DBus\" -p \"org.freedesktop.DBus.ListNames\" \\" >> $@
+	@echo "--task dbus-send -p \"--session\" -p \"--print-reply\" -p \"--dest=org.freedesktop.DBus\" -p \"/org/freedesktop/DBus\" -p \"org.freedesktop.DBus.ListNames\" \\" >> $@
+	@echo "--task dbus-send -p \"--session\" -p \"--print-reply\" -p \"--dest=org.freedesktop.DBus\" -p \"/org/freedesktop/DBus\" -p \"org.freedesktop.DBus.ListNames\" \\" >> $@
+	@echo "--task dbus-send -p \"--session\" -p \"--print-reply\" -p \"--dest=org.freedesktop.DBus\" -p \"/org/freedesktop/DBus\" -p \"org.freedesktop.DBus.ListNames\" \\" >> $@
+	@echo "--task dbus-send -p \"--session\" -p \"--print-reply\" -p \"--dest=org.freedesktop.DBus\" -p \"/org/freedesktop/DBus\" -p \"org.freedesktop.DBus.ListNames\" \\" >> $@
+	@echo "--task dbus-send -p \"--session\" -p \"--print-reply\" -p \"--dest=org.freedesktop.DBus\" -p \"/org/freedesktop/DBus\" -p \"org.freedesktop.DBus.ListNames\" \\" >> $@
+	@chmod +x $@
+DISTCLEANFILES += test-bustle-data.bustle
+
 
 EXTRA_DIST = \
 	delayrm.sh \
