@@ -66,34 +66,27 @@ bustle_write_error (GIOChannel * channel, GIOCondition condition, gpointer data)
 static gboolean
 bustle_writes (GIOChannel * channel, GIOCondition condition, gpointer data)
 {
-	g_debug("Bustle write");
 	gchar * line;
 	gsize termloc;
 
-	do {
-		GIOStatus status = g_io_channel_read_line (channel, &line, NULL, &termloc, NULL);
+	GIOStatus status = g_io_channel_read_line (channel, &line, NULL, &termloc, NULL);
 
-		if (status == G_IO_STATUS_EOF) {
-			continue;
-		}
+	if (status != G_IO_STATUS_NORMAL) {
+		return FALSE;
+	}
 
-		if (status != G_IO_STATUS_NORMAL) {
-			continue;
-		}
+	g_io_channel_write_chars((GIOChannel *)data,
+							 line,
+							 termloc,
+							 NULL,
+							 NULL);
+	g_io_channel_write_chars((GIOChannel *)data,
+							 "\n",
+							 1,
+							 NULL,
+							 NULL);
 
-		g_io_channel_write_chars((GIOChannel *)data,
-		                         line,
-		                         termloc,
-		                         NULL,
-		                         NULL);
-		g_io_channel_write_chars((GIOChannel *)data,
-		                         "\n",
-		                         1,
-		                         NULL,
-		                         NULL);
-
-		g_free(line);
-	} while ((G_IO_IN | G_IO_PRI) & g_io_channel_get_buffer_condition(channel));
+	g_free(line);
 
 	return TRUE;
 }
