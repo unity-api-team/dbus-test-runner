@@ -1,3 +1,9 @@
+dbus-test-runner (0.0.2~bzr16-0ubuntu6) UNRELEASED; urgency=low
+
+  * debian/control: Adding gvfs-backends as a dependency.
+
+ -- Ted Gould <ted@ubuntu.com>  Tue, 19 Jan 2010 09:35:33 -0600
+
 dbus-test-runner (0.0.2~bzr16-0ubuntu5) karmic; urgency=low
 
   * Adding in the ability to record using bustle-dbus-watcher
