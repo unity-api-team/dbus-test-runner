@@ -1,11 +1,11 @@
 
-AC_INIT(dbus-test-runner, 0.0.2dev, ted@canonical.com)
+AC_INIT(dbus-test-runner, 0.0.2, ted@canonical.com)
 AC_COPYRIGHT([Copyright 2009 Canonical])
 
 AC_PREREQ(2.53)
 
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(dbus-test-runner, 0.0.2dev)
+AM_INIT_AUTOMAKE(dbus-test-runner, 0.0.2)
 
 AM_MAINTAINER_MODE
 
@@ -18,6 +18,8 @@ AC_PROG_LIBTOOL
 
 AC_SUBST(VERSION)
 AC_CONFIG_MACRO_DIR([m4])
+
+m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 
 ###########################
 # Dependencies 
