@@ -4,6 +4,13 @@ dbus-test-runner (0.0.2-0ubuntu1) UNRELEASED; urgency=low
 
  -- Ken VanDine <ken.vandine@canonical.com>  Tue, 07 Dec 2010 21:41:29 -0500
 
+dbus-test-runner (0.0.2-0ubuntu1~ppa1) natty; urgency=low
+
+  * New upstream release.
+    * Uhg, not released in a while.  It's everything not released.
+
+ -- Ted Gould <ted@ubuntu.com>  Tue, 07 Dec 2010 20:41:19 -0600
+
 dbus-test-runner (0.0.2~bzr16-0ubuntu6) karmic; urgency=low
 
   * debian/control: Adding gvfs-backends as a dependency.
