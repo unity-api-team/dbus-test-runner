@@ -4,10 +4,10 @@ Priority: optional
 Maintainer: Ubuntu Core Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 Build-Depends: debhelper (>= 5.0),
                cdbs (>= 0.4.41),
-               libdbus-glib-1-dev
-Standards-Version: 3.8.0
+               libdbus-glib-1-dev,
+               dh-autoreconf
+Standards-Version: 3.9.1
 Homepage: https://launchpad.net/dbus-test-runner
-Vcs-Bzr: http://bazaar.launchpad.net/~indicator-applet-developers/dbus-test-runner/packaging
 
 Package: dbus-test-runner
 Architecture: any
