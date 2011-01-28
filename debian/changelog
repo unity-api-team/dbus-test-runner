@@ -1,10 +1,10 @@
-dbus-test-runner (0.0.3-0ubuntu1~ppa1) UNRELEASED; urgency=low
+dbus-test-runner (0.0.3-0ubuntu1~ppa1) natty; urgency=low
 
   * New upstream release.
     * Fixing test suite
     * Printing more debug information on tasks dying
 
- -- Ted Gould <ted@ubuntu.com>  Fri, 28 Jan 2011 10:46:05 -0600
+ -- Ted Gould <ted@ubuntu.com>  Fri, 28 Jan 2011 10:53:12 -0600
 
 dbus-test-runner (0.0.2-0ubuntu1~ppa1) natty; urgency=low
 
