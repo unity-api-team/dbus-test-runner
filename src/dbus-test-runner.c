@@ -1,3 +1,22 @@
+/*
+Copyright 2010 Canonical Ltd.
+
+Authors:
+    Ted Gould <ted@canonical.com>
+
+This program is free software: you can redistribute it and/or modify it 
+under the terms of the GNU General Public License version 3, as published 
+by the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful, but 
+WITHOUT ANY WARRANTY; without even the implied warranties of 
+MERCHANTABILITY, SATISFACTORY QUALITY, or FITNESS FOR A PARTICULAR 
+PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along 
+with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 
 #include <glib.h>
 
@@ -139,6 +158,8 @@ start_bustling (void)
 		return;
 	}
 
+	g_debug("Starting bustle monitor.  PID: %d", bustle_pid);
+
 	bustle_stdout = g_io_channel_unix_new(bustle_stdout_num);
 	g_io_add_watch(bustle_stdout,
 	               G_IO_IN | G_IO_PRI, /* conditions */
@@ -266,7 +287,9 @@ proc_watcher (GPid pid, gint status, gpointer data)
 		global_success = FALSE;
 	}
 
-	g_spawn_close_pid(pid);
+	if (pid != 0) {
+		g_spawn_close_pid(pid);
+	}
 
 	task->task_die = TRUE;
 
@@ -307,6 +330,7 @@ proc_writes (GIOChannel * channel, GIOCondition condition, gpointer data)
 void
 start_task (gpointer data, gpointer userdata)
 {
+	GError * error = NULL;
 	task_t * task = (task_t *)data;
 
 	gchar ** argv;
@@ -329,8 +353,16 @@ start_task (gpointer data, gpointer userdata)
 	                         NULL, /* stdin */
 	                         &proc_stdout, /* stdout */
 	                         NULL, /* stderr */
-	                         NULL); /* error */
+	                         &error); /* error */
 	g_free(argv);
+
+	if (error != NULL) {
+		g_warning("Unable to start task '%s': %s", task->name, error->message);
+		proc_watcher(0, 1, task);
+		return;
+	}
+
+	g_debug("Started task '%s' PID: %d", task->name, task->pid);
 
 	GIOChannel * iochan = g_io_channel_unix_new(proc_stdout);
 	g_io_channel_set_buffer_size(iochan, 10 * 1024 * 1024); /* 10 MB should be enough for anyone */
