@@ -1,10 +1,18 @@
 dbus-test-runner (0.0.3-0ubuntu1) natty; urgency=low
 
+  [ Ted Gould ]
   * New upstream release.
     * Fixing test suite
     * Printing more debug information on tasks dying
 
- -- Ted Gould <ted@ubuntu.com>  Fri, 28 Jan 2011 10:53:12 -0600
+  [ Ken VanDine ]
+  * debian/rules
+    - Disable running tests in the package for now, it causes hangs
+      when run headless
+  * debian/control
+    - Changed maintainer to ~ubuntu-desktop
+
+ -- Ken VanDine <ken.vandine@canonical.com>  Fri, 28 Jan 2011 13:27:15 -0500
 
 dbus-test-runner (0.0.2-0ubuntu1~ppa1) natty; urgency=low
 
