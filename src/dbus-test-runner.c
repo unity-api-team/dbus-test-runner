@@ -158,6 +158,8 @@ start_bustling (void)
 		return;
 	}
 
+	g_debug("Starting bustle monitor.  PID: %d", bustle_pid);
+
 	bustle_stdout = g_io_channel_unix_new(bustle_stdout_num);
 	g_io_add_watch(bustle_stdout,
 	               G_IO_IN | G_IO_PRI, /* conditions */
@@ -350,6 +352,8 @@ start_task (gpointer data, gpointer userdata)
 	                         NULL, /* stderr */
 	                         NULL); /* error */
 	g_free(argv);
+
+	g_debug("Started task '%s' PID: %d", task->name, task->pid);
 
 	GIOChannel * iochan = g_io_channel_unix_new(proc_stdout);
 	g_io_channel_set_buffer_size(iochan, 10 * 1024 * 1024); /* 10 MB should be enough for anyone */
