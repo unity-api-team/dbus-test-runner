@@ -36,10 +36,7 @@ host_triplet = @host@
 subdir = tests
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/m4/intltool.m4 \
-	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
-	$(top_srcdir)/m4/ltsugar.m4 $(top_srcdir)/m4/ltversion.m4 \
-	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
@@ -208,7 +205,8 @@ DISTCLEANFILES = $(TESTS) testcat.output.txt testcat.output.cat1.txt \
 	test-bustle.filtered test-bustle-data.bustle
 EXTRA_DIST = \
 	delayrm.sh \
-	test-bustle.reference
+	test-bustle.reference \
+	test-bustle-list.sh
 
 all: all-am
 
@@ -535,24 +533,25 @@ test-output: Makefile.am
 	@chmod +x $@
 test-bustle: Makefile.am test-bustle.reference
 	@echo "#!/bin/sh -e" > $@
-	@echo $(DBUS_RUNNER) --bustle-data \"$(builddir)/test-bustle.bustle\" --task dbus-send -p "--session" -p "--print-reply" -p "--dest=org.freedesktop.DBus" -p "/org/freedesktop/DBus" -p "org.freedesktop.DBus.ListNames" --ignore-return >> $@
+	@echo $(DBUS_RUNNER) --bustle-data \"$(builddir)/test-bustle.bustle\" --task $(srcdir)/test-bustle-list.sh --ignore-return >> $@
 	@echo "grep ^mc \"$(builddir)/test-bustle.bustle\" | grep ":1.1" | grep "ListNames" | cut -f 5-9 > test-bustle.filtered" >> $@
 	@echo "diff \"$(srcdir)/test-bustle.reference\" \"$(builddir)/test-bustle.filtered\"" >> $@
 	@chmod +x $@
 test-bustle-data: Makefile.am
 	@echo "#!/bin/sh -e" > $@
 	@echo "$(DBUS_RUNNER) --bustle-data \"$(builddir)/test-bustle-data.bustle\" \\" >> $@
-	@echo "--task dbus-send -p \"--session\" -p \"--print-reply\" -p \"--dest=org.freedesktop.DBus\" -p \"/org/freedesktop/DBus\" -p \"org.freedesktop.DBus.ListNames\" \\" >> $@
-	@echo "--task dbus-send -p \"--session\" -p \"--print-reply\" -p \"--dest=org.freedesktop.DBus\" -p \"/org/freedesktop/DBus\" -p \"org.freedesktop.DBus.ListNames\" \\" >> $@
-	@echo "--task dbus-send -p \"--session\" -p \"--print-reply\" -p \"--dest=org.freedesktop.DBus\" -p \"/org/freedesktop/DBus\" -p \"org.freedesktop.DBus.ListNames\" \\" >> $@
-	@echo "--task dbus-send -p \"--session\" -p \"--print-reply\" -p \"--dest=org.freedesktop.DBus\" -p \"/org/freedesktop/DBus\" -p \"org.freedesktop.DBus.ListNames\" \\" >> $@
-	@echo "--task dbus-send -p \"--session\" -p \"--print-reply\" -p \"--dest=org.freedesktop.DBus\" -p \"/org/freedesktop/DBus\" -p \"org.freedesktop.DBus.ListNames\" \\" >> $@
-	@echo "--task dbus-send -p \"--session\" -p \"--print-reply\" -p \"--dest=org.freedesktop.DBus\" -p \"/org/freedesktop/DBus\" -p \"org.freedesktop.DBus.ListNames\" \\" >> $@
-	@echo "--task dbus-send -p \"--session\" -p \"--print-reply\" -p \"--dest=org.freedesktop.DBus\" -p \"/org/freedesktop/DBus\" -p \"org.freedesktop.DBus.ListNames\" \\" >> $@
-	@echo "--task dbus-send -p \"--session\" -p \"--print-reply\" -p \"--dest=org.freedesktop.DBus\" -p \"/org/freedesktop/DBus\" -p \"org.freedesktop.DBus.ListNames\" \\" >> $@
-	@echo "--task dbus-send -p \"--session\" -p \"--print-reply\" -p \"--dest=org.freedesktop.DBus\" -p \"/org/freedesktop/DBus\" -p \"org.freedesktop.DBus.ListNames\" \\" >> $@
-	@echo "--task dbus-send -p \"--session\" -p \"--print-reply\" -p \"--dest=org.freedesktop.DBus\" -p \"/org/freedesktop/DBus\" -p \"org.freedesktop.DBus.ListNames\" \\" >> $@
-	@echo "--task dbus-send -p \"--session\" -p \"--print-reply\" -p \"--dest=org.freedesktop.DBus\" -p \"/org/freedesktop/DBus\" -p \"org.freedesktop.DBus.ListNames\" \\" >> $@
+	@echo "--task $(srcdir)/test-bustle-list.sh \\" >> $@
+	@echo "--task $(srcdir)/test-bustle-list.sh \\" >> $@
+	@echo "--task $(srcdir)/test-bustle-list.sh \\" >> $@
+	@echo "--task $(srcdir)/test-bustle-list.sh \\" >> $@
+	@echo "--task $(srcdir)/test-bustle-list.sh \\" >> $@
+	@echo "--task $(srcdir)/test-bustle-list.sh \\" >> $@
+	@echo "--task $(srcdir)/test-bustle-list.sh \\" >> $@
+	@echo "--task $(srcdir)/test-bustle-list.sh \\" >> $@
+	@echo "--task $(srcdir)/test-bustle-list.sh \\" >> $@
+	@echo "--task $(srcdir)/test-bustle-list.sh \\" >> $@
+	@echo "--task $(srcdir)/test-bustle-list.sh \\" >> $@
+	@echo "--task $(srcdir)/test-bustle-list.sh \\" >> $@
 	@chmod +x $@
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

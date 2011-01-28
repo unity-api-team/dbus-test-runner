@@ -158,6 +158,8 @@ start_bustling (void)
 		return;
 	}
 
+	g_debug("Starting bustle monitor.  PID: %d", bustle_pid);
+
 	bustle_stdout = g_io_channel_unix_new(bustle_stdout_num);
 	g_io_add_watch(bustle_stdout,
 	               G_IO_IN | G_IO_PRI, /* conditions */
@@ -285,7 +287,9 @@ proc_watcher (GPid pid, gint status, gpointer data)
 		global_success = FALSE;
 	}
 
-	g_spawn_close_pid(pid);
+	if (pid != 0) {
+		g_spawn_close_pid(pid);
+	}
 
 	task->task_die = TRUE;
 
@@ -326,6 +330,7 @@ proc_writes (GIOChannel * channel, GIOCondition condition, gpointer data)
 void
 start_task (gpointer data, gpointer userdata)
 {
+	GError * error = NULL;
 	task_t * task = (task_t *)data;
 
 	gchar ** argv;
@@ -348,8 +353,16 @@ start_task (gpointer data, gpointer userdata)
 	                         NULL, /* stdin */
 	                         &proc_stdout, /* stdout */
 	                         NULL, /* stderr */
-	                         NULL); /* error */
+	                         &error); /* error */
 	g_free(argv);
+
+	if (error != NULL) {
+		g_warning("Unable to start task '%s': %s", task->name, error->message);
+		proc_watcher(0, 1, task);
+		return;
+	}
+
+	g_debug("Started task '%s' PID: %d", task->name, task->pid);
 
 	GIOChannel * iochan = g_io_channel_unix_new(proc_stdout);
 	g_io_channel_set_buffer_size(iochan, 10 * 1024 * 1024); /* 10 MB should be enough for anyone */
