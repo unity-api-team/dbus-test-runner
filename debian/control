@@ -15,6 +15,6 @@ Depends: ${shlibs:Depends},
          ${misc:Depends},
          bustle,
          gvfs-backends
-Description: A simple little executable for running a couple
- of programs under a new DBus session.  
-
+Description: Runs tests under a new DBus session
+ A simple little executable for running a couple of programs under a 
+ new DBus session.  

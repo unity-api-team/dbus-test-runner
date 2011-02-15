@@ -1,3 +1,10 @@
+dbus-test-runner (0.0.3-0ubuntu2) UNRELEASED; urgency=low
+
+  * debian/control
+    - Improved package description (LP: #719384)
+
+ -- Ken VanDine <ken.vandine@canonical.com>  Tue, 15 Feb 2011 11:58:04 -0500
+
 dbus-test-runner (0.0.3-0ubuntu1) natty; urgency=low
 
   [ Ted Gould ]
