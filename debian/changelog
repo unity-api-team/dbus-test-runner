@@ -1,4 +1,4 @@
-dbus-test-runner (0.0.3-0ubuntu2) UNRELEASED; urgency=low
+dbus-test-runner (0.0.3-0ubuntu2) natty; urgency=low
 
   * debian/control
     - Improved package description (LP: #719384)
