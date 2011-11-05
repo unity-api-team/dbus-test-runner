@@ -42,6 +42,7 @@ typedef struct {
 	gboolean text_die;
 	guint idle;
 	guint io_watch;
+	gchar * wait_for;
 } task_t;
 
 static void check_task_cleanup (task_t * task, gboolean force);
@@ -263,6 +264,7 @@ check_task_cleanup (task_t * task, gboolean force)
 	}
 
 	tasks = g_list_remove(tasks, task);
+	g_free(task->wait_for);
 	g_free(task->executable);
 	g_free(task->name);
 	g_free(task);
@@ -425,6 +427,7 @@ option_task (const gchar * arg, const gchar * value, gpointer data, GError ** er
 	task->task_die = FALSE;
 	task->text_die = FALSE;
 	tasks = g_list_prepend(tasks, task);
+	task->wait_for = NULL;
 	return TRUE;
 }
 
