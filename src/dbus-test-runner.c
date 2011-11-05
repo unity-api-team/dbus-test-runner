@@ -583,6 +583,14 @@ normalize_name_length (void)
 	return;
 }
 
+static gboolean
+max_wait_hit (gpointer user_data)
+{
+	g_warning("Timing out at maximum wait of %d seconds.", max_wait);
+	g_main_loop_quit(global_mainloop);	
+	return FALSE;
+}
+
 static gchar * dbus_configfile = NULL;
 
 static GOptionEntry general_options[] = {
@@ -649,6 +657,10 @@ main (int argc, char * argv[])
 	               G_IO_IN | G_IO_ERR, /* conditions */
 	               dbus_writes, /* func */
 	               NULL); /* func data */
+
+	if (max_wait > 0) {
+		g_timeout_add_seconds(max_wait, max_wait_hit, NULL);
+	}
 
 	global_mainloop = g_main_loop_new(NULL, FALSE);
 	g_main_loop_run(global_mainloop);
