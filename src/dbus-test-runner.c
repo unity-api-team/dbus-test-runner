@@ -19,6 +19,7 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 #include <glib.h>
+#include <gio/gio.h>
 
 static GList * tasks = NULL;
 static gboolean global_success = TRUE;
@@ -46,6 +47,7 @@ typedef struct {
 } task_t;
 
 static void check_task_cleanup (task_t * task, gboolean force);
+static void start_task (gpointer data, gpointer userdata);
 
 static gchar * bustle_datafile = NULL;
 static GIOChannel * bustle_stdout = NULL;
@@ -330,11 +332,29 @@ proc_writes (GIOChannel * channel, GIOCondition condition, gpointer data)
 	return TRUE;
 }
 
-void
+static void
+wait_for_found (GDBusConnection * connection, const gchar * name, const gchar * name_owner, gpointer user_data)
+{
+	return start_task(user_data, GINT_TO_POINTER(TRUE));
+}
+
+static void
 start_task (gpointer data, gpointer userdata)
 {
+	gboolean ignore_waitfor = GPOINTER_TO_INT(userdata);
 	GError * error = NULL;
 	task_t * task = (task_t *)data;
+
+	if (!ignore_waitfor && task->wait_for != NULL) {
+		g_bus_watch_name(G_BUS_TYPE_SESSION,
+		                 task->wait_for,
+		                 G_BUS_NAME_WATCHER_FLAGS_NONE,
+		                 wait_for_found,
+		                 NULL,
+		                 task,
+		                 NULL);
+		return;
+	}
 
 	gchar ** argv;
 	argv = g_new0(gchar *, g_list_length(task->parameters) + 2);
@@ -406,7 +426,7 @@ dbus_writes (GIOChannel * channel, GIOCondition condition, gpointer data)
 		if (tasks != NULL) {
 			start_bustling();
 
-			g_list_foreach(tasks, start_task, NULL);
+			g_list_foreach(tasks, start_task, GINT_TO_POINTER(FALSE));
 		} else {
 			g_print("No tasks!\n");
 			g_main_loop_quit(global_mainloop);
