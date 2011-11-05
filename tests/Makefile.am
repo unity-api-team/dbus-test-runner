@@ -45,6 +45,12 @@ test-param: Makefile.am
 	@echo $(DBUS_RUNNER) --task \"$(srcdir)/delayrm.sh\" --parameter \"$(builddir)/bob\" --task touch --parameter \"$(builddir)/bob\" --ignore-return >> $@
 	@chmod +x $@
 
+TESTS += test-timeout
+test-timeout: Makefile.am
+	@echo "#!/bin/sh" > $@
+	@echo $(DBUS_RUNNER) --max-wait 1 --task sleep --parameter 3 --invert-return >> $@
+	@chmod +x $@
+
 TESTS += test-output
 test-output: Makefile.am
 	@echo "#!/bin/sh -e" > $@
