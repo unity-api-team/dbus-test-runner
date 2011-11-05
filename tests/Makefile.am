@@ -3,7 +3,8 @@ DBUS_RUNNER=../src/dbus-test-runner --dbus-config $(srcdir)/../data/session.conf
 TESTS = 
 DISTCLEANFILES = $(TESTS)
 check_PROGRAMS = \
-	test-own-name
+	test-own-name \
+	test-check-name
 
 TESTS += test-simple
 test-simple: Makefile.am
@@ -100,6 +101,14 @@ test_own_name_CFLAGS = \
 	$(DBUS_TEST_RUNNER_CFLAGS) \
 	-Wall -Werror
 test_own_name_LDADD = \
+	$(DBUS_TEST_RUNNER_LIBS)
+
+test_check_name_SOURCES = \
+	test-check-name.c
+test_check_name_CFLAGS = \
+	$(DBUS_TEST_RUNNER_CFLAGS) \
+	-Wall -Werror
+test_check_name_LDADD = \
 	$(DBUS_TEST_RUNNER_LIBS)
 
 
