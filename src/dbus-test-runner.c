@@ -502,8 +502,18 @@ option_param (const gchar * arg, const gchar * value, gpointer data, GError ** e
 static gboolean
 option_wait (const gchar * arg, const gchar * value, gpointer data, GError ** error)
 {
+	if (tasks == NULL) {
+		g_set_error(error, G_OPTION_ERROR, G_OPTION_ERROR_BAD_VALUE, "No task to add a wait on %s for.", value);
+		return FALSE;
+	}
 
+	task_t * task = (task_t *)tasks->data;
+	if (task->wait_for != NULL) {
+		g_set_error(error, G_OPTION_ERROR, G_OPTION_ERROR_BAD_VALUE, "Task is already waiting for %s.  Asked to wait for %s", task->wait_for, value);
+		return FALSE;
+	}
 
+	task->wait_for = g_strdup(value);
 	return TRUE;
 }
 
