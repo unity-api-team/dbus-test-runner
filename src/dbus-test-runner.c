@@ -650,6 +650,8 @@ main (int argc, char * argv[])
 	GError * error = NULL;
 	GOptionContext * context;
 
+	g_type_init();
+
 	context = g_option_context_new("- run multiple tasks under an independent DBus session bus");
 
 	g_option_context_add_main_entries(context, general_options, "dbus-runner");
