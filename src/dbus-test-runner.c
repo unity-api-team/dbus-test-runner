@@ -497,6 +497,14 @@ option_param (const gchar * arg, const gchar * value, gpointer data, GError ** e
 }
 
 static gboolean
+option_wait (const gchar * arg, const gchar * value, gpointer data, GError ** error)
+{
+
+
+	return TRUE;
+}
+
+static gboolean
 bustle_watch (const gchar * arg, const gchar * value, gpointer data, GError ** error)
 {
 	bustle_watches = g_list_append(bustle_watches, g_strdup(value));
@@ -597,6 +605,7 @@ static GOptionEntry task_options[] = {
 	{"ignore-return", 'r',  G_OPTION_FLAG_NO_ARG,     G_OPTION_ARG_CALLBACK,  option_noreturn, "Do not use the return value of the task to calculate whether the test passes or fails.", NULL},
 	{"invert-return", 'i',  G_OPTION_FLAG_NO_ARG,     G_OPTION_ARG_CALLBACK,  option_invert,   "Invert the return value of the task before calculating whether the test passes or fails.", NULL},
 	{"parameter",     'p',  0,                        G_OPTION_ARG_CALLBACK,  option_param,    "Add a parameter to the call of this utility.  May be called as many times as you'd like.", NULL},
+	{"wait-for",      'f',  0,                        G_OPTION_ARG_CALLBACK,  option_wait,     "A dbus-name that should appear on the bus before this task is started", "dbus-name"},
 	{NULL}
 };
 
