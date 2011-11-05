@@ -588,6 +588,7 @@ max_wait_hit (gpointer user_data)
 {
 	g_warning("Timing out at maximum wait of %d seconds.", max_wait);
 	g_main_loop_quit(global_mainloop);	
+	global_success = FALSE;
 	return FALSE;
 }
 

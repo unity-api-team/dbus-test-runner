@@ -2,6 +2,7 @@
 DBUS_RUNNER=../src/dbus-test-runner --dbus-config $(srcdir)/../data/session.conf
 TESTS = 
 DISTCLEANFILES = $(TESTS)
+XFAIL_TESTS =
 
 TESTS += test-simple
 test-simple: Makefile.am
@@ -48,8 +49,9 @@ test-param: Makefile.am
 TESTS += test-timeout
 test-timeout: Makefile.am
 	@echo "#!/bin/sh" > $@
-	@echo $(DBUS_RUNNER) --max-wait 1 --task sleep --parameter 3 --invert-return >> $@
+	@echo $(DBUS_RUNNER) --max-wait 1 --task sleep --parameter 3 >> $@
 	@chmod +x $@
+XFAIL_TESTS += test-timeout
 
 TESTS += test-output
 test-output: Makefile.am
