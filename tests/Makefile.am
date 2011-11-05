@@ -111,6 +111,11 @@ test_check_name_CFLAGS = \
 test_check_name_LDADD = \
 	$(DBUS_TEST_RUNNER_LIBS)
 
+TESTS += test-wait-for
+test-wait-for: Makefile.am test-own-name test-check-name
+	@echo "#!/bin/sh" > $@
+	@echo $(DBUS_RUNNER) --task $(builddir)/test-check-name --parameter org.test.name --wait-for org.test.name --task $(builddir)/test-own-name --parameter org.test.name --ignore-return >> $@
+	@chmod +x $@
 
 EXTRA_DIST = \
 	delayrm.sh \
