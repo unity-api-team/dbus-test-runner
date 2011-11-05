@@ -53,6 +53,7 @@ static GIOChannel * bustle_stderr = NULL;
 static GIOChannel * bustle_file = NULL;
 static GPid bustle_pid = 0;
 static GList * bustle_watches = NULL;
+static gboolean any_waitfors = FALSE;
 
 #define BUSTLE_ERROR_DEFAULT  "Bustle"
 static gchar * bustle_error = BUSTLE_ERROR_DEFAULT;
@@ -514,6 +515,7 @@ option_wait (const gchar * arg, const gchar * value, gpointer data, GError ** er
 	}
 
 	task->wait_for = g_strdup(value);
+	any_waitfors = TRUE;
 	return TRUE;
 }
 
