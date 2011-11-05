@@ -23,6 +23,7 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 static GList * tasks = NULL;
 static gboolean global_success = TRUE;
 static GMainLoop * global_mainloop;
+static gint max_wait = 30;
 
 typedef enum {
 	TASK_RETURN_NORMAL = 0,
@@ -588,6 +589,7 @@ static GOptionEntry general_options[] = {
 	{"dbus-config",  'd',   G_OPTION_FLAG_FILENAME,  G_OPTION_ARG_FILENAME,  &dbus_configfile, "Configuration file for newly created DBus server.  Defaults to '" DEFAULT_SESSION_CONF "'.", "config_file"},
 	{"bustle-data",  'b',   G_OPTION_FLAG_FILENAME,  G_OPTION_ARG_FILENAME,  &bustle_datafile, "A file to write out data from the bustle logger to.", "data_file"},
 	{"bustle-watch", 'w',   0,                       G_OPTION_ARG_CALLBACK,  bustle_watch,     "Defines a watch string for the bustle watcher task. (broken)", "filter"},
+	{"max-wait",     'm',   0,                       G_OPTION_ARG_INT,       &max_wait,        "The maximum amount of time the test runner will wait for the test to complete.  Default is 30 seconds.", "seconds"},
 	{NULL}
 };
 
