@@ -2,6 +2,8 @@
 DBUS_RUNNER=../src/dbus-test-runner --dbus-config $(srcdir)/../data/session.conf
 TESTS = 
 DISTCLEANFILES = $(TESTS)
+check_PROGRAMS = \
+	test-own-name
 
 TESTS += test-simple
 test-simple: Makefile.am
@@ -91,6 +93,14 @@ test-bustle-data: Makefile.am
 	@echo "--task $(srcdir)/test-bustle-list.sh \\" >> $@
 	@chmod +x $@
 DISTCLEANFILES += test-bustle-data.bustle
+
+test_own_name_SOURCES = \
+	test-own-name.c
+test_own_name_CFLAGS = \
+	$(DBUS_TEST_RUNNER_CFLAGS) \
+	-Wall -Werror
+test_own_name_LDADD = \
+	$(DBUS_TEST_RUNNER_LIBS)
 
 
 EXTRA_DIST = \
