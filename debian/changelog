@@ -1,3 +1,14 @@
+dbus-test-runner (0.0.3-0ubuntu3) precise; urgency=low
+
+  * debian/rules
+    - run tests during package build
+  * debian/control
+    - added build depends for xvfb, gvfs-backends and bustle, needed for 
+      running tests
+    - bumped standards version to 3.9.2
+
+ -- Ken VanDine <ken.vandine@canonical.com>  Mon, 14 Nov 2011 17:02:24 -0500
+
 dbus-test-runner (0.0.3-0ubuntu2) natty; urgency=low
 
   * debian/control
