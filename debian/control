@@ -1,12 +1,15 @@
 Source: dbus-test-runner
 Section: gnome
 Priority: optional
-Maintainer: Ubuntu Core Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Maintainer: Ubuntu Desktop Team <ubuntu-desktop@lists.ubuntu.com>
 Build-Depends: debhelper (>= 5.0),
                cdbs (>= 0.4.41),
                libdbus-glib-1-dev,
+               xvfb,
+               bustle,
+               gvfs-backends,
                dh-autoreconf
-Standards-Version: 3.9.1
+Standards-Version: 3.9.2
 Homepage: https://launchpad.net/dbus-test-runner
 
 Package: dbus-test-runner
@@ -15,6 +18,6 @@ Depends: ${shlibs:Depends},
          ${misc:Depends},
          bustle,
          gvfs-backends
-Description: A simple little executable for running a couple
- of programs under a new DBus session.  
-
+Description: Runs tests under a new DBus session
+ A simple little executable for running a couple of programs under a 
+ new DBus session.  

@@ -1,10 +1,36 @@
-dbus-test-runner (0.0.3-0ubuntu1~ppa1) natty; urgency=low
+dbus-test-runner (0.0.3-0ubuntu3) precise; urgency=low
 
+  * debian/rules
+    - run tests during package build
+  * debian/control
+    - added build depends for xvfb, gvfs-backends and bustle, needed for 
+      running tests
+    - bumped standards version to 3.9.2
+
+ -- Ken VanDine <ken.vandine@canonical.com>  Mon, 14 Nov 2011 17:02:24 -0500
+
+dbus-test-runner (0.0.3-0ubuntu2) natty; urgency=low
+
+  * debian/control
+    - Improved package description (LP: #719384)
+
+ -- Ken VanDine <ken.vandine@canonical.com>  Tue, 15 Feb 2011 11:58:04 -0500
+
+dbus-test-runner (0.0.3-0ubuntu1) natty; urgency=low
+
+  [ Ted Gould ]
   * New upstream release.
     * Fixing test suite
     * Printing more debug information on tasks dying
 
- -- Ted Gould <ted@ubuntu.com>  Fri, 28 Jan 2011 10:53:12 -0600
+  [ Ken VanDine ]
+  * debian/rules
+    - Disable running tests in the package for now, it causes hangs
+      when run headless
+  * debian/control
+    - Changed maintainer to ~ubuntu-desktop
+
+ -- Ken VanDine <ken.vandine@canonical.com>  Fri, 28 Jan 2011 13:27:15 -0500
 
 dbus-test-runner (0.0.2-0ubuntu1~ppa1) natty; urgency=low
 
