@@ -4,6 +4,10 @@ TESTS =
 DISTCLEANFILES = $(TESTS)
 XFAIL_TESTS =
 
+check_PROGRAMS = \
+	test-own-name \
+	test-check-name
+
 TESTS += test-simple
 test-simple: Makefile.am
 	@echo "#!/bin/sh" > $@
@@ -100,6 +104,27 @@ test-bustle-data: Makefile.am
 	@chmod +x $@
 DISTCLEANFILES += test-bustle-data.bustle
 
+test_own_name_SOURCES = \
+	test-own-name.c
+test_own_name_CFLAGS = \
+	$(DBUS_TEST_RUNNER_CFLAGS) \
+	-Wall -Werror
+test_own_name_LDADD = \
+	$(DBUS_TEST_RUNNER_LIBS)
+
+test_check_name_SOURCES = \
+	test-check-name.c
+test_check_name_CFLAGS = \
+	$(DBUS_TEST_RUNNER_CFLAGS) \
+	-Wall -Werror
+test_check_name_LDADD = \
+	$(DBUS_TEST_RUNNER_LIBS)
+
+TESTS += test-wait-for
+test-wait-for: Makefile.am test-own-name test-check-name
+	@echo "#!/bin/sh" > $@
+	@echo $(DBUS_RUNNER) --task $(builddir)/test-check-name --parameter org.test.name --wait-for org.test.name --task $(builddir)/test-own-name --parameter org.test.name --ignore-return >> $@
+	@chmod +x $@
 
 EXTRA_DIST = \
 	delayrm.sh \

@@ -19,6 +19,7 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 #include <glib.h>
+#include <gio/gio.h>
 
 static GList * tasks = NULL;
 static gboolean global_success = TRUE;
@@ -43,9 +44,11 @@ typedef struct {
 	gboolean text_die;
 	guint idle;
 	guint io_watch;
+	gchar * wait_for;
 } task_t;
 
 static void check_task_cleanup (task_t * task, gboolean force);
+static void start_task (gpointer data, gpointer userdata);
 
 static gchar * bustle_datafile = NULL;
 static GIOChannel * bustle_stdout = NULL;
@@ -53,6 +56,7 @@ static GIOChannel * bustle_stderr = NULL;
 static GIOChannel * bustle_file = NULL;
 static GPid bustle_pid = 0;
 static GList * bustle_watches = NULL;
+static gboolean any_waitfors = FALSE;
 
 #define BUSTLE_ERROR_DEFAULT  "Bustle"
 static gchar * bustle_error = BUSTLE_ERROR_DEFAULT;
@@ -264,6 +268,7 @@ check_task_cleanup (task_t * task, gboolean force)
 	}
 
 	tasks = g_list_remove(tasks, task);
+	g_free(task->wait_for);
 	g_free(task->executable);
 	g_free(task->name);
 	g_free(task);
@@ -328,11 +333,29 @@ proc_writes (GIOChannel * channel, GIOCondition condition, gpointer data)
 	return TRUE;
 }
 
-void
+static void
+wait_for_found (GDBusConnection * connection, const gchar * name, const gchar * name_owner, gpointer user_data)
+{
+	return start_task(user_data, GINT_TO_POINTER(TRUE));
+}
+
+static void
 start_task (gpointer data, gpointer userdata)
 {
+	gboolean ignore_waitfor = GPOINTER_TO_INT(userdata);
 	GError * error = NULL;
 	task_t * task = (task_t *)data;
+
+	if (!ignore_waitfor && task->wait_for != NULL) {
+		g_bus_watch_name(G_BUS_TYPE_SESSION,
+		                 task->wait_for,
+		                 G_BUS_NAME_WATCHER_FLAGS_NONE,
+		                 wait_for_found,
+		                 NULL,
+		                 task,
+		                 NULL);
+		return;
+	}
 
 	gchar ** argv;
 	argv = g_new0(gchar *, g_list_length(task->parameters) + 2);
@@ -404,7 +427,7 @@ dbus_writes (GIOChannel * channel, GIOCondition condition, gpointer data)
 		if (tasks != NULL) {
 			start_bustling();
 
-			g_list_foreach(tasks, start_task, NULL);
+			g_list_foreach(tasks, start_task, GINT_TO_POINTER(FALSE));
 		} else {
 			g_print("No tasks!\n");
 			g_main_loop_quit(global_mainloop);
@@ -426,6 +449,7 @@ option_task (const gchar * arg, const gchar * value, gpointer data, GError ** er
 	task->task_die = FALSE;
 	task->text_die = FALSE;
 	tasks = g_list_prepend(tasks, task);
+	task->wait_for = NULL;
 	return TRUE;
 }
 
@@ -494,6 +518,25 @@ option_param (const gchar * arg, const gchar * value, gpointer data, GError ** e
 	task_t * task = (task_t *)tasks->data;
 	task->parameters = g_list_append(task->parameters, g_strdup(value));
 
+	return TRUE;
+}
+
+static gboolean
+option_wait (const gchar * arg, const gchar * value, gpointer data, GError ** error)
+{
+	if (tasks == NULL) {
+		g_set_error(error, G_OPTION_ERROR, G_OPTION_ERROR_BAD_VALUE, "No task to add a wait on %s for.", value);
+		return FALSE;
+	}
+
+	task_t * task = (task_t *)tasks->data;
+	if (task->wait_for != NULL) {
+		g_set_error(error, G_OPTION_ERROR, G_OPTION_ERROR_BAD_VALUE, "Task is already waiting for %s.  Asked to wait for %s", task->wait_for, value);
+		return FALSE;
+	}
+
+	task->wait_for = g_strdup(value);
+	any_waitfors = TRUE;
 	return TRUE;
 }
 
@@ -608,6 +651,7 @@ static GOptionEntry task_options[] = {
 	{"ignore-return", 'r',  G_OPTION_FLAG_NO_ARG,     G_OPTION_ARG_CALLBACK,  option_noreturn, "Do not use the return value of the task to calculate whether the test passes or fails.", NULL},
 	{"invert-return", 'i',  G_OPTION_FLAG_NO_ARG,     G_OPTION_ARG_CALLBACK,  option_invert,   "Invert the return value of the task before calculating whether the test passes or fails.", NULL},
 	{"parameter",     'p',  0,                        G_OPTION_ARG_CALLBACK,  option_param,    "Add a parameter to the call of this utility.  May be called as many times as you'd like.", NULL},
+	{"wait-for",      'f',  0,                        G_OPTION_ARG_CALLBACK,  option_wait,     "A dbus-name that should appear on the bus before this task is started", "dbus-name"},
 	{NULL}
 };
 
@@ -616,6 +660,8 @@ main (int argc, char * argv[])
 {
 	GError * error = NULL;
 	GOptionContext * context;
+
+	g_type_init();
 
 	context = g_option_context_new("- run multiple tasks under an independent DBus session bus");
 

@@ -21,3 +21,6 @@ tests/test-bustle.filtered
 tests/test-bustle-data
 tests/test-bustle-data.bustle
 tests/test-timeout
+test-check-name
+test-own-name
+test-wait-for
