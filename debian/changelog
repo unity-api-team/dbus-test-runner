@@ -1,3 +1,11 @@
+dbus-test-runner (0.0.4-0ubuntu1~ppa1) oneiric; urgency=low
+
+  * New upstream release.
+    * Maximum time set for test to run
+    * Support waiting for a name before starting a task (LP: #814668)
+
+ -- Ted Gould <ted@ubuntu.com>  Mon, 28 Nov 2011 16:26:45 -0600
+
 dbus-test-runner (0.0.3-0ubuntu3) precise; urgency=low
 
   * debian/rules
