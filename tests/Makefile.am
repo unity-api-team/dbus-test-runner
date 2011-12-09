@@ -237,6 +237,18 @@ test-daemon-missing: Makefile.am
 	@chmod +x $@
 XFAIL_TESTS += test-daemon-missing
 
+TESTS += test-daemon-junk
+test-daemon-junk: Makefile.am test-daemon-junk-spitter
+	@echo "#!/bin/sh" > $@
+	@echo $(DBUS_RUNNER) --dbus-daemon $(builddir)/test-daemon-junk-spitter --task true >> $@
+	@chmod +x $@
+test-daemon-junk-spitter: Makefile.am
+	@echo "#!/bin/sh" > $@
+	@echo cat $(top_builddir)/src/dbus-test-runner >> $@
+	@chmod +x $@
+XFAIL_TESTS += test-daemon-junk
+DISTCLEANFILES += test-daemon-junk-spitter
+
 EXTRA_DIST = \
 	delayrm.sh \
 	test-bustle.reference \
