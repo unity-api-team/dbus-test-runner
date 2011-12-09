@@ -223,6 +223,13 @@ test-wait-for: Makefile.am test-own-name test-check-name
 	@echo $(DBUS_RUNNER) --task $(builddir)/test-check-name --parameter org.test.name --wait-for org.test.name --task $(builddir)/test-own-name --parameter org.test.name --ignore-return >> $@
 	@chmod +x $@
 
+TESTS += test-daemon-bad
+test-daemon-bad: Makefile.am
+	@echo "#!/bin/sh" > $@
+	@echo $(DBUS_RUNNER) --dbus-daemon false --task true >> $@
+	@chmod +x $@
+XFAIL_TESTS += test-daemon-bad
+
 EXTRA_DIST = \
 	delayrm.sh \
 	test-bustle.reference \
