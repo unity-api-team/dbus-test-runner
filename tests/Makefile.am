@@ -175,6 +175,13 @@ test-bustle: Makefile.am test-bustle.reference
 	@chmod +x $@
 DISTCLEANFILES += test-bustle.bustle test-bustle.filtered
 
+TESTS += test-bustle-bad-file
+test-bustle-bad-file: Makefile.am
+	@echo "#!/bin/sh -e" > $@
+	@echo $(DBUS_RUNNER) --bustle-data \"$(builddir)\" --task true >> $@
+	@chmod +x $@
+XFAIL_TESTS += test-bustle-bad-file
+
 TESTS += test-bustle-data
 test-bustle-data: Makefile.am
 	@echo "#!/bin/sh -e" > $@
