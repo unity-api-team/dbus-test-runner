@@ -63,6 +63,69 @@ test-timeout-disable: Makefile.am
 	@echo $(DBUS_RUNNER) --max-wait 0 --task true >> $@
 	@chmod +x $@
 
+TESTS += test-param-only-name
+test-param-only-name: Makefile.am
+	@echo "#!/bin/sh" > $@
+	@echo $(DBUS_RUNNER) --task-name Name >> $@
+	@chmod +x $@
+XFAIL_TESTS += test-param-only-name
+
+TESTS += test-param-dup-name
+test-param-dup-name: Makefile.am
+	@echo "#!/bin/sh" > $@
+	@echo $(DBUS_RUNNER) --task true --task-name Name --task-name Name2 >> $@
+	@chmod +x $@
+XFAIL_TESTS += test-param-dup-name
+
+TESTS += test-param-only-ignore
+test-param-only-ignore: Makefile.am
+	@echo "#!/bin/sh" > $@
+	@echo $(DBUS_RUNNER) --ignore-return >> $@
+	@chmod +x $@
+XFAIL_TESTS += test-param-only-ignore
+
+TESTS += test-param-only-invert
+test-param-only-invert: Makefile.am
+	@echo "#!/bin/sh" > $@
+	@echo $(DBUS_RUNNER) --invert-return >> $@
+	@chmod +x $@
+XFAIL_TESTS += test-param-only-invert
+
+TESTS += test-param-multi-return-invert
+test-param-multi-return-invert: Makefile.am
+	@echo "#!/bin/sh" > $@
+	@echo $(DBUS_RUNNER) --task true --ignore-return --invert-return >> $@
+	@chmod +x $@
+XFAIL_TESTS += test-param-multi-return-invert
+
+TESTS += test-param-multi-return-ignore
+test-param-multi-return-ignore: Makefile.am
+	@echo "#!/bin/sh" > $@
+	@echo $(DBUS_RUNNER) --task true --invert-return --ignore-return >> $@
+	@chmod +x $@
+XFAIL_TESTS += test-param-multi-return-ignore
+
+TESTS += test-param-only-param
+test-param-only-param: Makefile.am
+	@echo "#!/bin/sh" > $@
+	@echo $(DBUS_RUNNER) --parameter bob >> $@
+	@chmod +x $@
+XFAIL_TESTS += test-param-only-param
+
+TESTS += test-param-only-wait
+test-param-only-wait: Makefile.am
+	@echo "#!/bin/sh" > $@
+	@echo $(DBUS_RUNNER) --wait-for org.test.test >> $@
+	@chmod +x $@
+XFAIL_TESTS += test-param-only-wait
+
+TESTS += test-param-multi-wait
+test-param-multi-wait: Makefile.am
+	@echo "#!/bin/sh" > $@
+	@echo $(DBUS_RUNNER) --task true --wait-for org.test.test --wait-for org.test.test2 >> $@
+	@chmod +x $@
+XFAIL_TESTS += test-param-multi-wait
+
 TESTS += test-output
 test-output: Makefile.am
 	@echo "#!/bin/sh -e" > $@
