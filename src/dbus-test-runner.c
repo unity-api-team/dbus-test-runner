@@ -693,7 +693,12 @@ main (int argc, char * argv[])
 	                         NULL, /* stdin */
 	                         &dbus_stdout, /* stdout */
 	                         NULL, /* stderr */
-	                         NULL); /* error */
+	                         &error); /* error */
+
+	if (error != NULL) {
+		g_error("Unable to start dbus daemon: %s", error->message);
+		return 1;
+	}
 
 	GIOChannel * dbus_io = g_io_channel_unix_new(dbus_stdout);
 	g_io_add_watch(dbus_io,
