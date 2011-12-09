@@ -133,6 +133,13 @@ test-param-bad: Makefile.am
 	@chmod +x $@
 XFAIL_TESTS += test-param-bad
 
+TESTS += test-no-tasks
+test-no-tasks: Makefile.am
+	@echo "#!/bin/sh" > $@
+	@echo $(DBUS_RUNNER) >> $@
+	@chmod +x $@
+XFAIL_TESTS += test-no-tasks
+
 TESTS += test-output
 test-output: Makefile.am
 	@echo "#!/bin/sh -e" > $@
