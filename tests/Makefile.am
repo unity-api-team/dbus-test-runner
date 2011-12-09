@@ -126,6 +126,13 @@ test-param-multi-wait: Makefile.am
 	@chmod +x $@
 XFAIL_TESTS += test-param-multi-wait
 
+TESTS += test-param-bad
+test-param-bad: Makefile.am
+	@echo "#!/bin/sh" > $@
+	@echo $(DBUS_RUNNER) --this-is-most-surly-not-a-real-parameter >> $@
+	@chmod +x $@
+XFAIL_TESTS += test-param-bad
+
 TESTS += test-output
 test-output: Makefile.am
 	@echo "#!/bin/sh -e" > $@

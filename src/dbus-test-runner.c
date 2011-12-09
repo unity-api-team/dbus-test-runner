@@ -55,7 +55,6 @@ static GIOChannel * bustle_stdout = NULL;
 static GIOChannel * bustle_stderr = NULL;
 static GIOChannel * bustle_file = NULL;
 static GPid bustle_pid = 0;
-static GList * bustle_watches = NULL;
 static gboolean any_waitfors = FALSE;
 
 #define BUSTLE_ERROR_DEFAULT  "Bustle"
@@ -137,13 +136,9 @@ start_bustling (void)
 	gint bustle_stdout_num;
 	gint bustle_stderr_num;
 	
-	gchar ** bustle_monitor = g_new0(gchar *, g_list_length(bustle_watches) + 3);
+	gchar ** bustle_monitor = g_new0(gchar *, 3);
 	bustle_monitor[0] = "bustle-dbus-monitor";
 	bustle_monitor[1] = "--session";
-	int i;
-	for (i = 0; i < g_list_length(bustle_watches); i++) {
-		bustle_monitor[i + 2] = (gchar *)g_list_nth(bustle_watches, i)->data;
-	}
 
 	g_spawn_async_with_pipes(g_get_current_dir(),
 	                         bustle_monitor, /* argv */
@@ -540,13 +535,6 @@ option_wait (const gchar * arg, const gchar * value, gpointer data, GError ** er
 	return TRUE;
 }
 
-static gboolean
-bustle_watch (const gchar * arg, const gchar * value, gpointer data, GError ** error)
-{
-	bustle_watches = g_list_append(bustle_watches, g_strdup(value));
-	return TRUE;
-}
-
 static void
 length_finder (gpointer data, gpointer udata)
 {
@@ -640,7 +628,6 @@ static gchar * dbus_configfile = NULL;
 static GOptionEntry general_options[] = {
 	{"dbus-config",  'd',   0,                       G_OPTION_ARG_FILENAME,  &dbus_configfile, "Configuration file for newly created DBus server.  Defaults to '" DEFAULT_SESSION_CONF "'.", "config_file"},
 	{"bustle-data",  'b',   0,                       G_OPTION_ARG_FILENAME,  &bustle_datafile, "A file to write out data from the bustle logger to.", "data_file"},
-	{"bustle-watch", 'w',   0,                       G_OPTION_ARG_CALLBACK,  bustle_watch,     "Defines a watch string for the bustle watcher task. (broken)", "filter"},
 	{"max-wait",     'm',   0,                       G_OPTION_ARG_INT,       &max_wait,        "The maximum amount of time the test runner will wait for the test to complete.  Default is 30 seconds.", "seconds"},
 	{NULL}
 };
