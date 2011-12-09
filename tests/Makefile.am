@@ -182,6 +182,13 @@ test-bustle-bad-file: Makefile.am
 	@chmod +x $@
 XFAIL_TESTS += test-bustle-bad-file
 
+TESTS += test-bustle-bad-monitor
+test-bustle-bad-monitor: Makefile.am
+	@echo "#!/bin/sh -e" > $@
+	@echo $(DBUS_RUNNER) --bustle-monitor probably-doesnt-exist --bustle-data \"$(builddir)\" --task true >> $@
+	@chmod +x $@
+XFAIL_TESTS += test-bustle-bad-monitor
+
 TESTS += test-bustle-data
 test-bustle-data: Makefile.am
 	@echo "#!/bin/sh -e" > $@
