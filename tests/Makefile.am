@@ -57,6 +57,12 @@ test-timeout: Makefile.am
 	@chmod +x $@
 XFAIL_TESTS += test-timeout
 
+TESTS += test-timeout-disable
+test-timeout-disable: Makefile.am
+	@echo "#!/bin/sh" > $@
+	@echo $(DBUS_RUNNER) --max-wait 0 --task true >> $@
+	@chmod +x $@
+
 TESTS += test-output
 test-output: Makefile.am
 	@echo "#!/bin/sh -e" > $@
