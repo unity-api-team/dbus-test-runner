@@ -178,16 +178,26 @@ DISTCLEANFILES += test-bustle.bustle test-bustle.filtered
 TESTS += test-bustle-bad-file
 test-bustle-bad-file: Makefile.am
 	@echo "#!/bin/sh -e" > $@
-	@echo $(DBUS_RUNNER) --bustle-data \"$(builddir)\" --task true >> $@
+	@echo $(DBUS_RUNNER) --bustle-data \"$(builddir)/test-bustle-bad-file.bustle\" --task true >> $@
 	@chmod +x $@
 XFAIL_TESTS += test-bustle-bad-file
+DISTCLEANFILES += test-bustle-bad-file.bustle
 
 TESTS += test-bustle-bad-monitor
 test-bustle-bad-monitor: Makefile.am
 	@echo "#!/bin/sh -e" > $@
-	@echo $(DBUS_RUNNER) --bustle-monitor probably-doesnt-exist --bustle-data \"$(builddir)\" --task true >> $@
+	@echo $(DBUS_RUNNER) --bustle-monitor probably-doesnt-exist --bustle-data \"$(builddir)/test-bustle-bad-monitor.bustle\" --task true >> $@
 	@chmod +x $@
 XFAIL_TESTS += test-bustle-bad-monitor
+DISTCLEANFILES += test-bustle-bad-monitor.bustle
+
+TESTS += test-bustle-bad-monitor-error
+test-bustle-bad-monitor-error: Makefile.am
+	@echo "#!/bin/sh -e" > $@
+	@echo $(DBUS_RUNNER) --bustle-monitor sleep --bustle-data \"$(builddir)/test-bustle-bad-monitor-error.bustle\" --task true >> $@
+	@chmod +x $@
+XFAIL_TESTS += test-bustle-bad-monitor-error
+DISTCLEANFILES += test-bustle-bad-monitor-error.bustle
 
 TESTS += test-bustle-data
 test-bustle-data: Makefile.am
