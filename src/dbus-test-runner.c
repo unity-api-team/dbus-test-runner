@@ -627,8 +627,10 @@ max_wait_hit (gpointer user_data)
 }
 
 static gchar * dbus_configfile = NULL;
+static gchar * dbus_daemon = NULL;
 
 static GOptionEntry general_options[] = {
+	{"dbus-daemon",  0,     0,                       G_OPTION_ARG_FILENAME,  &dbus_daemon,     "Path to the DBus deamon to use.  Defaults to 'dbus-daemon'.", "executable"},
 	{"dbus-config",  'd',   0,                       G_OPTION_ARG_FILENAME,  &dbus_configfile, "Configuration file for newly created DBus server.  Defaults to '" DEFAULT_SESSION_CONF "'.", "config_file"},
 	{"bustle-data",  'b',   0,                       G_OPTION_ARG_FILENAME,  &bustle_datafile, "A file to write out data from the bustle logger to.", "data_file"},
 	{"max-wait",     'm',   0,                       G_OPTION_ARG_INT,       &max_wait,        "The maximum amount of time the test runner will wait for the test to complete.  Default is 30 seconds.", "seconds"},
@@ -673,10 +675,14 @@ main (int argc, char * argv[])
 		dbus_configfile = DEFAULT_SESSION_CONF;
 	}
 
+	if (dbus_daemon == NULL) {
+		dbus_daemon = "dbus-daemon";
+	}
+
 	gint dbus_stdout;
 	GPid dbus;
 	gchar * blank[1] = {NULL};
-	gchar * dbus_startup[] = {"dbus-daemon", "--config-file", dbus_configfile, "--print-address", NULL};
+	gchar * dbus_startup[] = {dbus_daemon, "--config-file", dbus_configfile, "--print-address", NULL};
 	g_spawn_async_with_pipes(g_get_current_dir(),
 	                         dbus_startup, /* argv */
 	                         blank, /* envp */
