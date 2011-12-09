@@ -230,6 +230,13 @@ test-daemon-bad: Makefile.am
 	@chmod +x $@
 XFAIL_TESTS += test-daemon-bad
 
+TESTS += test-daemon-missing
+test-daemon-missing: Makefile.am
+	@echo "#!/bin/sh" > $@
+	@echo $(DBUS_RUNNER) --dbus-daemon probably-doesnt-exist --task true >> $@
+	@chmod +x $@
+XFAIL_TESTS += test-daemon-missing
+
 EXTRA_DIST = \
 	delayrm.sh \
 	test-bustle.reference \
