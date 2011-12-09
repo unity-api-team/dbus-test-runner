@@ -130,6 +130,8 @@ start_bustling (void)
 		g_error_free(error);
 		g_free(bustle_datafile);
 		bustle_datafile = NULL;
+		global_success = FALSE;
+		g_main_loop_quit(global_mainloop);
 		return;
 	}
 
