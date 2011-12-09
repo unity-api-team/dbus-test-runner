@@ -278,6 +278,21 @@ check_task_cleanup (task_t * task, gboolean force)
 }
 
 static void
+dbus_watcher (GPid pid, gint status, gpointer data)
+{
+	g_error("DBus Daemon exited abruptly!");
+
+	global_success = FALSE;
+	g_main_loop_quit(global_mainloop);
+
+	if (pid != 0) {
+		g_spawn_close_pid(pid);
+	}
+
+	return;
+}
+
+static void
 proc_watcher (GPid pid, gint status, gpointer data)
 {
 	task_t * task = (task_t *)data;
@@ -686,7 +701,7 @@ main (int argc, char * argv[])
 	g_spawn_async_with_pipes(g_get_current_dir(),
 	                         dbus_startup, /* argv */
 	                         blank, /* envp */
-	                         G_SPAWN_SEARCH_PATH, /* flags */
+	                         G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD, /* flags */
 	                         NULL, /* child setup func */
 	                         NULL, /* child setup data */
 							 &dbus, /* PID */
@@ -699,6 +714,8 @@ main (int argc, char * argv[])
 		g_error("Unable to start dbus daemon: %s", error->message);
 		return 1;
 	}
+
+	guint dbus_watch = g_child_watch_add(dbus, dbus_watcher, NULL);
 
 	GIOChannel * dbus_io = g_io_channel_unix_new(dbus_stdout);
 	g_io_add_watch(dbus_io,
@@ -715,6 +732,7 @@ main (int argc, char * argv[])
 
 	stop_bustling();
 
+	g_source_remove(dbus_watch); /* Let's not error when we want to kill it */
 	gchar * killline = g_strdup_printf("kill -9 %d", dbus);
 	g_spawn_command_line_sync(killline, NULL, NULL, NULL, NULL);
 	g_free(killline);
