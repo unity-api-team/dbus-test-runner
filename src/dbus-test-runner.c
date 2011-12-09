@@ -425,6 +425,7 @@ dbus_writes (GIOChannel * channel, GIOCondition condition, gpointer data)
 			g_list_foreach(tasks, start_task, GINT_TO_POINTER(FALSE));
 		} else {
 			g_print("No tasks!\n");
+			global_success = FALSE;
 			g_main_loop_quit(global_mainloop);
 		}
 	}
