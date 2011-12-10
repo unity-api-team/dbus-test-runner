@@ -50,7 +50,7 @@ typedef struct {
 static void check_task_cleanup (task_t * task, gboolean force);
 static void start_task (gpointer data, gpointer userdata);
 
-static gchar * bustle_mon = NULL;
+static gchar * bustle_cmd = NULL;
 static gchar * bustle_datafile = NULL;
 static GIOChannel * bustle_stdout = NULL;
 static GIOChannel * bustle_stderr = NULL;
@@ -127,7 +127,7 @@ start_bustling (void)
 	bustle_file = g_io_channel_new_file(bustle_datafile, "w", &error);
 
 	if (error != NULL) {
-		g_warning("Unable to open bustle file '%s': %s", bustle_datafile, error->message);
+		g_error("Unable to open bustle file '%s': %s", bustle_datafile, error->message);
 		g_error_free(error);
 		g_free(bustle_datafile);
 		bustle_datafile = NULL;
@@ -140,7 +140,7 @@ start_bustling (void)
 	gint bustle_stderr_num;
 	
 	gchar ** bustle_monitor = g_new0(gchar *, 3);
-	bustle_monitor[0] = (gchar *)bustle_mon;
+	bustle_monitor[0] = (gchar *)bustle_cmd;
 	bustle_monitor[1] = "--session";
 
 	g_spawn_async_with_pipes(g_get_current_dir(),
@@ -157,7 +157,10 @@ start_bustling (void)
 	                         &error); /* error */
 
 	if (error != NULL) {
-		g_warning("Unable to start bustling data: %s", error->message);
+		g_error("Unable to start bustling data: %s", error->message);
+		g_error_free(error);
+		global_success = FALSE;
+		g_main_loop_quit(global_mainloop);
 		return;
 	}
 
@@ -440,7 +443,11 @@ dbus_writes (GIOChannel * channel, GIOCondition condition, gpointer data)
 		if (tasks != NULL) {
 			start_bustling();
 
-			g_list_foreach(tasks, start_task, GINT_TO_POINTER(FALSE));
+			/* If we're still in a place where we can succeed, then
+			   we should continue.  Otherwise fail. */
+			if (global_success) {
+				g_list_foreach(tasks, start_task, GINT_TO_POINTER(FALSE));
+			}
 		} else {
 			g_print("No tasks!\n");
 			global_success = FALSE;
@@ -648,7 +655,7 @@ static gchar * dbus_daemon = NULL;
 static GOptionEntry general_options[] = {
 	{"dbus-daemon",  0,     0,                       G_OPTION_ARG_FILENAME,  &dbus_daemon,     "Path to the DBus deamon to use.  Defaults to 'dbus-daemon'.", "executable"},
 	{"dbus-config",  'd',   0,                       G_OPTION_ARG_FILENAME,  &dbus_configfile, "Configuration file for newly created DBus server.  Defaults to '" DEFAULT_SESSION_CONF "'.", "config_file"},
-	{"bustle-monitor", 0,   0,                       G_OPTION_ARG_FILENAME,  &bustle_mon,      "Path to the Bustle DBus Monitor to use.  Defaults to 'bustle-dbus-monitor'.", "executable"},
+	{"bustle-monitor", 0,   0,                       G_OPTION_ARG_FILENAME,  &bustle_cmd,      "Path to the Bustle DBus Monitor to use.  Defaults to 'bustle-dbus-monitor'.", "executable"},
 	{"bustle-data",  'b',   0,                       G_OPTION_ARG_FILENAME,  &bustle_datafile, "A file to write out data from the bustle logger to.", "data_file"},
 	{"max-wait",     'm',   0,                       G_OPTION_ARG_INT,       &max_wait,        "The maximum amount of time the test runner will wait for the test to complete.  Default is 30 seconds.", "seconds"},
 	{NULL}
@@ -696,8 +703,8 @@ main (int argc, char * argv[])
 		dbus_daemon = "dbus-daemon";
 	}
 
-	if (bustle_mon == NULL) {
-		bustle_mon = "bustle-dbus-monitor";
+	if (bustle_cmd == NULL) {
+		bustle_cmd = "bustle-dbus-monitor";
 	}
 
 	gint dbus_stdout;
