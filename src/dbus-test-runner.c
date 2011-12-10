@@ -49,9 +49,11 @@ typedef struct {
 
 static void check_task_cleanup (task_t * task, gboolean force);
 static void start_task (gpointer data, gpointer userdata);
+static void bustle_watcher (GPid pid, gint status, gpointer data);
 
 static gchar * bustle_cmd = NULL;
 static gchar * bustle_datafile = NULL;
+static guint bustle_watch = 0;
 static GIOChannel * bustle_stdout = NULL;
 static GIOChannel * bustle_stderr = NULL;
 static GIOChannel * bustle_file = NULL;
@@ -147,7 +149,7 @@ start_bustling (void)
 	                         bustle_monitor, /* argv */
 	                         NULL, /* envp */
 	                         /* G_SPAWN_SEARCH_PATH | G_SPAWN_STDERR_TO_DEV_NULL, */ /* flags */
-	                         G_SPAWN_SEARCH_PATH, /* flags */
+	                         G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD, /* flags */
 	                         NULL, /* child setup func */
 	                         NULL, /* child setup data */
 	                         &bustle_pid, /* PID */
@@ -165,6 +167,7 @@ start_bustling (void)
 	}
 
 	g_debug("Starting bustle monitor.  PID: %d", bustle_pid);
+	bustle_watch = g_child_watch_add(bustle_pid, bustle_watcher, NULL);
 
 	bustle_stdout = g_io_channel_unix_new(bustle_stdout_num);
 	g_io_add_watch(bustle_stdout,
@@ -186,6 +189,10 @@ stop_bustling (void)
 {
 	if (bustle_datafile == NULL) {
 		return;
+	}
+
+	if (bustle_watch != 0) {
+		g_source_remove(bustle_watch);
 	}
 
 	gchar * killline = g_strdup_printf("kill -INT %d", bustle_pid);
@@ -285,6 +292,21 @@ static void
 dbus_watcher (GPid pid, gint status, gpointer data)
 {
 	g_error("DBus Daemon exited abruptly!");
+
+	global_success = FALSE;
+	g_main_loop_quit(global_mainloop);
+
+	if (pid != 0) {
+		g_spawn_close_pid(pid);
+	}
+
+	return;
+}
+
+static void
+bustle_watcher (GPid pid, gint status, gpointer data)
+{
+	g_error("Bustle Monitor exited abruptly!");
 
 	global_success = FALSE;
 	g_main_loop_quit(global_mainloop);
