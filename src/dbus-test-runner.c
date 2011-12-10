@@ -161,6 +161,7 @@ start_bustling (void)
 	if (error != NULL) {
 		g_critical("Unable to start bustling data: %s", error->message);
 		g_error_free(error);
+		bustle_pid = 0;
 		global_success = FALSE;
 		g_main_loop_quit(global_mainloop);
 		return;
@@ -193,6 +194,10 @@ stop_bustling (void)
 
 	if (bustle_watch != 0) {
 		g_source_remove(bustle_watch);
+	}
+
+	if (bustle_pid == 0) {
+		return;
 	}
 
 	gchar * killline = g_strdup_printf("kill -INT %d", bustle_pid);
