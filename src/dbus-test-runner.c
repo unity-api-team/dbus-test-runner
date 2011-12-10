@@ -129,7 +129,7 @@ start_bustling (void)
 	bustle_file = g_io_channel_new_file(bustle_datafile, "w", &error);
 
 	if (error != NULL) {
-		g_error("Unable to open bustle file '%s': %s", bustle_datafile, error->message);
+		g_critical("Unable to open bustle file '%s': %s", bustle_datafile, error->message);
 		g_error_free(error);
 		g_free(bustle_datafile);
 		bustle_datafile = NULL;
@@ -159,7 +159,7 @@ start_bustling (void)
 	                         &error); /* error */
 
 	if (error != NULL) {
-		g_error("Unable to start bustling data: %s", error->message);
+		g_critical("Unable to start bustling data: %s", error->message);
 		g_error_free(error);
 		global_success = FALSE;
 		g_main_loop_quit(global_mainloop);
@@ -291,7 +291,7 @@ check_task_cleanup (task_t * task, gboolean force)
 static void
 dbus_watcher (GPid pid, gint status, gpointer data)
 {
-	g_error("DBus Daemon exited abruptly!");
+	g_critical("DBus Daemon exited abruptly!");
 
 	global_success = FALSE;
 	g_main_loop_quit(global_mainloop);
@@ -306,7 +306,7 @@ dbus_watcher (GPid pid, gint status, gpointer data)
 static void
 bustle_watcher (GPid pid, gint status, gpointer data)
 {
-	g_error("Bustle Monitor exited abruptly!");
+	g_critical("Bustle Monitor exited abruptly!");
 
 	global_success = FALSE;
 	g_main_loop_quit(global_mainloop);
@@ -442,7 +442,7 @@ gboolean
 dbus_writes (GIOChannel * channel, GIOCondition condition, gpointer data)
 {
 	if (condition & G_IO_ERR) {
-		g_error("DBus writing failure!");
+		g_critical("DBus writing failure!");
 		return FALSE;
 	}
 
@@ -746,7 +746,7 @@ main (int argc, char * argv[])
 	                         &error); /* error */
 
 	if (error != NULL) {
-		g_error("Unable to start dbus daemon: %s", error->message);
+		g_critical("Unable to start dbus daemon: %s", error->message);
 		return 1;
 	}
 
