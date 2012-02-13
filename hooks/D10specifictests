@@ -1,0 +1,39 @@
+#!/bin/sh
+
+# Not needed for every project, but better than specifying for every of each
+
+# Expand package selection to universe
+echo "deb http://de.archive.ubuntu.com/ubuntu/ precise universe" >> /etc/apt/sources.list
+echo "deb http://de.archive.ubuntu.com/ubuntu/ precise-updates universe" >> /etc/apt/sources.list
+echo "deb http://de.archive.ubuntu.com/ubuntu/ precise-backports main restricted universe multiverse" >> /etc/apt/sources.list
+apt-get update
+
+# Install packages
+apt-get install -y \
+    git \ # For accessing git repos (xorg-gtest)
+    wget \ # For downloading gcovr
+    lcov \ # For coverage reporting
+    sudo \ # Required for some testing setups
+    check \ # Required to _unlock_ some testing functionality
+    automake \ # Well ...
+    build-essential \ # See before
+    libtool \ # See before
+    pkg-config \ # See before
+    libgtest-dev \ # Google Test 
+    google-mock \ # Google Mock 
+    dbus-test-runner \ # For DBus testing
+    xserver-xorg-dev \ # For projects depending on xorg
+    xserver-xorg-video-dummy # For xorg-gtest
+
+# Download gcovr to report coverage result to jenkins
+cd /usr/bin
+wget https://software.sandia.gov/trac/fast/export/2727/gcovr/trunk/scripts/gcovr
+chmod +x gcovr
+
+# xorg-gtest for dummy X testing
+cd /tmp
+git clone git://people.freedesktop.org/~cndougla/xorg-gtest
+cd xorg-gtest
+./autogen.sh
+./configure --prefix=/usr
+make && make install

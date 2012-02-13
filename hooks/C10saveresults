@@ -1,0 +1,5 @@
+#!/bin/sh
+
+make coverage-html
+# Save the test & coverage results
+cp -R coveragereport `cat /tmp/buildd/ReportDir`
