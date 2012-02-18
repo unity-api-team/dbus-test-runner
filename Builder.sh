@@ -2,9 +2,9 @@
 
 version_major=0
 version_minor=0
-version_patch=1
+version_patch=2
 
-echo "PBuilderScript Ver. $version_major.$version_minor.$version_patch"
+echo "BuilderScript Ver. $version_major.$version_minor.$version_patch"
 
 main_branch=
 packaging_branch=
@@ -12,8 +12,9 @@ work_dir=
 config_file=
 result_dir=
 hook_dir=
+chrooted=""
 
-while getopts "m:p:h:w:r:" opt; do
+while getopts "m:p:h:w:r:c" opt; do
     case $opt in
 	m)
 	    echo "(m)ain branch: $OPTARG" >&2
@@ -38,6 +39,10 @@ while getopts "m:p:h:w:r:" opt; do
 	r)
 	    echo "(r)esult dir: $OPTARG" >&2
 	    result_dir=$OPTARG
+	    ;;
+	c)
+	    echo "Considering (c)hrooted build" >&2
+	    chrooted=""
 	    ;;
 	\p)
 	    echo "Invalid option: -$OPTARG" >&2
@@ -93,14 +98,25 @@ tar -czf ${sourcename}_${version}.orig.tar.gz trunk
 
 cd trunk
 
-# Make our result dir known to pbuilder env
-echo "$result_dir" > 'ReportDir'
-
-pdebuild -- \
---inputfile "ReportDir" \
---hookdir "$hook_dir" \
---bindmounts "$result_dir"
-
+if [ -z "$chrooted" ]; then
+    export BUILD_DIR=$(readlink -f ".")
+    export RESULT_DIR=$result_dir
+    
+    cd "$hook_dir"
+    ./D00dependency_hooks
+    cd "$BUILD_DIR"
+    debuild -uc -us -d
+    cd "$hook_dir"
+    "./B00dependency_hooks"
+    cd "$BUILD_DIR"
+else
+    # Make our result dir known to pbuilder env
+    echo "$result_dir" > 'ReportDir'
+    pdebuild -- \
+	--inputfile "ReportDir" \
+	--hookdir "$hook_dir" \
+	--bindmounts "$result_dir"
+fi
 
 rm -f -- "ReportDir"
 
