@@ -1,11 +1,11 @@
 
-AC_INIT(dbus-test-runner, 0.0.4, ted@canonical.com)
+AC_INIT(dbus-test-runner, 0.0.5, ted@canonical.com)
 AC_COPYRIGHT([Copyright 2009 Canonical])
 
 AC_PREREQ(2.53)
 
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(dbus-test-runner, 0.0.4)
+AM_INIT_AUTOMAKE(dbus-test-runner, 0.0.5)
 
 AM_MAINTAINER_MODE
 
@@ -47,6 +47,16 @@ AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE, "$GETTEXT_PACKAGE", [Name of the default get
 AM_GLIB_GNU_GETTEXT
 
 ###########################
+# gcov coverage reporting
+###########################
+
+m4_include([m4/gcov.m4])
+AC_TDD_GCOV
+AC_SUBST(COVERAGE_CFLAGS)
+AC_SUBST(COVERAGE_CXXFLAGS)
+AC_SUBST(COVERAGE_LDFLAGS)
+
+###########################
 # Files
 ###########################
 
@@ -67,5 +77,7 @@ AC_MSG_NOTICE([
 dbus-test-runner Configuration:
 
 	Prefix:                 $prefix
+
+	Coverage reporting:     $use_gcov
 ])
 
