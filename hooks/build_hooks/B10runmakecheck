@@ -1,7 +1,12 @@
 #!/bin/sh
 
+if [ -z "$BUILD_DIR" ]; then
+    BUILD_DIR=/tmp/buildd/*/debian/..
+fi
+
 # Jump to build directory
-cd /tmp/buildd/*/debian/..
+cd "$BUILD_DIR"
+
 if [ -f CMakeLists.txt ]; then
     cd obj-`dpkg-architecture -qDEB_BUILD_GNU_TYPE`
 fi
@@ -24,10 +29,16 @@ result=$?
 # Generate coverage results
 make coverage-html
 make coverage-xml
+
+# Check for results dir
+if [ -z "$RESULT_DIR" ]; then
+    RESULT_DIR=`cat /tmp/buildd/ReportDir`
+fi
+
 # Save the test & coverage results
-cp test/test_detail.xml `cat /tmp/buildd/ReportDir`
-cp coverage.xml `cat /tmp/buildd/ReportDir`
-cp -R coveragereport `cat /tmp/buildd/ReportDir`
+cp test/test_detail.xml "$RESULT_DIR"
+cp coverage.xml "$RESULT_DIR"
+cp -R coveragereport "$RESULT_DIR"
 
 exit $result
 
