@@ -193,10 +193,10 @@ DISTCLEANFILES += test-bustle-bad-monitor.bustle
 TESTS += test-bustle-bad-monitor-error
 test-bustle-bad-monitor-error: Makefile.am
 	@echo "#!/bin/sh -e" > $@
-	@echo $(DBUS_RUNNER) --bustle-monitor sleep --bustle-data \"$(builddir)/test-bustle-bad-monitor-error.bustle\" --task true >> $@
+	@echo $(DBUS_RUNNER) --bustle-monitor false --bustle-data \"$(builddir)/test-bustle-bad-monitor-error.bustle\" --task true >> $@
 	@chmod +x $@
 XFAIL_TESTS += test-bustle-bad-monitor-error
-DISTCLEANFILES += test-bustle-bad-monitor-error.bustle
+DISTCLEANFILES += test-bustle-bad-monitor-error.bustle sleep-wrapper
 
 TESTS += test-bustle-data
 test-bustle-data: Makefile.am
