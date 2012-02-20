@@ -1,4 +1,4 @@
-dbus-test-runner (0.0.4-0ubuntu1~ppa1) oneiric; urgency=low
+dbus-test-runner (0.0.4-0ubuntu1) precise; urgency=low
 
   * New upstream release.
     * Maximum time set for test to run
