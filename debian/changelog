@@ -1,4 +1,4 @@
-dbus-test-runner (0.0.5-0ubuntu1~ppa1) UNRELEASED; urgency=low
+dbus-test-runner (0.0.5-0ubuntu1~ppa1) precise; urgency=low
 
   * New upstream release.
     * Improved test suite and small fixes to enable it
@@ -6,7 +6,7 @@ dbus-test-runner (0.0.5-0ubuntu1~ppa1) UNRELEASED; urgency=low
   * Upstream Merge
     * Fixing the bustle failure test
 
- -- Ted Gould <ted@ubuntu.com>  Mon, 20 Feb 2012 14:18:34 -0600
+ -- Ted Gould <ted@ubuntu.com>  Mon, 20 Feb 2012 14:19:33 -0600
 
 dbus-test-runner (0.0.4-0ubuntu1) precise; urgency=low
 
