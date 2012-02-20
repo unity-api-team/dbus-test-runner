@@ -28,10 +28,6 @@ while getopts "m:p:h:w:r:c" opt; do
 	    echo "(w)orking dir: $OPTARG" >&2
 	    work_dir=$OPTARG
 	    ;;
-	c)
-	    echo "(c)onfig file: $OPTARG" >&2
-	    config_file=$OPTARG
-	    ;;
 	h)
 	    echo "(h)ook dir: $OPTARG" >&2
 	    hook_dir=$OPTARG
