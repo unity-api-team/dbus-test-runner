@@ -49,13 +49,15 @@ typedef struct {
 
 static void check_task_cleanup (task_t * task, gboolean force);
 static void start_task (gpointer data, gpointer userdata);
+static void bustle_watcher (GPid pid, gint status, gpointer data);
 
+static gchar * bustle_cmd = NULL;
 static gchar * bustle_datafile = NULL;
+static guint bustle_watch = 0;
 static GIOChannel * bustle_stdout = NULL;
 static GIOChannel * bustle_stderr = NULL;
 static GIOChannel * bustle_file = NULL;
 static GPid bustle_pid = 0;
-static GList * bustle_watches = NULL;
 static gboolean any_waitfors = FALSE;
 
 #define BUSTLE_ERROR_DEFAULT  "Bustle"
@@ -127,29 +129,27 @@ start_bustling (void)
 	bustle_file = g_io_channel_new_file(bustle_datafile, "w", &error);
 
 	if (error != NULL) {
-		g_warning("Unable to open bustle file '%s': %s", bustle_datafile, error->message);
+		g_critical("Unable to open bustle file '%s': %s", bustle_datafile, error->message);
 		g_error_free(error);
 		g_free(bustle_datafile);
 		bustle_datafile = NULL;
+		global_success = FALSE;
+		g_main_loop_quit(global_mainloop);
 		return;
 	}
 
 	gint bustle_stdout_num;
 	gint bustle_stderr_num;
 	
-	gchar ** bustle_monitor = g_new0(gchar *, g_list_length(bustle_watches) + 3);
-	bustle_monitor[0] = "bustle-dbus-monitor";
+	gchar ** bustle_monitor = g_new0(gchar *, 3);
+	bustle_monitor[0] = (gchar *)bustle_cmd;
 	bustle_monitor[1] = "--session";
-	int i;
-	for (i = 0; i < g_list_length(bustle_watches); i++) {
-		bustle_monitor[i + 2] = (gchar *)g_list_nth(bustle_watches, i)->data;
-	}
 
 	g_spawn_async_with_pipes(g_get_current_dir(),
 	                         bustle_monitor, /* argv */
 	                         NULL, /* envp */
 	                         /* G_SPAWN_SEARCH_PATH | G_SPAWN_STDERR_TO_DEV_NULL, */ /* flags */
-	                         G_SPAWN_SEARCH_PATH, /* flags */
+	                         G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD, /* flags */
 	                         NULL, /* child setup func */
 	                         NULL, /* child setup data */
 	                         &bustle_pid, /* PID */
@@ -159,11 +159,16 @@ start_bustling (void)
 	                         &error); /* error */
 
 	if (error != NULL) {
-		g_warning("Unable to start bustling data: %s", error->message);
+		g_critical("Unable to start bustling data: %s", error->message);
+		g_error_free(error);
+		bustle_pid = 0;
+		global_success = FALSE;
+		g_main_loop_quit(global_mainloop);
 		return;
 	}
 
 	g_debug("Starting bustle monitor.  PID: %d", bustle_pid);
+	bustle_watch = g_child_watch_add(bustle_pid, bustle_watcher, NULL);
 
 	bustle_stdout = g_io_channel_unix_new(bustle_stdout_num);
 	g_io_add_watch(bustle_stdout,
@@ -184,6 +189,14 @@ static void
 stop_bustling (void)
 {
 	if (bustle_datafile == NULL) {
+		return;
+	}
+
+	if (bustle_watch != 0) {
+		g_source_remove(bustle_watch);
+	}
+
+	if (bustle_pid == 0) {
 		return;
 	}
 
@@ -275,6 +288,36 @@ check_task_cleanup (task_t * task, gboolean force)
 
 	if (g_list_length(tasks) == 0) {
 		g_main_loop_quit(global_mainloop);
+	}
+
+	return;
+}
+
+static void
+dbus_watcher (GPid pid, gint status, gpointer data)
+{
+	g_critical("DBus Daemon exited abruptly!");
+
+	global_success = FALSE;
+	g_main_loop_quit(global_mainloop);
+
+	if (pid != 0) {
+		g_spawn_close_pid(pid);
+	}
+
+	return;
+}
+
+static void
+bustle_watcher (GPid pid, gint status, gpointer data)
+{
+	g_critical("Bustle Monitor exited abruptly!");
+
+	global_success = FALSE;
+	g_main_loop_quit(global_mainloop);
+
+	if (pid != 0) {
+		g_spawn_close_pid(pid);
 	}
 
 	return;
@@ -404,7 +447,7 @@ gboolean
 dbus_writes (GIOChannel * channel, GIOCondition condition, gpointer data)
 {
 	if (condition & G_IO_ERR) {
-		g_error("DBus writing failure!");
+		g_critical("DBus writing failure!");
 		return FALSE;
 	}
 
@@ -427,9 +470,14 @@ dbus_writes (GIOChannel * channel, GIOCondition condition, gpointer data)
 		if (tasks != NULL) {
 			start_bustling();
 
-			g_list_foreach(tasks, start_task, GINT_TO_POINTER(FALSE));
+			/* If we're still in a place where we can succeed, then
+			   we should continue.  Otherwise fail. */
+			if (global_success) {
+				g_list_foreach(tasks, start_task, GINT_TO_POINTER(FALSE));
+			}
 		} else {
 			g_print("No tasks!\n");
+			global_success = FALSE;
 			g_main_loop_quit(global_mainloop);
 		}
 	}
@@ -540,13 +588,6 @@ option_wait (const gchar * arg, const gchar * value, gpointer data, GError ** er
 	return TRUE;
 }
 
-static gboolean
-bustle_watch (const gchar * arg, const gchar * value, gpointer data, GError ** error)
-{
-	bustle_watches = g_list_append(bustle_watches, g_strdup(value));
-	return TRUE;
-}
-
 static void
 length_finder (gpointer data, gpointer udata)
 {
@@ -636,11 +677,13 @@ max_wait_hit (gpointer user_data)
 }
 
 static gchar * dbus_configfile = NULL;
+static gchar * dbus_daemon = NULL;
 
 static GOptionEntry general_options[] = {
+	{"dbus-daemon",  0,     0,                       G_OPTION_ARG_FILENAME,  &dbus_daemon,     "Path to the DBus deamon to use.  Defaults to 'dbus-daemon'.", "executable"},
 	{"dbus-config",  'd',   0,                       G_OPTION_ARG_FILENAME,  &dbus_configfile, "Configuration file for newly created DBus server.  Defaults to '" DEFAULT_SESSION_CONF "'.", "config_file"},
+	{"bustle-monitor", 0,   0,                       G_OPTION_ARG_FILENAME,  &bustle_cmd,      "Path to the Bustle DBus Monitor to use.  Defaults to 'bustle-dbus-monitor'.", "executable"},
 	{"bustle-data",  'b',   0,                       G_OPTION_ARG_FILENAME,  &bustle_datafile, "A file to write out data from the bustle logger to.", "data_file"},
-	{"bustle-watch", 'w',   0,                       G_OPTION_ARG_CALLBACK,  bustle_watch,     "Defines a watch string for the bustle watcher task. (broken)", "filter"},
 	{"max-wait",     'm',   0,                       G_OPTION_ARG_INT,       &max_wait,        "The maximum amount of time the test runner will wait for the test to complete.  Default is 30 seconds.", "seconds"},
 	{NULL}
 };
@@ -683,21 +726,36 @@ main (int argc, char * argv[])
 		dbus_configfile = DEFAULT_SESSION_CONF;
 	}
 
+	if (dbus_daemon == NULL) {
+		dbus_daemon = "dbus-daemon";
+	}
+
+	if (bustle_cmd == NULL) {
+		bustle_cmd = "bustle-dbus-monitor";
+	}
+
 	gint dbus_stdout;
 	GPid dbus;
 	gchar * blank[1] = {NULL};
-	gchar * dbus_startup[] = {"dbus-daemon", "--config-file", dbus_configfile, "--print-address", NULL};
+	gchar * dbus_startup[] = {dbus_daemon, "--config-file", dbus_configfile, "--print-address", NULL};
 	g_spawn_async_with_pipes(g_get_current_dir(),
 	                         dbus_startup, /* argv */
 	                         blank, /* envp */
-	                         G_SPAWN_SEARCH_PATH, /* flags */
+	                         G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD, /* flags */
 	                         NULL, /* child setup func */
 	                         NULL, /* child setup data */
 							 &dbus, /* PID */
 	                         NULL, /* stdin */
 	                         &dbus_stdout, /* stdout */
 	                         NULL, /* stderr */
-	                         NULL); /* error */
+	                         &error); /* error */
+
+	if (error != NULL) {
+		g_critical("Unable to start dbus daemon: %s", error->message);
+		return 1;
+	}
+
+	guint dbus_watch = g_child_watch_add(dbus, dbus_watcher, NULL);
 
 	GIOChannel * dbus_io = g_io_channel_unix_new(dbus_stdout);
 	g_io_add_watch(dbus_io,
@@ -714,6 +772,7 @@ main (int argc, char * argv[])
 
 	stop_bustling();
 
+	g_source_remove(dbus_watch); /* Let's not error when we want to kill it */
 	gchar * killline = g_strdup_printf("kill -9 %d", dbus);
 	g_spawn_command_line_sync(killline, NULL, NULL, NULL, NULL);
 	g_free(killline);
