@@ -1,0 +1,10 @@
+#!/bin/bash
+
+set -ex
+
+hooks="dependency_hooks/D*"
+
+for h in $hooks
+do
+	$h
+done

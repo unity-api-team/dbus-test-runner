@@ -1,0 +1,34 @@
+#!/bin/sh
+
+# Jump to build directory
+cd /tmp/buildd/*/debian/..
+if [ -f CMakeLists.txt ]; then
+    cd obj-`dpkg-architecture -qDEB_BUILD_GNU_TYPE`
+fi
+# for gtk2/gtk3 specific build, go to the builddir
+# FIXME: any other way to find a better builddir?
+if [ -d build/gtk3 ]; then
+    cd build/gtk3
+fi
+
+# Export results of unit testing in xml format
+# for reporting purposes in jenkins
+export GTEST_OUTPUT=xml
+
+# Execute the unit test suite
+make check
+
+# Remember the exit status of the unit tests.
+result=$?
+
+# Generate coverage results
+make coverage-html
+make coverage-xml
+# Save the test & coverage results
+cp test/test_detail.xml `cat /tmp/buildd/ReportDir`
+cp coverage.xml `cat /tmp/buildd/ReportDir`
+cp -R coveragereport `cat /tmp/buildd/ReportDir`
+
+exit $result
+
+
