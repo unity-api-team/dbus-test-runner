@@ -1,5 +1,5 @@
 
-DBUS_RUNNER=../src/dbus-test-runner --dbus-config $(srcdir)/../data/session.conf
+DBUS_RUNNER=$(top_builddir)/src/dbus-test-runner --dbus-config $(srcdir)/../data/session.conf
 TESTS = 
 DISTCLEANFILES = $(TESTS)
 XFAIL_TESTS =
@@ -57,6 +57,96 @@ test-timeout: Makefile.am
 	@chmod +x $@
 XFAIL_TESTS += test-timeout
 
+TESTS += test-timeout-disable
+test-timeout-disable: Makefile.am
+	@echo "#!/bin/sh" > $@
+	@echo $(DBUS_RUNNER) --max-wait 0 --task true >> $@
+	@chmod +x $@
+
+TESTS += test-param-only-name
+test-param-only-name: Makefile.am
+	@echo "#!/bin/sh" > $@
+	@echo $(DBUS_RUNNER) --task-name Name >> $@
+	@chmod +x $@
+XFAIL_TESTS += test-param-only-name
+
+TESTS += test-param-dup-name
+test-param-dup-name: Makefile.am
+	@echo "#!/bin/sh" > $@
+	@echo $(DBUS_RUNNER) --task true --task-name Name --task-name Name2 >> $@
+	@chmod +x $@
+XFAIL_TESTS += test-param-dup-name
+
+TESTS += test-param-only-ignore
+test-param-only-ignore: Makefile.am
+	@echo "#!/bin/sh" > $@
+	@echo $(DBUS_RUNNER) --ignore-return >> $@
+	@chmod +x $@
+XFAIL_TESTS += test-param-only-ignore
+
+TESTS += test-param-only-invert
+test-param-only-invert: Makefile.am
+	@echo "#!/bin/sh" > $@
+	@echo $(DBUS_RUNNER) --invert-return >> $@
+	@chmod +x $@
+XFAIL_TESTS += test-param-only-invert
+
+TESTS += test-param-multi-return-invert
+test-param-multi-return-invert: Makefile.am
+	@echo "#!/bin/sh" > $@
+	@echo $(DBUS_RUNNER) --task true --ignore-return --invert-return >> $@
+	@chmod +x $@
+XFAIL_TESTS += test-param-multi-return-invert
+
+TESTS += test-param-multi-return-ignore
+test-param-multi-return-ignore: Makefile.am
+	@echo "#!/bin/sh" > $@
+	@echo $(DBUS_RUNNER) --task true --invert-return --ignore-return >> $@
+	@chmod +x $@
+XFAIL_TESTS += test-param-multi-return-ignore
+
+TESTS += test-param-only-param
+test-param-only-param: Makefile.am
+	@echo "#!/bin/sh" > $@
+	@echo $(DBUS_RUNNER) --parameter bob >> $@
+	@chmod +x $@
+XFAIL_TESTS += test-param-only-param
+
+TESTS += test-param-only-wait
+test-param-only-wait: Makefile.am
+	@echo "#!/bin/sh" > $@
+	@echo $(DBUS_RUNNER) --wait-for org.test.test >> $@
+	@chmod +x $@
+XFAIL_TESTS += test-param-only-wait
+
+TESTS += test-param-multi-wait
+test-param-multi-wait: Makefile.am
+	@echo "#!/bin/sh" > $@
+	@echo $(DBUS_RUNNER) --task true --wait-for org.test.test --wait-for org.test.test2 >> $@
+	@chmod +x $@
+XFAIL_TESTS += test-param-multi-wait
+
+TESTS += test-param-bad
+test-param-bad: Makefile.am
+	@echo "#!/bin/sh" > $@
+	@echo $(DBUS_RUNNER) --this-is-most-surly-not-a-real-parameter >> $@
+	@chmod +x $@
+XFAIL_TESTS += test-param-bad
+
+TESTS += test-param-bad-task
+test-param-bad-task: Makefile.am
+	@echo "#!/bin/sh" > $@
+	@echo $(DBUS_RUNNER) --task this-is-most-surly-not-a-real-program >> $@
+	@chmod +x $@
+XFAIL_TESTS += test-param-bad-task
+
+TESTS += test-no-tasks
+test-no-tasks: Makefile.am
+	@echo "#!/bin/sh" > $@
+	@echo $(DBUS_RUNNER) >> $@
+	@chmod +x $@
+XFAIL_TESTS += test-no-tasks
+
 TESTS += test-output
 test-output: Makefile.am
 	@echo "#!/bin/sh -e" > $@
@@ -84,6 +174,29 @@ test-bustle: Makefile.am test-bustle.reference
 	@echo "diff \"$(srcdir)/test-bustle.reference\" \"$(builddir)/test-bustle.filtered\"" >> $@
 	@chmod +x $@
 DISTCLEANFILES += test-bustle.bustle test-bustle.filtered
+
+TESTS += test-bustle-bad-file
+test-bustle-bad-file: Makefile.am
+	@echo "#!/bin/sh -e" > $@
+	@echo $(DBUS_RUNNER) --bustle-data \"$(builddir)\" --task true >> $@
+	@chmod +x $@
+XFAIL_TESTS += test-bustle-bad-file
+
+TESTS += test-bustle-bad-monitor
+test-bustle-bad-monitor: Makefile.am
+	@echo "#!/bin/sh -e" > $@
+	@echo $(DBUS_RUNNER) --bustle-monitor probably-doesnt-exist --bustle-data \"$(builddir)/test-bustle-bad-monitor.bustle\" --task true >> $@
+	@chmod +x $@
+XFAIL_TESTS += test-bustle-bad-monitor
+DISTCLEANFILES += test-bustle-bad-monitor.bustle
+
+TESTS += test-bustle-bad-monitor-error
+test-bustle-bad-monitor-error: Makefile.am
+	@echo "#!/bin/sh -e" > $@
+	@echo $(DBUS_RUNNER) --bustle-monitor false --bustle-data \"$(builddir)/test-bustle-bad-monitor-error.bustle\" --task true >> $@
+	@chmod +x $@
+XFAIL_TESTS += test-bustle-bad-monitor-error
+DISTCLEANFILES += test-bustle-bad-monitor-error.bustle sleep-wrapper
 
 TESTS += test-bustle-data
 test-bustle-data: Makefile.am
@@ -125,6 +238,32 @@ test-wait-for: Makefile.am test-own-name test-check-name
 	@echo "#!/bin/sh" > $@
 	@echo $(DBUS_RUNNER) --task $(builddir)/test-check-name --parameter org.test.name --wait-for org.test.name --task $(builddir)/test-own-name --parameter org.test.name --ignore-return >> $@
 	@chmod +x $@
+
+TESTS += test-daemon-bad
+test-daemon-bad: Makefile.am
+	@echo "#!/bin/sh" > $@
+	@echo $(DBUS_RUNNER) --dbus-daemon false --task true >> $@
+	@chmod +x $@
+XFAIL_TESTS += test-daemon-bad
+
+TESTS += test-daemon-missing
+test-daemon-missing: Makefile.am
+	@echo "#!/bin/sh" > $@
+	@echo $(DBUS_RUNNER) --dbus-daemon probably-doesnt-exist --task true >> $@
+	@chmod +x $@
+XFAIL_TESTS += test-daemon-missing
+
+TESTS += test-daemon-junk
+test-daemon-junk: Makefile.am test-daemon-junk-spitter
+	@echo "#!/bin/sh" > $@
+	@echo $(DBUS_RUNNER) --dbus-daemon $(builddir)/test-daemon-junk-spitter --task true >> $@
+	@chmod +x $@
+test-daemon-junk-spitter: Makefile.am
+	@echo "#!/bin/sh" > $@
+	@echo cat $(top_builddir)/src/dbus-test-runner >> $@
+	@chmod +x $@
+XFAIL_TESTS += test-daemon-junk
+DISTCLEANFILES += test-daemon-junk-spitter
 
 EXTRA_DIST = \
 	delayrm.sh \
