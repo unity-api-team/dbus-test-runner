@@ -1,3 +1,15 @@
+dbus-test-runner (0.0.4-0ubuntu2) precise; urgency=low
+
+  * debian/source/format:
+    - Make "3.0 (quilt)"
+  * debian/control:
+    - Drop bustle from Build-Depends (for MIR)
+    - Demote bustle from Depends to Suggests
+  * debian/patches/disable-bustle-tests.patch:
+    - Disable tests that require bustle
+
+ -- Michael Terry <mterry@ubuntu.com>  Fri, 13 Jan 2012 12:38:02 +0100
+
 dbus-test-runner (0.0.4-0ubuntu1) precise; urgency=low
 
   * New upstream release.

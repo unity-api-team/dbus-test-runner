@@ -6,7 +6,6 @@ Build-Depends: debhelper (>= 5.0),
                cdbs (>= 0.4.41),
                libdbus-glib-1-dev,
                xvfb,
-               bustle,
                gvfs-backends,
                dh-autoreconf
 Standards-Version: 3.9.2
@@ -16,8 +15,8 @@ Package: dbus-test-runner
 Architecture: any
 Depends: ${shlibs:Depends},
          ${misc:Depends},
-         bustle,
          gvfs-backends
+Suggests: bustle
 Description: Runs tests under a new DBus session
  A simple little executable for running a couple of programs under a 
  new DBus session.  
