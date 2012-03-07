@@ -22,6 +22,9 @@ if HAVE_GCOV
 	-$(LCOV) --directory $(top_builddir) -z
 	-rm -rf coverage.info coveragereport
   
+  .PHONY: clean-local
+  clean-local: clean-coverage-html
+
 if HAVE_GCOVR
 
   .PHONY: coverage-gcovr generate-coverage-gcovr clean-coverage-gcovr
