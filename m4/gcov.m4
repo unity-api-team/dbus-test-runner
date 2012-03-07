@@ -33,7 +33,6 @@ AC_DEFUN([AC_TDD_GCOV],
   lcov_version_list="1.6 1.7 1.8 1.9"
   AC_CHECK_PROG(LCOV, lcov, lcov)
   AC_CHECK_PROG(GENHTML, genhtml, genhtml)
-  AC_CHECK_PROG(GCOVR, gcovr, gcovr)
 
   if test "$LCOV"; then
     AC_CACHE_CHECK([for lcov version], glib_cv_lcov_version, [
@@ -62,11 +61,8 @@ AC_DEFUN([AC_TDD_GCOV],
     AC_MSG_ERROR([Could not find genhtml from the lcov package])
   fi
 
-  if test -z "$GCOVR"; then
-    AC_MSG_ERROR([Could not find gcovr; easy_install (or pip) gcovr])
-  fi
-
   ac_cv_check_gcov=yes
+  ac_cv_check_lcov=yes
 
   # Remove all optimization flags from CFLAGS
   changequote({,})
@@ -78,6 +74,13 @@ AC_DEFUN([AC_TDD_GCOV],
   COVERAGE_CXXFLAGS="-O0 -fprofile-arcs -ftest-coverage"	
   COVERAGE_LDFLAGS="-lgcov"
 
+  # Check availability of gcovr
+  AC_CHECK_PROG(GCOVR, gcovr, gcovr)
+  if test -z "$GCOVR"; then
+    ac_cv_check_gcovr=no
+  else
+    ac_cv_check_gcovr=yes
+  fi
+
 fi
 ]) # AC_TDD_GCOV
-
