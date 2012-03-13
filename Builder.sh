@@ -103,7 +103,7 @@ if [ -z "$chrooted" ]; then
     cd "$BUILD_DIR"
     debuild -uc -us -d
     cd "$hook_dir"
-    "./B00dependency_hooks"
+    "./B00build_hooks"
     cd "$BUILD_DIR"
 else
     # Make our result dir known to pbuilder env
