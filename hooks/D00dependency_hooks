@@ -2,7 +2,7 @@
 
 set -ex
 
-hooks="dependency_hooks/D*"
+hooks="$HOOK_DIR/dependency_hooks/D*"
 
 for h in $hooks
 do

@@ -2,7 +2,7 @@
 
 set -ex
 
-hooks="error_hooks/C*"
+hooks="$HOOK_DIR/error_hooks/C*"
 
 for h in $hooks
 do

@@ -2,7 +2,7 @@
 
 set -ex
 
-hooks="build_hooks/B*"
+hooks="$HOOK_DIR/build_hooks/B*"
 
 for h in $hooks
 do

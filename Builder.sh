@@ -38,7 +38,7 @@ while getopts "m:p:h:w:r:c" opt; do
 	    ;;
 	c)
 	    echo "Considering (c)hrooted build" >&2
-	    chrooted=""
+	    chrooted=1
 	    ;;
 	\p)
 	    echo "Invalid option: -$OPTARG" >&2
@@ -54,6 +54,7 @@ done
 # convert to absolute path
 result_dir=$(readlink -f "$result_dir")
 hook_dir=$(readlink -f "$hook_dir")
+export HOOK_DIR=$hook_dir
 
 # do not continue if any command fails
 set -ex
@@ -66,9 +67,7 @@ mkdir "$work_dir"
 bzr branch $main_branch "$work_dir/trunk"
 cd "$work_dir/trunk"
 bzr merge  "$packaging_branch"
-
-#mv packaging/debian trunk/
-#cd trunk
+#bzr build nest-part ubuntu "$packaging_branch" debian
 
 if [ -f autogen.sh ]; then
     autoreconf -f -i
@@ -79,10 +78,10 @@ fi
 # This is potentially dangerous
 # but we force a native source format
 # to prevent from dpkg-buildpackage bailing out
-sed -i 's/quilt/native/g' debian/source/format
+#sed -i 's/quilt/native/g' debian/source/format
 
 # Place any project specific replacements here
-# sed -i 's/--with-xi/--with-xi --enable-gcov/g' debian/rules
+#sed -i 's/--disable-scrollkeeper/--disable-scrollkeeper --enable-gcov/g' debian/rules
 
 # Extract some packaging information
 version=`dpkg-parsechangelog | awk '/^Version/ {print $2}' | sed -e "s/\(.*\)-[0-9]ubuntu.*/\1/"`+bzr${trunkrev}
@@ -108,10 +107,11 @@ if [ -z "$chrooted" ]; then
 else
     # Make our result dir known to pbuilder env
     echo "$result_dir" > 'ReportDir'
+    echo "$hook_dir"
     pdebuild -- \
 	--inputfile "ReportDir" \
 	--hookdir "$hook_dir" \
-	--bindmounts "$result_dir"
+	--bindmounts "$result_dir $hook_dir"
 fi
 
 rm -f -- "ReportDir"
