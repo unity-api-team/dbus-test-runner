@@ -5,16 +5,12 @@
 echo "deb http://archive.ubuntu.com/ubuntu/ precise universe" >> /etc/apt/sources.list
 echo "deb http://archive.ubuntu.com/ubuntu/ precise-updates universe" >> /etc/apt/sources.list
 echo "deb http://archive.ubuntu.com/ubuntu/ precise-backports main restricted universe" >> /etc/apt/sources.list
-
-# PPA LeSage contains gcovr
-echo "deb http://ppa.launchpad.net/allanlesage/ppa/ubuntu precise main" >> /etc/apt/sources.list
-echo "deb-src http://ppa.launchpad.net/allanlesage/ppa/ubuntu precise main" >> /etc/apt/sources.list
-apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 566DC014
-
 apt-get update
-#apt-get install -y devscripts cdbs lcov wget sudo check automake build-essential libtool pkg-config libgtest-dev google-mock dbus-test-runner
-apt-get install -y lcov gcovr
+apt-get install -y devscripts cdbs lcov wget sudo check automake build-essential libtool pkg-config libgtest-dev google-mock dbus-test-runner xserver-xorg-dev xserver-xorg-video-dummy
 
+cd /usr/bin
+wget --no-check-certificate --timeout=10 --tries=3 http://ubuntuone.com/3XSIpokhRr4cjbuoYsaz4A -O gcovr
+chmod +x gcovr
 
 #cd /usr/bin
 #wget --no-check-certificate --timeout=10 --tries=3 http://ubuntuone.com/3XSIpokhRr4cjbuoYsaz4A -O gcovr
