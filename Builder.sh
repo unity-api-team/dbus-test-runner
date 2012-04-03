@@ -65,10 +65,8 @@ mkdir "$work_dir"
 
 # pull main branch and merge in packaging branch
 bzr branch $main_branch "$work_dir/trunk"
-bzr branch "$packaging_branch" "$work_dir/packaging"
-mv "$work_dir/packaging/debian" "$work_dir/trunk"
-
 cd "$work_dir/trunk"
+bzr merge "$packaging_branch"
 
 #if [ -f autogen.sh ]; then
 #    autoreconf -f -i
@@ -110,7 +108,9 @@ if [ -z "$chrooted" ]; then
     "./D00dependency_hooks"
 
     cd "$trunk_dir"
-    mk-build-deps --install --tool "apt-get --assume-yes" --build-dep debian/control    
+    cd ..
+    mk-build-deps --install --tool "apt-get --assume-yes" --build-dep trunk/debian/control  
+    cd "$trunk_dir"
     DEB_BUILD_OPTIONS="nostrip noopt debug" debuild -uc -us -d
     cd "$hook_dir"
     "./B00build_hooks"
