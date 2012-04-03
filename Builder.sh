@@ -65,9 +65,10 @@ mkdir "$work_dir"
 
 # pull main branch and merge in packaging branch
 bzr branch $main_branch "$work_dir/trunk"
+bzr branch "$packaging_branch" "$work_dir/packaging"
+mv "$work_dir/packaging/debian" "$work_dir/trunk"
+
 cd "$work_dir/trunk"
-bzr merge  "$packaging_branch"
-#bzr build nest-part ubuntu "$packaging_branch" debian
 
 if [ -f autogen.sh ]; then
     autoreconf -f -i
@@ -84,8 +85,14 @@ fi
 #sed -i 's/--disable-scrollkeeper/--disable-scrollkeeper --enable-gcov/g' debian/rules
 
 # Extract some packaging information
-version=`dpkg-parsechangelog | awk '/^Version/ {print $2}' | sed -e "s/\(.*\)-[0-9]ubuntu.*/\1/"`+bzr${trunkrev}
-version=${version}ubuntu0+${packaging_rev}
+version=`dpkg-parsechangelog | awk '/^Version/ {print $2}' | sed -e "s/\(.*\)-[0-9]ubuntu.*/\1/"`
+if [ -z "$chrooted" ]; then
+    version=`dpkg-parsechangelog | awk '/^Version/ {print $2}' | sed -e "s/\(.*\)-[0-9]ubuntu.*/\1/"`
+else
+    version=`dpkg-parsechangelog | awk '/^Version/ {print $2}' | sed -e "s/\(.*\)-[0-9]ubuntu.*/\1/"`
+    version=${version}ubuntu0+${packaging_rev}
+fi
+
 sourcename=`dpkg-parsechangelog | awk '/^Source/ {print $2}'`
 # Generate the actual source package
 cd ..
@@ -94,16 +101,19 @@ tar -czf ${sourcename}_${version}.orig.tar.gz trunk
 cd trunk
 
 if [ -z "$chrooted" ]; then
+    trunk_dir=$(readlink -f ".")
+    
     export BUILD_DIR=$(readlink -f ".")
     export RESULT_DIR=$result_dir
     
     cd "$hook_dir"
-    ./D00dependency_hooks
-    cd "$BUILD_DIR"
-    debuild -uc -us -d
+    "./D00dependency_hooks"
+
+    cd "$trunk_dir"
+    mk-build-deps --install --tool "apt-get --assume-yes" --build-dep debian/control    
+    DEB_BUILD_OPTIONS="nostrip noopt debug" debuild -uc -us -d
     cd "$hook_dir"
-    "./B00dependency_hooks"
-    cd "$BUILD_DIR"
+    "./B00build_hooks"
 else
     # Make our result dir known to pbuilder env
     echo "$result_dir" > 'ReportDir'
