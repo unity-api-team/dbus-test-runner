@@ -70,11 +70,11 @@ mv "$work_dir/packaging/debian" "$work_dir/trunk"
 
 cd "$work_dir/trunk"
 
-if [ -f autogen.sh ]; then
-    autoreconf -f -i
-    aclocal
-    grep -q IT_PROG_INTLTOOL configure.* && intltoolize
-fi
+#if [ -f autogen.sh ]; then
+#    autoreconf -f -i
+#    aclocal
+#    grep -q IT_PROG_INTLTOOL configure.* && intltoolize
+#fi
 
 # This is potentially dangerous
 # but we force a native source format
