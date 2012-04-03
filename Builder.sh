@@ -12,7 +12,7 @@ work_dir=
 config_file=
 result_dir=
 hook_dir=
-chrooted=1
+chrooted=
 
 while getopts "m:p:h:w:r:c" opt; do
     case $opt in
