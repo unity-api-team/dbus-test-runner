@@ -6,10 +6,12 @@ API_VERSION = 1
 
 libdbustestincludedir=$(includedir)/libdbustest-$(API_VERSION)/libdbustest
 libdbustestinclude_HEADERS = \
+	dbus-test.h \
 	service.h \
 	task.h
 
 libdbustest_la_SOURCES = \
+	dbus-test.h \
 	service.c \
 	service.h \
 	task.c \
@@ -18,6 +20,7 @@ libdbustest_la_SOURCES = \
 libdbustest_la_CFLAGS = \
 	$(DBUS_TEST_RUNNER_CFLAGS) \
 	$(COVERAGE_CFLAGS) \
+	-I$(top_srcdir) \
 	-DG_LOG_DOMAIN=\"libdbustest\" \
 	-Wall -Werror
 

@@ -1,6 +1,10 @@
 #ifndef __DBUS_TEST_TASK_H__
 #define __DBUS_TEST_TASK_H__
 
+#ifndef __DBUS_TEST_TOP_LEVEL__
+#error "Please include #include <libdbustest/dbus-test.h> only"
+#endif
+
 #include <glib.h>
 #include <glib-object.h>
 

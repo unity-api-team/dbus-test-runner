@@ -2,7 +2,7 @@
 #include "config.h"
 #endif
 
-#include "task.h"
+#include "dbus-test.h"
 
 struct _DbusTestTaskPrivate {
 	int dummy;
