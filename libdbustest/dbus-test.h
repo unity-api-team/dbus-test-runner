@@ -8,8 +8,9 @@
 #define __DBUS_TEST_TOP_LEVEL__ 1
 
 
-#include <libdbustest/service.h>
 #include <libdbustest/task.h>
+#include <libdbustest/service.h>
+#include <libdbustest/process.h>
 
 
 #endif /* __DBUS_TEST_H__ */
