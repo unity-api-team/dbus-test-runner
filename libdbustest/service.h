@@ -1,8 +1,9 @@
 #ifndef __DBUS_TEST_SERVICE_H__
 #define __DBUS_TEST_SERVICE_H__
 
-#include <glib.h>
 #include <glib-object.h>
+
+#include "task.h"
 
 G_BEGIN_DECLS
 
@@ -27,6 +28,11 @@ struct _DbusTestService {
 };
 
 GType dbus_test_service_get_type (void);
+DbusTestService * dbus_test_service_new (const gchar * address);
+void dbus_test_service_start_tasks (DbusTestService * service);
+int dbus_test_service_run (DbusTestService * service);
+
+void dbus_test_service_add_task (DbusTestService * service, DbusTestTask * task);
 
 G_END_DECLS
 
