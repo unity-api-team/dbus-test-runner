@@ -29,6 +29,9 @@ struct _DbusTestProcess {
 
 GType dbus_test_process_get_type (void);
 
+DbusTestProcess * dbus_test_process_new (const gchar * executable);
+void dbus_test_process_append_param (DbusTestProcess * process, const gchar * parameter);
+
 G_END_DECLS
 
 #endif
