@@ -10,12 +10,12 @@
 
 G_BEGIN_DECLS
 
-#define DBUS_TEST_TASK_TYPE            (dbus_test_task_get_type ())
-#define DBUS_TEST_TASK(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), DBUS_TEST_TASK_TYPE, DbusTestTask))
-#define DBUS_TEST_TASK_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), DBUS_TEST_TASK_TYPE, DbusTestTaskClass))
-#define DBUS_TEST_IS_TASK(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), DBUS_TEST_TASK_TYPE))
-#define DBUS_TEST_IS_TASK_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), DBUS_TEST_TASK_TYPE))
-#define DBUS_TEST_TASK_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), DBUS_TEST_TASK_TYPE, DbusTestTaskClass))
+#define DBUS_TEST_TYPE_TASK            (dbus_test_task_get_type ())
+#define DBUS_TEST_TASK(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), DBUS_TEST_TYPE_TASK, DbusTestTask))
+#define DBUS_TEST_TASK_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), DBUS_TEST_TYPE_TASK, DbusTestTaskClass))
+#define DBUS_TEST_IS_TASK(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), DBUS_TEST_TYPE_TASK))
+#define DBUS_TEST_IS_TASK_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), DBUS_TEST_TYPE_TASK))
+#define DBUS_TEST_TASK_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), DBUS_TEST_TYPE_TASK, DbusTestTaskClass))
 
 typedef struct _DbusTestTask        DbusTestTask;
 typedef struct _DbusTestTaskClass   DbusTestTaskClass;
