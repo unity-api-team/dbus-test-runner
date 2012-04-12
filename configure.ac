@@ -63,7 +63,7 @@ AC_SUBST(COVERAGE_LDFLAGS)
 AC_OUTPUT([
 Makefile
 po/Makefile.in
-libdbustestrunner/Makefile
+libdbustest/Makefile
 src/Makefile
 data/Makefile
 tests/Makefile

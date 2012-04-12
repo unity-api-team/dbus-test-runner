@@ -1,11 +1,11 @@
 SUBDIRS = \
 	data \
 	src \
-	libdbustestrunner \
+	libdbustest \
 	tests \
 	po
 
-src: libdbustestrunner
+src: libdbustest
 tests: src
 
 # Coverage targets
