@@ -6,11 +6,11 @@ API_VERSION = 1
 
 libdbustestincludedir=$(includedir)/libdbustest-$(API_VERSION)/libdbustest
 libdbustestinclude_HEADERS = \
-	dbus-task.h
+	service.h
 
 libdbustest_la_SOURCES = \
-	dbus-task.c \
-	dbus-task.h
+	service.c \
+	service.h
 
 libdbustest_la_CFLAGS = \
 	$(DBUS_TEST_RUNNER_CFLAGS) \
