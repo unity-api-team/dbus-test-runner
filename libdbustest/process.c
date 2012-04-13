@@ -5,11 +5,16 @@
 #include "dbus-test.h"
 
 struct _DbusTestProcessPrivate {
-	int dummy;
+	gchar * executable;
+	GList * parameters;
+
+	GPid pid;
+	guint io_watch;
+	guint watcher;
 };
 
 #define DBUS_TEST_PROCESS_GET_PRIVATE(o) \
-(G_TYPE_INSTANCE_GET_PRIVATE ((o), DBUS_TEST_PROCESS_TYPE, DbusTestProcessPrivate))
+(G_TYPE_INSTANCE_GET_PRIVATE ((o), DBUS_TEST_TYPE_PROCESS, DbusTestProcessPrivate))
 
 static void dbus_test_process_class_init (DbusTestProcessClass *klass);
 static void dbus_test_process_init       (DbusTestProcess *self);
@@ -34,6 +39,10 @@ dbus_test_process_class_init (DbusTestProcessClass *klass)
 static void
 dbus_test_process_init (DbusTestProcess *self)
 {
+	self->priv = DBUS_TEST_PROCESS_GET_PRIVATE(self);
+
+	self->priv->executable = NULL;
+	self->priv->parameters = NULL;
 
 	return;
 }
