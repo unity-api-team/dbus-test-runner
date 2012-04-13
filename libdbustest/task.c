@@ -76,8 +76,10 @@ dbus_test_task_finalize (GObject *object)
 DbusTestTask *
 dbus_test_task_new (void)
 {
+	DbusTestTask * task = g_object_new(DBUS_TEST_TYPE_TASK,
+	                                   NULL);
 
-	return NULL;
+	return task;
 }
 
 void
