@@ -14,6 +14,8 @@ struct _DbusTestTaskPrivate {
 	gchar * name;
 	gchar * name_padded;
 	guint padding_cnt;
+
+	gboolean been_run;
 };
 
 #define DBUS_TEST_TASK_GET_PRIVATE(o) \
@@ -58,6 +60,8 @@ dbus_test_task_init (DbusTestTask *self)
 	self->priv->name = g_strdup_printf("task-%d", task_count++);
 	self->priv->name_padded = NULL;
 	self->priv->padding_cnt = 0;
+
+	self->priv->been_run = FALSE;
 
 	return;
 }
@@ -196,6 +200,18 @@ dbus_test_task_get_state (DbusTestTask * task)
 static void
 wait_for_found (GDBusConnection * connection, const gchar * name, const gchar * name_owner, gpointer user_data)
 {
+	g_return_if_fail(DBUS_TEST_IS_TASK(user_data));
+	DbusTestTask * task = DBUS_TEST_TASK(user_data);
+
+	task->priv->wait_task = 0;
+
+	DbusTestTaskClass * klass = DBUS_TEST_TASK_GET_CLASS(task);
+	if (klass->run != NULL) {
+		klass->run(task);
+	} else {
+		task->priv->been_run = TRUE;
+		/* TODO: signal finished */
+	}
 
 	return;
 }
@@ -216,6 +232,14 @@ dbus_test_task_run (DbusTestTask * task)
 		                                         task,
 		                                         NULL);
 		return;
+	}
+
+	DbusTestTaskClass * klass = DBUS_TEST_TASK_GET_CLASS(task);
+	if (klass->run != NULL) {
+		klass->run(task);
+	} else {
+		task->priv->been_run = TRUE;
+		/* TODO: signal finished */
 	}
 
 	return;
