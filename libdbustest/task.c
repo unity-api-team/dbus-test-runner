@@ -28,6 +28,10 @@ dbus_test_task_class_init (DbusTestTaskClass *klass)
 	object_class->dispose = dbus_test_task_dispose;
 	object_class->finalize = dbus_test_task_finalize;
 
+	klass->run = NULL;
+	klass->get_state = NULL;
+	klass->get_passed = NULL;
+
 	return;
 }
 

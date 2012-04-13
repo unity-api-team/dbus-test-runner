@@ -20,9 +20,18 @@ G_BEGIN_DECLS
 typedef struct _DbusTestTask        DbusTestTask;
 typedef struct _DbusTestTaskClass   DbusTestTaskClass;
 typedef struct _DbusTestTaskPrivate DbusTestTaskPrivate;
+typedef enum   _DbusTestTaskState   DbusTestTaskState;
+typedef enum   _DbusTestTaskReturn  DbusTestTaskReturn;
 
 struct _DbusTestTaskClass {
 	GObjectClass parent_class;
+
+	/* Subclassable functions */
+	void               (*run)         (DbusTestTask * task);
+	DbusTestTaskState  (*get_state)   (DbusTestTask * task);
+	gboolean           (*get_passed)  (DbusTestTask * task);
+
+	/* Signals */
 };
 
 struct _DbusTestTask {
@@ -30,7 +39,6 @@ struct _DbusTestTask {
 	DbusTestTaskPrivate * priv;
 };
 
-typedef enum _DbusTestTaskState DbusTestTaskState;
 enum _DbusTestTaskState {
 	DBUS_TEST_TASK_STATE_INIT,
 	DBUS_TEST_TASK_STATE_WAITING,
@@ -38,7 +46,6 @@ enum _DbusTestTaskState {
 	DBUS_TEST_TASK_STATE_FINISHED
 };
 
-typedef enum _DbusTestTaskReturn DbusTestTaskReturn;
 enum _DbusTestTaskReturn {
 	DBUS_TEST_TASK_RETURN_NORMAL,
 	DBUS_TEST_TASK_RETURN_IGNORE,
