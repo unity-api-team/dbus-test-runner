@@ -6,6 +6,7 @@
 
 struct _DbusTestTaskPrivate {
 	DbusTestTaskReturn return_type;
+	gchar * wait_for;
 };
 
 #define DBUS_TEST_TASK_GET_PRIVATE(o) \
@@ -41,6 +42,7 @@ dbus_test_task_init (DbusTestTask *self)
 	self->priv = DBUS_TEST_TASK_GET_PRIVATE(self);
 
 	self->priv->return_type = DBUS_TEST_TASK_RETURN_NORMAL;
+	self->priv->wait_for = NULL;
 
 	return;
 }
@@ -85,6 +87,18 @@ dbus_test_task_set_name_spacing (DbusTestTask * task, guint chars)
 void
 dbus_test_task_set_wait_for (DbusTestTask * task, const gchar * dbus_name)
 {
+	g_return_if_fail(DBUS_TEST_IS_TASK(task));
+
+	if (task->priv->wait_for != NULL) {
+		g_free(task->priv->wait_for);
+		task->priv->wait_for = NULL;
+	}
+
+	if (dbus_name == NULL) {
+		return;
+	}
+
+	task->priv->wait_for = g_strdup(dbus_name);
 
 	return;
 }
