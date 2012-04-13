@@ -3,10 +3,13 @@
 #endif
 
 #include "dbus-test.h"
+#include <gio/gio.h>
 
 struct _DbusTestTaskPrivate {
 	DbusTestTaskReturn return_type;
+
 	gchar * wait_for;
+	guint wait_task;
 
 	gchar * name;
 	gchar * name_padded;
@@ -48,7 +51,9 @@ dbus_test_task_init (DbusTestTask *self)
 	self->priv = DBUS_TEST_TASK_GET_PRIVATE(self);
 
 	self->priv->return_type = DBUS_TEST_TASK_RETURN_NORMAL;
+
 	self->priv->wait_for = NULL;
+	self->priv->wait_task = 0;
 
 	self->priv->name = g_strdup_printf("task-%d", task_count++);
 	self->priv->name_padded = NULL;
@@ -60,6 +65,13 @@ dbus_test_task_init (DbusTestTask *self)
 static void
 dbus_test_task_dispose (GObject *object)
 {
+	g_return_if_fail(DBUS_TEST_IS_TASK(object));
+	DbusTestTask * self = DBUS_TEST_TASK(object);
+
+	if (self->priv->wait_task != 0) {
+		g_bus_unwatch_name(self->priv->wait_task);
+		self->priv->wait_task = 0;
+	}
 
 	G_OBJECT_CLASS (dbus_test_task_parent_class)->dispose (object);
 	return;
@@ -181,9 +193,30 @@ dbus_test_task_get_state (DbusTestTask * task)
 	return DBUS_TEST_TASK_STATE_FINISHED;
 }
 
+static void
+wait_for_found (GDBusConnection * connection, const gchar * name, const gchar * name_owner, gpointer user_data)
+{
+
+	return;
+}
+
 void
 dbus_test_task_run (DbusTestTask * task)
 {
+	g_return_if_fail(DBUS_TEST_IS_TASK(task));
+
+	/* We're going to process the waiting at this level if we've been
+	   asked to do so */
+	if (task->priv->wait_for != NULL) {
+		task->priv->wait_task = g_bus_watch_name(G_BUS_TYPE_SESSION,
+		                                         task->priv->wait_for,
+		                                         G_BUS_NAME_WATCHER_FLAGS_NONE,
+		                                         wait_for_found,
+		                                         NULL,
+		                                         task,
+		                                         NULL);
+		return;
+	}
 
 	return;
 }
