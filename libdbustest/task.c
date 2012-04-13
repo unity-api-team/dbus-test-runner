@@ -68,6 +68,12 @@ dbus_test_task_dispose (GObject *object)
 static void
 dbus_test_task_finalize (GObject *object)
 {
+	g_return_if_fail(DBUS_TEST_IS_TASK(object));
+	DbusTestTask * self = DBUS_TEST_TASK(object);
+
+	g_free(self->priv->name);
+	g_free(self->priv->name_padded);
+	g_free(self->priv->wait_for);
 
 	G_OBJECT_CLASS (dbus_test_task_parent_class)->finalize (object);
 	return;
