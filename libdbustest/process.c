@@ -11,6 +11,9 @@ struct _DbusTestProcessPrivate {
 	GPid pid;
 	guint io_watch;
 	guint watcher;
+
+	gboolean complete;
+	gint status;
 };
 
 #define DBUS_TEST_PROCESS_GET_PRIVATE(o) \
@@ -73,8 +76,20 @@ dbus_test_process_finalize (GObject *object)
 static void
 proc_watcher (GPid pid, gint status, gpointer data)
 {
+	g_return_if_fail(DBUS_TEST_IS_PROCESS(data));
+	DbusTestProcess * process = DBUS_TEST_PROCESS(data);
 
+	if (pid != 0) {
+		g_spawn_close_pid(pid);
+		process->priv->pid = 0;
+	}
 
+	process->priv->complete = TRUE;
+	process->priv->status = status;
+
+	/* TODO: Signal finished */
+
+	return;
 }
 
 gboolean
