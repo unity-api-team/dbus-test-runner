@@ -193,8 +193,22 @@ dbus_test_task_print (DbusTestTask * task, const gchar * message)
 DbusTestTaskState
 dbus_test_task_get_state (DbusTestTask * task)
 {
+	g_return_val_if_fail(DBUS_TEST_IS_TASK(task), DBUS_TEST_TASK_STATE_FINISHED);
 
-	return DBUS_TEST_TASK_STATE_FINISHED;
+	if (task->priv->wait_task != 0) {
+		return DBUS_TEST_TASK_STATE_WAITING;
+	}
+
+	DbusTestTaskClass * klass = DBUS_TEST_TASK_GET_CLASS(task);
+	if (klass->get_state != NULL) {
+		return klass->get_state(task);
+	}
+
+	if (task->priv->been_run) {
+		return DBUS_TEST_TASK_STATE_FINISHED;
+	} else {
+		return DBUS_TEST_TASK_STATE_INIT;
+	}
 }
 
 static void
@@ -203,6 +217,7 @@ wait_for_found (GDBusConnection * connection, const gchar * name, const gchar * 
 	g_return_if_fail(DBUS_TEST_IS_TASK(user_data));
 	DbusTestTask * task = DBUS_TEST_TASK(user_data);
 
+	g_bus_unwatch_name(task->priv->wait_task);
 	task->priv->wait_task = 0;
 
 	DbusTestTaskClass * klass = DBUS_TEST_TASK_GET_CLASS(task);
