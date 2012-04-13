@@ -106,7 +106,13 @@ dbus_test_task_set_wait_for (DbusTestTask * task, const gchar * dbus_name)
 void
 dbus_test_task_set_return (DbusTestTask * task, DbusTestTaskReturn ret)
 {
+	g_return_if_fail(DBUS_TEST_IS_TASK(task));
 
+	if (ret != task->priv->return_type && dbus_test_task_get_state(task) == DBUS_TEST_TASK_FINISHED) {
+		g_warning("Changing return type after the task has finished");
+	}
+
+	task->priv->return_type = ret;
 	return;
 }
 
