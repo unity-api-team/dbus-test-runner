@@ -80,6 +80,31 @@ proc_watcher (GPid pid, gint status, gpointer data)
 gboolean
 proc_writes (GIOChannel * channel, GIOCondition condition, gpointer data)
 {
+	g_return_val_if_fail(DBUS_TEST_IS_PROCESS(data), FALSE);
+	DbusTestProcess * process = DBUS_TEST_PROCESS(data);
+
+	gchar * line;
+	gsize termloc;
+
+	do {
+		GIOStatus status = g_io_channel_read_line (channel, &line, NULL, &termloc, NULL);
+
+		if (status == G_IO_STATUS_EOF) {
+			/* TODO, end this task */
+			// task->text_die = TRUE;
+			//check_task_cleanup(task, FALSE);
+			continue;
+		}
+
+		if (status != G_IO_STATUS_NORMAL) {
+			continue;
+		}
+
+		line[termloc] = '\0';
+
+		dbus_test_task_print(DBUS_TEST_TASK(process), line);
+		g_free(line);
+	} while (G_IO_IN & g_io_channel_get_buffer_condition(channel));
 
 	return TRUE;
 }
