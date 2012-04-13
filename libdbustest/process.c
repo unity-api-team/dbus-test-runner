@@ -58,7 +58,27 @@ dbus_test_process_init (DbusTestProcess *self)
 static void
 dbus_test_process_dispose (GObject *object)
 {
+	g_return_if_fail(DBUS_TEST_IS_PROCESS(object));
+	DbusTestProcess * process = DBUS_TEST_PROCESS(object);
 
+	if (process->priv->io_watch != 0) {
+		g_source_remove(process->priv->io_watch);
+		process->priv->io_watch = 0;
+	}
+
+	if (process->priv->watcher != 0) {
+		g_source_remove(process->priv->watcher);
+		process->priv->watcher = 0;
+	}
+
+	if (process->priv->pid != 0) {
+		gchar * killstr = g_strdup_printf("kill -9 %d", process->priv->pid);
+		g_spawn_command_line_async(killstr, NULL);
+		g_free(killstr);
+
+		g_spawn_close_pid(process->priv->pid);
+		process->priv->pid = 0;
+	}
 
 	G_OBJECT_CLASS (dbus_test_process_parent_class)->dispose (object);
 	return;
@@ -67,7 +87,14 @@ dbus_test_process_dispose (GObject *object)
 static void
 dbus_test_process_finalize (GObject *object)
 {
+	g_return_if_fail(DBUS_TEST_IS_PROCESS(object));
+	DbusTestProcess * process = DBUS_TEST_PROCESS(object);
 
+	g_free(process->priv->executable);
+	process->priv->executable = NULL;
+
+	g_list_free_full(process->priv->parameters, g_free);
+	process->priv->parameters = NULL;
 
 	G_OBJECT_CLASS (dbus_test_process_parent_class)->finalize (object);
 	return;
