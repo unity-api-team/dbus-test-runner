@@ -153,6 +153,15 @@ dbus_test_task_set_return (DbusTestTask * task, DbusTestTaskReturn ret)
 void
 dbus_test_task_print (DbusTestTask * task, const gchar * message)
 {
+	g_return_if_fail(DBUS_TEST_IS_TASK(task));
+	g_return_if_fail(message != NULL);
+
+	gchar * name = task->priv->name;
+	if (task->priv->name_padded != NULL) {
+		name = task->priv->name_padded;
+	}
+
+	g_print("%s: %s", name, message);
 
 	return;
 }
