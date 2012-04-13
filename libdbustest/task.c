@@ -7,6 +7,10 @@
 struct _DbusTestTaskPrivate {
 	DbusTestTaskReturn return_type;
 	gchar * wait_for;
+
+	gchar * name;
+	gchar * name_padded;
+	guint padding_cnt;
 };
 
 #define DBUS_TEST_TASK_GET_PRIVATE(o) \
@@ -39,10 +43,16 @@ dbus_test_task_class_init (DbusTestTaskClass *klass)
 static void
 dbus_test_task_init (DbusTestTask *self)
 {
+	static gint task_count = 0;
+
 	self->priv = DBUS_TEST_TASK_GET_PRIVATE(self);
 
 	self->priv->return_type = DBUS_TEST_TASK_RETURN_NORMAL;
 	self->priv->wait_for = NULL;
+
+	self->priv->name = g_strdup_printf("task-%d", task_count++);
+	self->priv->name_padded = NULL;
+	self->priv->padding_cnt = 0;
 
 	return;
 }
@@ -73,6 +83,19 @@ dbus_test_task_new (void)
 void
 dbus_test_task_set_name (DbusTestTask * task, const gchar * name)
 {
+	g_return_if_fail(DBUS_TEST_IS_TASK(task));
+
+	g_free(task->priv->name);
+	g_free(task->priv->name_padded);
+
+	task->priv->name = g_strdup(name);
+	if (task->priv->padding_cnt != 0 && task->priv->name != NULL) {
+		gchar * fillstr = g_strnfill(task->priv->padding_cnt - g_utf8_strlen(task->priv->name, -1), ' ');
+		task->priv->name_padded = g_strconcat(task->priv->name, fillstr, NULL);
+		g_free(fillstr);
+	} else {
+		task->priv->name_padded = NULL;
+	}
 
 	return;
 }
@@ -80,6 +103,17 @@ dbus_test_task_set_name (DbusTestTask * task, const gchar * name)
 void
 dbus_test_task_set_name_spacing (DbusTestTask * task, guint chars)
 {
+	g_return_if_fail(DBUS_TEST_IS_TASK(task));
+
+	g_free(task->priv->name_padded);
+
+	if (chars != 0 && task->priv->name != NULL) {
+		gchar * fillstr = g_strnfill(task->priv->padding_cnt - g_utf8_strlen(task->priv->name, -1), ' ');
+		task->priv->name_padded = g_strconcat(task->priv->name, fillstr, NULL);
+		g_free(fillstr);
+	} else {
+		task->priv->name_padded = NULL;
+	}
 
 	return;
 }
@@ -108,7 +142,7 @@ dbus_test_task_set_return (DbusTestTask * task, DbusTestTaskReturn ret)
 {
 	g_return_if_fail(DBUS_TEST_IS_TASK(task));
 
-	if (ret != task->priv->return_type && dbus_test_task_get_state(task) == DBUS_TEST_TASK_FINISHED) {
+	if (ret != task->priv->return_type && dbus_test_task_get_state(task) == DBUS_TEST_TASK_STATE_FINISHED) {
 		g_warning("Changing return type after the task has finished");
 	}
 
