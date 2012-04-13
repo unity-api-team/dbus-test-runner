@@ -5,11 +5,11 @@
 #include "dbus-test.h"
 
 struct _DbusTestTaskPrivate {
-	int dummy;
+	DbusTestTaskReturn return_type;
 };
 
 #define DBUS_TEST_TASK_GET_PRIVATE(o) \
-(G_TYPE_INSTANCE_GET_PRIVATE ((o), DBUS_TEST_TASK_TYPE, DbusTestTaskPrivate))
+(G_TYPE_INSTANCE_GET_PRIVATE ((o), DBUS_TEST_TYPE_TASK, DbusTestTaskPrivate))
 
 static void dbus_test_task_class_init (DbusTestTaskClass *klass);
 static void dbus_test_task_init       (DbusTestTask *self);
@@ -38,6 +38,9 @@ dbus_test_task_class_init (DbusTestTaskClass *klass)
 static void
 dbus_test_task_init (DbusTestTask *self)
 {
+	self->priv = DBUS_TEST_TASK_GET_PRIVATE(self);
+
+	self->priv->return_type = DBUS_TEST_TASK_RETURN_NORMAL;
 
 	return;
 }
@@ -117,6 +120,23 @@ dbus_test_task_run (DbusTestTask * task)
 gboolean
 dbus_test_task_passed (DbusTestTask * task)
 {
+	g_return_val_if_fail(DBUS_TEST_IS_TASK(task), FALSE);
 
-	return FALSE;
+	/* If we don't care, we always pass */
+	if (task->priv->return_type == DBUS_TEST_TASK_RETURN_IGNORE) {
+		return TRUE;
+	}
+
+	DbusTestTaskClass * klass = DBUS_TEST_TASK_GET_CLASS(task);
+	if (klass->get_passed == NULL) {
+		return FALSE;
+	}
+
+	gboolean subret = klass->get_passed(task);
+
+	if (task->priv->return_type == DBUS_TEST_TASK_RETURN_INVERT) {
+		return !subret;
+	}
+
+	return subret;
 }
