@@ -57,3 +57,66 @@ dbus_test_task_finalize (GObject *object)
 	G_OBJECT_CLASS (dbus_test_task_parent_class)->finalize (object);
 	return;
 }
+
+DbusTestTask *
+dbus_test_task_new (void)
+{
+
+	return NULL;
+}
+
+void
+dbus_test_task_set_name (DbusTestTask * task, const gchar * name)
+{
+
+	return;
+}
+
+void
+dbus_test_task_set_name_spacing (DbusTestTask * task, guint chars)
+{
+
+	return;
+}
+
+void
+dbus_test_task_set_wait_for (DbusTestTask * task, const gchar * dbus_name)
+{
+
+	return;
+}
+
+void
+dbus_test_task_set_return (DbusTestTask * task, DbusTestTaskReturn ret)
+{
+
+	return;
+}
+
+void
+dbus_test_task_print (DbusTestTask * task, const gchar * message)
+{
+
+	return;
+}
+
+DbusTestTaskState
+dbus_test_task_get_state (DbusTestTask * task)
+{
+
+	return DBUS_TEST_TASK_STATE_FINISHED;
+}
+
+void
+dbus_test_task_run (DbusTestTask * task)
+{
+
+	return;
+}
+
+gboolean
+dbus_test_task_passed (DbusTestTask * task)
+{
+
+	return FALSE;
+}
