@@ -5,11 +5,13 @@
 #include "dbus-test.h"
 
 struct _DbusTestServicePrivate {
-	int dummy;
+	GQueue tasks_first;
+	GQueue tasks_normal;
+	GQueue tasks_last;
 };
 
 #define DBUS_TEST_SERVICE_GET_PRIVATE(o) \
-(G_TYPE_INSTANCE_GET_PRIVATE ((o), DBUS_TEST_SERVICE_TYPE, DbusTestServicePrivate))
+(G_TYPE_INSTANCE_GET_PRIVATE ((o), DBUS_TEST_TYPE_SERVICE, DbusTestServicePrivate))
 
 static void dbus_test_service_class_init (DbusTestServiceClass *klass);
 static void dbus_test_service_init       (DbusTestService *self);
@@ -34,6 +36,11 @@ dbus_test_service_class_init (DbusTestServiceClass *klass)
 static void
 dbus_test_service_init (DbusTestService *self)
 {
+	self->priv = DBUS_TEST_SERVICE_GET_PRIVATE(self);
+
+	g_queue_init(&self->priv->tasks_first);
+	g_queue_init(&self->priv->tasks_normal);
+	g_queue_init(&self->priv->tasks_last);
 
 	return;
 }
@@ -41,7 +48,23 @@ dbus_test_service_init (DbusTestService *self)
 static void
 dbus_test_service_dispose (GObject *object)
 {
+	g_return_if_fail(DBUS_TEST_IS_SERVICE(object));
+	DbusTestService * self = DBUS_TEST_SERVICE(object);
 
+	if (!g_queue_is_empty(&self->priv->tasks_first)) {
+		g_queue_foreach(&self->priv->tasks_first, (GFunc)g_object_unref, NULL);
+		g_queue_clear(&self->priv->tasks_first);
+	}
+
+	if (!g_queue_is_empty(&self->priv->tasks_normal)) {
+		g_queue_foreach(&self->priv->tasks_normal, (GFunc)g_object_unref, NULL);
+		g_queue_clear(&self->priv->tasks_normal);
+	}
+
+	if (!g_queue_is_empty(&self->priv->tasks_last)) {
+		g_queue_foreach(&self->priv->tasks_last, (GFunc)g_object_unref, NULL);
+		g_queue_clear(&self->priv->tasks_last);
+	}
 
 	G_OBJECT_CLASS (dbus_test_service_parent_class)->dispose (object);
 	return;
