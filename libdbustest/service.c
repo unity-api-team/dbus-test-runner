@@ -55,3 +55,37 @@ dbus_test_service_finalize (GObject *object)
 	G_OBJECT_CLASS (dbus_test_service_parent_class)->finalize (object);
 	return;
 }
+
+DbusTestService *
+dbus_test_service_new (const gchar * address)
+{
+
+	return NULL;
+}
+
+void
+dbus_test_service_start_tasks (DbusTestService * service)
+{
+
+	return;
+}
+
+int
+dbus_test_service_run (DbusTestService * service)
+{
+
+	return -1;
+}
+
+void
+dbus_test_service_add_task (DbusTestService * service, DbusTestTask * task)
+{
+	return dbus_test_service_add_task_with_priority(service, task, DBUS_TEST_SERVICE_PRIORITY_NORMAL);
+}
+
+void
+dbus_test_service_add_task_with_priority (DbusTestService * service, DbusTestTask * task, DbusTestServicePriority prio)
+{
+
+	return;
+}
