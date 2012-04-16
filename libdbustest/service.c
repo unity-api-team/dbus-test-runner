@@ -113,6 +113,24 @@ dbus_test_service_add_task (DbusTestService * service, DbusTestTask * task)
 void
 dbus_test_service_add_task_with_priority (DbusTestService * service, DbusTestTask * task, DbusTestServicePriority prio)
 {
+	GQueue * queue = NULL;
+
+	switch (prio) {
+	case DBUS_TEST_SERVICE_PRIORITY_FIRST:
+		queue = &service->priv->tasks_first;
+		break;
+	case DBUS_TEST_SERVICE_PRIORITY_NORMAL:
+		queue = &service->priv->tasks_normal;
+		break;
+	case DBUS_TEST_SERVICE_PRIORITY_LAST:
+		queue = &service->priv->tasks_last;
+		break;
+	default:
+		g_assert_not_reached();
+		break;
+	}
+
+	g_queue_push_tail(queue, g_object_ref(task));
 
 	return;
 }
