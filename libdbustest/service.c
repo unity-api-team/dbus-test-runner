@@ -8,6 +8,8 @@ struct _DbusTestServicePrivate {
 	GQueue tasks_first;
 	GQueue tasks_normal;
 	GQueue tasks_last;
+
+	GMainLoop * mainloop;
 };
 
 #define DBUS_TEST_SERVICE_GET_PRIVATE(o) \
@@ -42,6 +44,8 @@ dbus_test_service_init (DbusTestService *self)
 	g_queue_init(&self->priv->tasks_normal);
 	g_queue_init(&self->priv->tasks_last);
 
+	self->priv->mainloop = g_main_loop_new(NULL, FALSE);
+
 	return;
 }
 
@@ -64,6 +68,11 @@ dbus_test_service_dispose (GObject *object)
 	if (!g_queue_is_empty(&self->priv->tasks_last)) {
 		g_queue_foreach(&self->priv->tasks_last, (GFunc)g_object_unref, NULL);
 		g_queue_clear(&self->priv->tasks_last);
+	}
+
+	if (self->priv->mainloop != NULL) {
+		g_main_loop_unref(self->priv->mainloop);
+		self->priv->mainloop = NULL;
 	}
 
 	G_OBJECT_CLASS (dbus_test_service_parent_class)->dispose (object);
