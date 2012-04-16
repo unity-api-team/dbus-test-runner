@@ -59,8 +59,12 @@ dbus_test_service_finalize (GObject *object)
 DbusTestService *
 dbus_test_service_new (const gchar * address)
 {
+	DbusTestService * service = g_object_new(DBUS_TEST_TYPE_SERVICE,
+	                                         NULL);
 
-	return NULL;
+	/* TODO: Use the address */
+
+	return service;
 }
 
 void
