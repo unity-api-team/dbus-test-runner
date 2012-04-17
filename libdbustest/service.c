@@ -214,11 +214,27 @@ dbus_test_service_start_tasks (DbusTestService * service)
 	return;
 }
 
+static void
+all_tasks_passed_helper (gpointer data, gpointer user_data)
+{
+	DbusTestTask * task = DBUS_TEST_TASK(data);
+	gboolean * all_passed = (gboolean *)user_data;
+
+	if (!dbus_test_task_passed(task)) {
+		*all_passed = FALSE;
+	}
+
+	return;
+}
+
 static int
 get_status (DbusTestService * service)
 {
-
-	return -1;
+	if (all_tasks(service, all_tasks_passed_helper)) {
+		return 0;
+	} else {
+		return -1;
+	}
 }
 
 int
