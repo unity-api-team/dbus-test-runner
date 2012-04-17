@@ -217,7 +217,7 @@ dbus_test_process_new (const gchar * executable)
 
 	proc->priv->executable = g_strdup(executable);
 
-	return NULL;
+	return proc;
 }
 
 void
