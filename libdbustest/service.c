@@ -208,6 +208,13 @@ dbus_test_service_run (DbusTestService * service)
 static void
 task_state_changed (DbusTestTask * task, DbusTestTaskState state, gpointer user_data)
 {
+	g_return_if_fail(DBUS_TEST_IS_SERVICE(user_data));
+	DbusTestService * service = DBUS_TEST_SERVICE(user_data);
+
+	if (service->priv->state == STATE_STARTING && all_tasks_started(service)) {
+		g_main_loop_quit(service->priv->mainloop);
+		return;
+	}
 
 	return;
 }
