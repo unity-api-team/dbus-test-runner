@@ -290,6 +290,9 @@ dbus_test_service_add_task (DbusTestService * service, DbusTestTask * task)
 void
 dbus_test_service_add_task_with_priority (DbusTestService * service, DbusTestTask * task, DbusTestServicePriority prio)
 {
+	g_return_if_fail(DBUS_TEST_IS_SERVICE(service));
+	g_return_if_fail(DBUS_TEST_IS_TASK(task));
+
 	GQueue * queue = NULL;
 
 	switch (prio) {
