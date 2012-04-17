@@ -126,6 +126,21 @@ dbus_test_service_new (const gchar * address)
 }
 
 static void
+all_tasks_finished_helper (gpointer data, gpointer user_data)
+{
+	DbusTestTask * task = DBUS_TEST_TASK(data);
+	gboolean * all_finished = (gboolean *)user_data;
+
+	DbusTestTaskState state = dbus_test_task_get_state(task);
+
+	if (state != DBUS_TEST_TASK_STATE_FINISHED) {
+		*all_finished = FALSE;
+	}
+
+	return;
+}
+
+static void
 all_tasks_started_helper (gpointer data, gpointer user_data)
 {
 	DbusTestTask * task = DBUS_TEST_TASK(data);
@@ -212,6 +227,11 @@ task_state_changed (DbusTestTask * task, DbusTestTaskState state, gpointer user_
 	DbusTestService * service = DBUS_TEST_SERVICE(user_data);
 
 	if (service->priv->state == STATE_STARTING && all_tasks(service, all_tasks_started_helper)) {
+		g_main_loop_quit(service->priv->mainloop);
+		return;
+	}
+
+	if (service->priv->state == STATE_RUNNING && all_tasks(service, all_tasks_finished_helper)) {
 		g_main_loop_quit(service->priv->mainloop);
 		return;
 	}
