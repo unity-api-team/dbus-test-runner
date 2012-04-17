@@ -241,7 +241,7 @@ wait_for_found (GDBusConnection * connection, const gchar * name, const gchar * 
 		klass->run(task);
 	} else {
 		task->priv->been_run = TRUE;
-		/* TODO: signal finished */
+		g_signal_emit(G_OBJECT(task), signals[STATE_CHANGED], 0, DBUS_TEST_TASK_STATE_FINISHED, NULL);
 	}
 
 	return;
@@ -262,6 +262,7 @@ dbus_test_task_run (DbusTestTask * task)
 		                                         NULL,
 		                                         task,
 		                                         NULL);
+		g_signal_emit(G_OBJECT(task), signals[STATE_CHANGED], 0, DBUS_TEST_TASK_STATE_WAITING, NULL);
 		return;
 	}
 
@@ -270,7 +271,7 @@ dbus_test_task_run (DbusTestTask * task)
 		klass->run(task);
 	} else {
 		task->priv->been_run = TRUE;
-		/* TODO: signal finished */
+		g_signal_emit(G_OBJECT(task), signals[STATE_CHANGED], 0, DBUS_TEST_TASK_STATE_FINISHED, NULL);
 	}
 
 	return;
