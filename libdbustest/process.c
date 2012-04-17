@@ -206,3 +206,17 @@ process_run (DbusTestTask * task)
 
 	return;
 }
+
+DbusTestProcess *
+dbus_test_process_new (const gchar * executable)
+{
+
+	return NULL;
+}
+
+void
+dbus_test_process_append_param (DbusTestProcess * process, const gchar * parameter)
+{
+
+	return;
+}
