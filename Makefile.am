@@ -1,7 +1,7 @@
 SUBDIRS = \
 	data \
-	src \
 	libdbustest \
+	src \
 	tests \
 	po
 
