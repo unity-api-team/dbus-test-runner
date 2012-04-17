@@ -66,6 +66,7 @@ void dbus_test_task_set_return (DbusTestTask * task, DbusTestTaskReturn ret);
 void dbus_test_task_print (DbusTestTask * task, const gchar * message);
 
 DbusTestTaskState dbus_test_task_get_state (DbusTestTask * task);
+DbusTestTaskReturn dbus_test_task_get_return (DbusTestTask * task);
 
 void dbus_test_task_run (DbusTestTask * task);
 

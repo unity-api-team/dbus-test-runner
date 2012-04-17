@@ -227,6 +227,14 @@ dbus_test_task_get_state (DbusTestTask * task)
 	}
 }
 
+DbusTestTaskReturn
+dbus_test_task_get_return (DbusTestTask * task)
+{
+	g_return_val_if_fail(DBUS_TEST_IS_TASK(task), DBUS_TEST_TASK_RETURN_IGNORE);
+
+	return task->priv->return_type;
+}
+
 static void
 wait_for_found (GDBusConnection * connection, const gchar * name, const gchar * name_owner, gpointer user_data)
 {

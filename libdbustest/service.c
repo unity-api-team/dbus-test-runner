@@ -132,8 +132,9 @@ all_tasks_finished_helper (gpointer data, gpointer user_data)
 	gboolean * all_finished = (gboolean *)user_data;
 
 	DbusTestTaskState state = dbus_test_task_get_state(task);
+	DbusTestTaskReturn ret  = dbus_test_task_get_return(task);
 
-	if (state != DBUS_TEST_TASK_STATE_FINISHED) {
+	if (state != DBUS_TEST_TASK_STATE_FINISHED && ret != DBUS_TEST_TASK_RETURN_IGNORE) {
 		*all_finished = FALSE;
 	}
 
