@@ -114,7 +114,7 @@ proc_watcher (GPid pid, gint status, gpointer data)
 	process->priv->complete = TRUE;
 	process->priv->status = status;
 
-	/* TODO: Signal finished */
+	g_signal_emit_by_name(G_OBJECT(process), DBUS_TEST_TASK_SIGNAL_STATE_CHANGED, DBUS_TEST_TASK_STATE_FINISHED, NULL);
 
 	return;
 }
@@ -183,7 +183,7 @@ process_run (DbusTestTask * task)
 
 	if (error != NULL) {
 		g_warning("Unable to start process '%s': %s", process->priv->executable, error->message);
-		/* TODO: Signal finished */
+		g_signal_emit_by_name(G_OBJECT(process), DBUS_TEST_TASK_SIGNAL_STATE_CHANGED, DBUS_TEST_TASK_STATE_FINISHED, NULL);
 		return;
 	}
 
@@ -201,6 +201,8 @@ process_run (DbusTestTask * task)
 	                                         process); /* func data */
 
 	process->priv->watcher = g_child_watch_add(process->priv->pid, proc_watcher, process);
+
+	g_signal_emit_by_name(G_OBJECT(process), DBUS_TEST_TASK_SIGNAL_STATE_CHANGED, DBUS_TEST_TASK_STATE_RUNNING, NULL);
 
 	return;
 }
