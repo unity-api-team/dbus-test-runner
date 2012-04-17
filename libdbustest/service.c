@@ -126,7 +126,7 @@ dbus_test_service_new (const gchar * address)
 }
 
 static void
-all_task_started_helper (gpointer data, gpointer user_data)
+all_tasks_started_helper (gpointer data, gpointer user_data)
 {
 	DbusTestTask * task = DBUS_TEST_TASK(data);
 	gboolean * all_started = (gboolean *)user_data;
@@ -141,22 +141,22 @@ all_task_started_helper (gpointer data, gpointer user_data)
 }
 
 static gboolean
-all_tasks_started (DbusTestService * service)
+all_tasks (DbusTestService * service, GFunc helper)
 {
-	gboolean all_started = TRUE;
+	gboolean breaknow = TRUE;
 
-	g_queue_foreach(&service->priv->tasks_first, all_task_started_helper, &all_started);
-	if (!all_started) {
+	g_queue_foreach(&service->priv->tasks_first, helper, &breaknow);
+	if (!breaknow) {
 		return FALSE;
 	}
 
-	g_queue_foreach(&service->priv->tasks_normal, all_task_started_helper, &all_started);
-	if (!all_started) {
+	g_queue_foreach(&service->priv->tasks_normal, helper, &breaknow);
+	if (!breaknow) {
 		return FALSE;
 	}
 
-	g_queue_foreach(&service->priv->tasks_last, all_task_started_helper, &all_started);
-	if (!all_started) {
+	g_queue_foreach(&service->priv->tasks_last, helper, &breaknow);
+	if (!breaknow) {
 		return FALSE;
 	}
 
@@ -178,7 +178,7 @@ dbus_test_service_start_tasks (DbusTestService * service)
 {
 	g_return_if_fail(DBUS_TEST_SERVICE(service));
 
-	if (all_tasks_started(service)) {
+	if (all_tasks(service, all_tasks_started_helper)) {
 		return;
 	}
 
@@ -192,7 +192,7 @@ dbus_test_service_start_tasks (DbusTestService * service)
 	g_main_loop_run(service->priv->mainloop);
 
 	/* This should never happen, but let's be sure */
-	g_return_if_fail(all_tasks_started(service));
+	g_return_if_fail(all_tasks(service, all_tasks_started_helper));
 	service->priv->state = STATE_STARTED;
 
 	return;
@@ -211,7 +211,7 @@ task_state_changed (DbusTestTask * task, DbusTestTaskState state, gpointer user_
 	g_return_if_fail(DBUS_TEST_IS_SERVICE(user_data));
 	DbusTestService * service = DBUS_TEST_SERVICE(user_data);
 
-	if (service->priv->state == STATE_STARTING && all_tasks_started(service)) {
+	if (service->priv->state == STATE_STARTING && all_tasks(service, all_tasks_started_helper)) {
 		g_main_loop_quit(service->priv->mainloop);
 		return;
 	}
