@@ -210,6 +210,12 @@ process_run (DbusTestTask * task)
 DbusTestProcess *
 dbus_test_process_new (const gchar * executable)
 {
+	g_return_val_if_fail(executable != NULL, NULL);
+
+	DbusTestProcess * proc = g_object_new(DBUS_TEST_TYPE_PROCESS,
+	                                      NULL);
+
+	proc->priv->executable = g_strdup(executable);
 
 	return NULL;
 }
@@ -217,6 +223,10 @@ dbus_test_process_new (const gchar * executable)
 void
 dbus_test_process_append_param (DbusTestProcess * process, const gchar * parameter)
 {
+	g_return_if_fail(DBUS_TEST_IS_PROCESS(process));
+	g_return_if_fail(parameter != NULL);
+
+	process->priv->parameters = g_list_append(process->priv->parameters, g_strdup(parameter));
 
 	return;
 }
