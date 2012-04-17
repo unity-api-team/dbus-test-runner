@@ -99,9 +99,52 @@ dbus_test_service_new (const gchar * address)
 	return service;
 }
 
+static void
+all_task_started_helper (gpointer data, gpointer user_data)
+{
+	DbusTestTask * task = DBUS_TEST_TASK(data);
+	gboolean * all_started = (gboolean *)user_data;
+
+	DbusTestTaskState state = dbus_test_task_get_state(task);
+
+	if (state == DBUS_TEST_TASK_STATE_INIT || state == DBUS_TEST_TASK_STATE_WAITING) {
+		*all_started = FALSE;
+	}
+
+	return;
+}
+
+static gboolean
+all_tasks_started (DbusTestService * service)
+{
+	gboolean all_started = TRUE;
+
+	g_queue_foreach(&service->priv->tasks_first, all_task_started_helper, &all_started);
+	if (!all_started) {
+		return FALSE;
+	}
+
+	g_queue_foreach(&service->priv->tasks_normal, all_task_started_helper, &all_started);
+	if (!all_started) {
+		return FALSE;
+	}
+
+	g_queue_foreach(&service->priv->tasks_last, all_task_started_helper, &all_started);
+	if (!all_started) {
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
 void
 dbus_test_service_start_tasks (DbusTestService * service)
 {
+	g_return_if_fail(DBUS_TEST_SERVICE(service));
+
+	if (all_tasks_started(service)) {
+		return;
+	}
 
 	return;
 }
