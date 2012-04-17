@@ -160,9 +160,9 @@ main (int argc, char * argv[])
 	GError * error = NULL;
 	GOptionContext * context;
 
-	service = dbus_test_service_new(NULL);
-
 	g_type_init();
+
+	service = dbus_test_service_new(NULL);
 
 	context = g_option_context_new("- run multiple tasks under an independent DBus session bus");
 
