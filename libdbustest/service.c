@@ -4,12 +4,22 @@
 
 #include "dbus-test.h"
 
+typedef enum _ServiceState ServiceState;
+enum _ServiceState {
+	STATE_INIT,
+	STATE_STARTING,
+	STATE_STARTED,
+	STATE_RUNNING,
+	STATE_FINISHED
+};
+
 struct _DbusTestServicePrivate {
 	GQueue tasks_first;
 	GQueue tasks_normal;
 	GQueue tasks_last;
 
 	GMainLoop * mainloop;
+	ServiceState state;
 };
 
 #define DBUS_TEST_SERVICE_GET_PRIVATE(o) \
@@ -137,6 +147,16 @@ all_tasks_started (DbusTestService * service)
 	return TRUE;
 }
 
+static void
+task_starter (gpointer data, gpointer user_data)
+{
+	DbusTestTask * task = DBUS_TEST_TASK(data);
+
+	dbus_test_task_run(task);
+
+	return;
+}
+
 void
 dbus_test_service_start_tasks (DbusTestService * service)
 {
@@ -145,6 +165,19 @@ dbus_test_service_start_tasks (DbusTestService * service)
 	if (all_tasks_started(service)) {
 		return;
 	}
+
+	g_queue_foreach(&service->priv->tasks_first, task_starter, NULL);
+	/* TODO: Let some events through */
+	g_queue_foreach(&service->priv->tasks_normal, task_starter, NULL);
+	/* TODO: Let some events through */
+	g_queue_foreach(&service->priv->tasks_last, task_starter, NULL);
+
+	service->priv->state = STATE_STARTING;
+	g_main_loop_run(service->priv->mainloop);
+
+	/* This should never happen, but let's be sure */
+	g_return_if_fail(all_tasks_started(service));
+	service->priv->state = STATE_STARTED;
 
 	return;
 }
