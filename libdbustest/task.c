@@ -18,6 +18,12 @@ struct _DbusTestTaskPrivate {
 	gboolean been_run;
 };
 
+/* Signals */
+enum {
+	STATE_CHANGED,
+	LAST_SIGNAL /* Don't touch! */
+};
+
 #define DBUS_TEST_TASK_GET_PRIVATE(o) \
 (G_TYPE_INSTANCE_GET_PRIVATE ((o), DBUS_TEST_TYPE_TASK, DbusTestTaskPrivate))
 
@@ -27,6 +33,8 @@ static void dbus_test_task_dispose    (GObject *object);
 static void dbus_test_task_finalize   (GObject *object);
 
 G_DEFINE_TYPE (DbusTestTask, dbus_test_task, G_TYPE_OBJECT);
+
+static guint signals[LAST_SIGNAL] = {0};
 
 static void
 dbus_test_task_class_init (DbusTestTaskClass *klass)
@@ -41,6 +49,14 @@ dbus_test_task_class_init (DbusTestTaskClass *klass)
 	klass->run = NULL;
 	klass->get_state = NULL;
 	klass->get_passed = NULL;
+
+	signals[STATE_CHANGED]  = g_signal_new(DBUS_TEST_TASK_SIGNAL_STATE_CHANGED,
+	                                       G_TYPE_FROM_CLASS (klass),
+	                                       G_SIGNAL_RUN_LAST,
+	                                       G_STRUCT_OFFSET (DbusTestTaskClass, state_changed),
+	                                       NULL, NULL,
+	                                       g_cclosure_marshal_VOID__INT,
+	                                       G_TYPE_NONE, 1, G_TYPE_INT, G_TYPE_NONE);
 
 	return;
 }

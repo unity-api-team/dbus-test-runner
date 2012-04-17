@@ -10,6 +10,8 @@
 
 G_BEGIN_DECLS
 
+#define DBUS_TEST_TASK_SIGNAL_STATE_CHANGED  "state-changed"
+
 #define DBUS_TEST_TYPE_TASK            (dbus_test_task_get_type ())
 #define DBUS_TEST_TASK(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), DBUS_TEST_TYPE_TASK, DbusTestTask))
 #define DBUS_TEST_TASK_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), DBUS_TEST_TYPE_TASK, DbusTestTaskClass))
@@ -32,6 +34,7 @@ struct _DbusTestTaskClass {
 	gboolean           (*get_passed)  (DbusTestTask * task);
 
 	/* Signals */
+	void               (*state_changed) (DbusTestTask * task, DbusTestTaskState new_state, gpointer user_data);
 };
 
 struct _DbusTestTask {
