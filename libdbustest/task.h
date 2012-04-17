@@ -59,7 +59,7 @@ GType dbus_test_task_get_type (void);
 DbusTestTask * dbus_test_task_new (void);
 
 void dbus_test_task_set_name (DbusTestTask * task, const gchar * name);
-void dbus_test_task_set_name_spacing (DbusTestTask * task, guint chars);
+void dbus_test_task_set_name_spacing (DbusTestTask * task, glong chars);
 void dbus_test_task_set_wait_for (DbusTestTask * task, const gchar * dbus_name);
 void dbus_test_task_set_return (DbusTestTask * task, DbusTestTaskReturn ret);
 

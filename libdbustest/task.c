@@ -13,7 +13,7 @@ struct _DbusTestTaskPrivate {
 
 	gchar * name;
 	gchar * name_padded;
-	guint padding_cnt;
+	glong padding_cnt;
 
 	gboolean been_run;
 };
@@ -141,7 +141,7 @@ dbus_test_task_set_name (DbusTestTask * task, const gchar * name)
 }
 
 void
-dbus_test_task_set_name_spacing (DbusTestTask * task, guint chars)
+dbus_test_task_set_name_spacing (DbusTestTask * task, glong chars)
 {
 	g_return_if_fail(DBUS_TEST_IS_TASK(task));
 

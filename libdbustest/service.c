@@ -180,6 +180,47 @@ all_tasks (DbusTestService * service, GFunc helper)
 }
 
 static void
+task_set_name_length (gpointer data, gpointer user_data)
+{
+	DbusTestTask * task = DBUS_TEST_TASK(data);
+	glong * length = (glong *)user_data;
+
+	dbus_test_task_set_name_spacing(task, *length);
+	return;
+}
+
+static void
+task_get_name_length (gpointer data, gpointer user_data)
+{
+	DbusTestTask * task = DBUS_TEST_TASK(data);
+	glong * length = (glong *)user_data;
+
+	const gchar * name = dbus_test_task_get_name(task);
+	g_return_if_fail(name != NULL);
+
+	glong nlength = g_utf8_strlen(name, -1);
+	*length = MAX(*length, nlength);
+
+	return;
+}
+
+static void
+normalize_name_lengths (DbusTestService * service)
+{
+	glong length = 0;
+
+	g_queue_foreach(&service->priv->tasks_first, task_get_name_length, &length);
+	g_queue_foreach(&service->priv->tasks_normal, task_get_name_length, &length);
+	g_queue_foreach(&service->priv->tasks_last, task_get_name_length, &length);
+
+	g_queue_foreach(&service->priv->tasks_first, task_set_name_length, &length);
+	g_queue_foreach(&service->priv->tasks_normal, task_set_name_length, &length);
+	g_queue_foreach(&service->priv->tasks_last, task_set_name_length, &length);
+
+	return;
+}
+
+static void
 task_starter (gpointer data, gpointer user_data)
 {
 	DbusTestTask * task = DBUS_TEST_TASK(data);
@@ -198,7 +239,7 @@ dbus_test_service_start_tasks (DbusTestService * service)
 		return;
 	}
 
-	/* TODO: Standardize name lengths */
+	normalize_name_lengths(service);
 
 	/* TODO: Start dbus daemon */
 
