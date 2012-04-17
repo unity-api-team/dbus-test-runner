@@ -22,6 +22,8 @@ struct _DbusTestServicePrivate {
 	ServiceState state;
 };
 
+#define SERVICE_CHANGE_HANDLER  "dbus-test-service-change-handler"
+
 #define DBUS_TEST_SERVICE_GET_PRIVATE(o) \
 (G_TYPE_INSTANCE_GET_PRIVATE ((o), DBUS_TEST_TYPE_SERVICE, DbusTestServicePrivate))
 
@@ -60,23 +62,37 @@ dbus_test_service_init (DbusTestService *self)
 }
 
 static void
+task_unref (gpointer data, gpointer user_data)
+{
+	DbusTestTask * task = DBUS_TEST_TASK(data);
+
+	gulong handler = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(task), SERVICE_CHANGE_HANDLER));
+	if (handler != 0) {
+		g_signal_handler_disconnect(G_OBJECT(task), handler);
+	}
+
+	g_object_unref(task);
+	return;
+}
+
+static void
 dbus_test_service_dispose (GObject *object)
 {
 	g_return_if_fail(DBUS_TEST_IS_SERVICE(object));
 	DbusTestService * self = DBUS_TEST_SERVICE(object);
 
 	if (!g_queue_is_empty(&self->priv->tasks_first)) {
-		g_queue_foreach(&self->priv->tasks_first, (GFunc)g_object_unref, NULL);
+		g_queue_foreach(&self->priv->tasks_first, task_unref, NULL);
 		g_queue_clear(&self->priv->tasks_first);
 	}
 
 	if (!g_queue_is_empty(&self->priv->tasks_normal)) {
-		g_queue_foreach(&self->priv->tasks_normal, (GFunc)g_object_unref, NULL);
+		g_queue_foreach(&self->priv->tasks_normal, task_unref, NULL);
 		g_queue_clear(&self->priv->tasks_normal);
 	}
 
 	if (!g_queue_is_empty(&self->priv->tasks_last)) {
-		g_queue_foreach(&self->priv->tasks_last, (GFunc)g_object_unref, NULL);
+		g_queue_foreach(&self->priv->tasks_last, task_unref, NULL);
 		g_queue_clear(&self->priv->tasks_last);
 	}
 
@@ -224,7 +240,8 @@ dbus_test_service_add_task_with_priority (DbusTestService * service, DbusTestTas
 
 	g_queue_push_tail(queue, g_object_ref(task));
 
-	g_signal_connect(G_OBJECT(task), DBUS_TEST_TASK_SIGNAL_STATE_CHANGED, G_CALLBACK(task_state_changed), service);
+	gulong connect = g_signal_connect(G_OBJECT(task), DBUS_TEST_TASK_SIGNAL_STATE_CHANGED, G_CALLBACK(task_state_changed), service);
+	g_object_set_data(G_OBJECT(task), SERVICE_CHANGE_HANDLER, GUINT_TO_POINTER(connect));
 
 	return;
 }
