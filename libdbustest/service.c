@@ -189,6 +189,13 @@ dbus_test_service_run (DbusTestService * service)
 	return -1;
 }
 
+static void
+task_state_changed (DbusTestTask * task, DbusTestTaskState state, gpointer user_data)
+{
+
+	return;
+}
+
 void
 dbus_test_service_add_task (DbusTestService * service, DbusTestTask * task)
 {
@@ -216,6 +223,8 @@ dbus_test_service_add_task_with_priority (DbusTestService * service, DbusTestTas
 	}
 
 	g_queue_push_tail(queue, g_object_ref(task));
+
+	g_signal_connect(G_OBJECT(task), DBUS_TEST_TASK_SIGNAL_STATE_CHANGED, G_CALLBACK(task_state_changed), service);
 
 	return;
 }
