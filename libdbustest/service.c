@@ -213,11 +213,32 @@ dbus_test_service_start_tasks (DbusTestService * service)
 	return;
 }
 
-int
-dbus_test_service_run (DbusTestService * service)
+static int
+get_status (DbusTestService * service)
 {
 
 	return -1;
+}
+
+int
+dbus_test_service_run (DbusTestService * service)
+{
+	g_return_val_if_fail(DBUS_TEST_SERVICE(service), -1);
+
+	dbus_test_service_start_tasks(service);
+
+	if (all_tasks(service, all_tasks_finished_helper)) {
+		return get_status(service);
+	}
+
+	service->priv->state = STATE_RUNNING;
+	g_main_loop_run(service->priv->mainloop);
+
+	/* This should never happen, but let's be sure */
+	g_return_val_if_fail(all_tasks(service, all_tasks_finished_helper), -1);
+	service->priv->state = STATE_FINISHED;
+
+	return get_status(service);
 }
 
 static void
