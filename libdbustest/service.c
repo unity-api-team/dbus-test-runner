@@ -198,6 +198,10 @@ dbus_test_service_start_tasks (DbusTestService * service)
 		return;
 	}
 
+	/* TODO: Standardize name lengths */
+
+	/* TODO: Start dbus daemon */
+
 	g_queue_foreach(&service->priv->tasks_first, task_starter, NULL);
 	/* TODO: Let some events through */
 	g_queue_foreach(&service->priv->tasks_normal, task_starter, NULL);
