@@ -308,3 +308,19 @@ dbus_test_task_passed (DbusTestTask * task)
 
 	return subret;
 }
+
+const gchar *
+dbus_test_task_get_name (DbusTestTask * task)
+{
+	g_return_val_if_fail(DBUS_TEST_IS_TASK(task), NULL);
+
+	return task->priv->name;
+}
+
+const gchar *
+dbus_test_task_get_wait_for (DbusTestTask * task)
+{
+	g_return_val_if_fail(DBUS_TEST_IS_TASK(task), NULL);
+
+	return task->priv->wait_for;
+}
