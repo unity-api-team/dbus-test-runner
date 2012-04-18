@@ -26,6 +26,7 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 static gint max_wait = 30;
 static DbusTestProcess * last_task = NULL;
 static DbusTestService * service = NULL;
+static gboolean timeout = FALSE;
 
 
 static gboolean
@@ -126,6 +127,7 @@ max_wait_hit (gpointer user_data)
 {
 	g_warning("Timing out at maximum wait of %d seconds.", max_wait);
 	dbus_test_service_stop(service);
+	timeout = TRUE;
 	return FALSE;
 }
 
@@ -207,5 +209,12 @@ main (int argc, char * argv[])
 		last_task = NULL;
 	}
 
-	return dbus_test_service_run(service);
+	gint service_status = dbus_test_service_run(service);
+	g_object_unref(service);
+
+	if (timeout) {
+		return -1;
+	} else {
+		return service_status;
+	}
 }
