@@ -204,7 +204,7 @@ dbus_test_task_print (DbusTestTask * task, const gchar * message)
 		name = task->priv->name_padded;
 	}
 
-	g_print("%s: %s", name, message);
+	g_print("%s: %s\n", name, message);
 
 	return;
 }
