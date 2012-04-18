@@ -340,7 +340,7 @@ start_daemon (DbusTestService * service)
 		return;
 	}
 
-	service->priv->dbus_watch = g_child_watch_add(service->priv->dbus, dbus_watcher, NULL);
+	service->priv->dbus_watch = g_child_watch_add(service->priv->dbus, dbus_watcher, service);
 
 	service->priv->dbus_io = g_io_channel_unix_new(dbus_stdout);
 	g_io_add_watch(service->priv->dbus_io,
