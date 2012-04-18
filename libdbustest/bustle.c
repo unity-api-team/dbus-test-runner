@@ -54,3 +54,17 @@ dbus_test_bustle_finalize (GObject *object)
 	G_OBJECT_CLASS (dbus_test_bustle_parent_class)->finalize (object);
 	return;
 }
+
+DbusTestBustle *
+dbus_test_bustle_new (const gchar * filename)
+{
+
+	return NULL;
+}
+
+void
+dbus_test_bustle_set_executable (DbusTestBustle * bustle, const gchar * executable)
+{
+
+	return;
+}

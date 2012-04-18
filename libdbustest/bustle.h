@@ -28,6 +28,9 @@ struct _DbusTestBustle {
 
 GType dbus_test_bustle_get_type (void);
 
+DbusTestBustle * dbus_test_bustle_new (const gchar * filename);
+void dbus_test_bustle_set_executable (DbusTestBustle * bustle, const gchar * executable);
+
 G_END_DECLS
 
 #endif
