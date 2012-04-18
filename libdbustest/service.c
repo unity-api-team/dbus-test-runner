@@ -414,6 +414,7 @@ dbus_test_service_run (DbusTestService * service)
 	g_return_val_if_fail(DBUS_TEST_SERVICE(service), -1);
 
 	dbus_test_service_start_tasks(service);
+	g_return_val_if_fail(service->priv->state == STATE_STARTED, get_status(service));
 
 	if (all_tasks(service, all_tasks_finished_helper)) {
 		return get_status(service);
