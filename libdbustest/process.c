@@ -127,14 +127,13 @@ proc_writes (GIOChannel * channel, GIOCondition condition, gpointer data)
 
 	gchar * line;
 	gsize termloc;
+	gboolean done = FALSE;
 
 	do {
 		GIOStatus status = g_io_channel_read_line (channel, &line, NULL, &termloc, NULL);
 
 		if (status == G_IO_STATUS_EOF) {
-			/* TODO, end this task */
-			// task->text_die = TRUE;
-			//check_task_cleanup(task, FALSE);
+			done = TRUE;
 			continue;
 		}
 
@@ -147,6 +146,14 @@ proc_writes (GIOChannel * channel, GIOCondition condition, gpointer data)
 		dbus_test_task_print(DBUS_TEST_TASK(process), line);
 		g_free(line);
 	} while (G_IO_IN & g_io_channel_get_buffer_condition(channel));
+
+	if (done) {
+		process->priv->complete = TRUE;
+		process->priv->status = -1;
+
+		g_debug("Task finished");
+		g_signal_emit_by_name(G_OBJECT(process), DBUS_TEST_TASK_SIGNAL_STATE_CHANGED, DBUS_TEST_TASK_STATE_FINISHED, NULL);
+	}
 
 	return TRUE;
 }
