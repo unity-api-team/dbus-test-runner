@@ -7,6 +7,12 @@
 struct _DbusTestBustlePrivate {
 	gchar * filename;
 	gchar * executable;
+
+	guint watch;
+	GIOChannel * stdout;
+	GIOChannel * stderr;
+	GIOChannel * file;
+	GPid pid;
 };
 
 #define DBUS_TEST_BUSTLE_GET_PRIVATE(o) \
@@ -49,12 +55,46 @@ dbus_test_bustle_init (DbusTestBustle *self)
 	self->priv->filename = g_strconcat(g_get_current_dir(), G_DIR_SEPARATOR_S, "bustle.log", NULL);
 	self->priv->executable = g_strdup("bustle-dbus-monitor");
 
+	self->priv->watch = 0;
+	self->priv->stdout = NULL;
+	self->priv->stderr = NULL;
+	self->priv->file = NULL;
+	self->priv->pid = 0;
+
 	return;
 }
 
 static void
 dbus_test_bustle_dispose (GObject *object)
 {
+	g_return_if_fail(DBUS_TEST_IS_BUSTLE(object));
+	DbusTestBustle * bustler = DBUS_TEST_BUSTLE(object);
+
+	if (bustler->priv->watch != 0) {
+		g_source_remove(bustler->priv->watch);
+		bustler->priv->watch = 0;
+	}
+
+	if (bustler->priv->pid != 0) {
+		/* TODO: Send a single dbus message */
+
+		g_spawn_close_pid(bustler->priv->pid);
+	}
+
+	if (bustler->priv->stdout != NULL) {
+		g_io_channel_shutdown(bustler->priv->stdout, TRUE, NULL);
+		bustler->priv->stdout = NULL;
+	}
+
+	if (bustler->priv->stderr != NULL) {
+		g_io_channel_shutdown(bustler->priv->stderr, TRUE, NULL);
+		bustler->priv->stderr = NULL;
+	}
+
+	if (bustler->priv->file != NULL) {
+		g_io_channel_shutdown(bustler->priv->file, TRUE, NULL);
+		bustler->priv->file = NULL;
+	}
 
 	G_OBJECT_CLASS (dbus_test_bustle_parent_class)->dispose (object);
 	return;
