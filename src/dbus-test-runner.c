@@ -28,6 +28,7 @@ static DbusTestProcess * last_task = NULL;
 static DbusTestService * service = NULL;
 static gboolean timeout = FALSE;
 
+#define NAME_SET "dbus-test-runner-name-set"
 
 static gboolean
 option_task (const gchar * arg, const gchar * value, gpointer data, GError ** error)
@@ -50,11 +51,12 @@ option_taskname (const gchar * arg, const gchar * value, gpointer data, GError *
 		return FALSE;
 	}
 
-	if (dbus_test_task_get_name(DBUS_TEST_TASK(last_task)) != NULL) {
+	if (g_object_get_data(G_OBJECT(last_task), NAME_SET)) {
 		g_set_error(error, G_OPTION_ERROR, G_OPTION_ERROR_BAD_VALUE, "Task already has the name %s.  Asked to put %s on it.", dbus_test_task_get_name(DBUS_TEST_TASK(last_task)), value);
 		return FALSE;
 	}
 
+	g_object_set_data(G_OBJECT(last_task), NAME_SET, GINT_TO_POINTER(TRUE));
 	dbus_test_task_set_name(DBUS_TEST_TASK(last_task), value);
 	return TRUE;
 }
