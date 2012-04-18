@@ -374,6 +374,11 @@ dbus_test_service_start_tasks (DbusTestService * service)
 	g_return_if_fail(DBUS_TEST_SERVICE(service));
 
 	if (all_tasks(service, all_tasks_started_helper)) {
+		/* If we have all started we can mark it as such as long
+		   as we understand where we could hit this case */
+		if (service->priv->state == STATE_INIT || service->priv->state == STATE_DAEMON_STARTED) {
+			service->priv->state = STATE_STARTED;
+		}
 		return;
 	}
 
