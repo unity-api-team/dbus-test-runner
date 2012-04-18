@@ -46,6 +46,9 @@ int dbus_test_service_run (DbusTestService * service);
 void dbus_test_service_add_task (DbusTestService * service, DbusTestTask * task);
 void dbus_test_service_add_task_with_priority (DbusTestService * service, DbusTestTask * task, DbusTestServicePriority prio);
 
+void dbus_test_service_set_daemon (DbusTestService * service, const gchar * daemon);
+void dbus_test_service_set_conf_file (DbusTestService * service, const gchar * conffile);
+
 G_END_DECLS
 
 #endif

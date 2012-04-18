@@ -485,3 +485,21 @@ dbus_test_service_add_task_with_priority (DbusTestService * service, DbusTestTas
 
 	return;
 }
+
+void
+dbus_test_service_set_daemon (DbusTestService * service, const gchar * daemon)
+{
+	g_return_if_fail(DBUS_TEST_IS_SERVICE(service));
+	g_free(service->priv->dbus_daemon);
+	service->priv->dbus_daemon = g_strdup(daemon);
+	return;
+}
+
+void
+dbus_test_service_set_conf_file (DbusTestService * service, const gchar * conffile)
+{
+	g_return_if_fail(DBUS_TEST_IS_SERVICE(service));
+	g_free(service->priv->dbus_configfile);
+	service->priv->dbus_configfile = g_strdup(conffile);
+	return;
+}
