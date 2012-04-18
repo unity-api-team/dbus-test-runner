@@ -7,6 +7,8 @@
 typedef enum _ServiceState ServiceState;
 enum _ServiceState {
 	STATE_INIT,
+	STATE_DAEMON_STARTING,
+	STATE_DAEMON_STARTED,
 	STATE_STARTING,
 	STATE_STARTED,
 	STATE_RUNNING,
@@ -272,6 +274,8 @@ task_starter (gpointer data, gpointer user_data)
 gboolean
 dbus_writes (GIOChannel * channel, GIOCondition condition, gpointer data)
 {
+	DbusTestService * service = DBUS_TEST_SERVICE(data);
+
 	if (condition & G_IO_ERR) {
 		g_critical("DBus writing failure!");
 		return FALSE;
@@ -292,6 +296,10 @@ dbus_writes (GIOChannel * channel, GIOCondition condition, gpointer data)
 		g_setenv("DBUS_SESSION_BUS_ADDRESS", line, TRUE);
 		g_setenv("DBUS_STARTER_ADDRESS", line, TRUE);
 		g_setenv("DBUS_STARTER_BUS_TYPE", "session", TRUE);
+
+		if (service->priv->state == STATE_DAEMON_STARTING) {
+			g_main_loop_quit(service->priv->mainloop);
+		}
 	}
 
 	g_free(line);
@@ -318,6 +326,8 @@ dbus_watcher (GPid pid, gint status, gpointer data)
 static void
 start_daemon (DbusTestService * service)
 {
+	service->priv->state = STATE_DAEMON_STARTING;
+
 	gint dbus_stdout = 0;
 	GError * error = NULL;
 	gchar * blank[1] = {NULL};
@@ -347,6 +357,10 @@ start_daemon (DbusTestService * service)
 	               G_IO_IN | G_IO_ERR, /* conditions */
 	               dbus_writes, /* func */
 	               service); /* func data */
+
+
+	g_main_loop_run(service->priv->mainloop);
+	service->priv->state = STATE_DAEMON_STARTED;
 
 	return;
 }
