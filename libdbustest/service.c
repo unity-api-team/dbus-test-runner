@@ -503,3 +503,11 @@ dbus_test_service_set_conf_file (DbusTestService * service, const gchar * conffi
 	service->priv->dbus_configfile = g_strdup(conffile);
 	return;
 }
+
+void
+dbus_test_service_stop (DbusTestService * service)
+{
+	g_return_if_fail(DBUS_TEST_IS_SERVICE(service));
+	g_main_loop_quit(service->priv->mainloop);
+	return;
+}

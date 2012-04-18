@@ -42,6 +42,7 @@ GType dbus_test_service_get_type (void);
 DbusTestService * dbus_test_service_new (const gchar * address);
 void dbus_test_service_start_tasks (DbusTestService * service);
 int dbus_test_service_run (DbusTestService * service);
+void dbus_test_service_stop (DbusTestService * service);
 
 void dbus_test_service_add_task (DbusTestService * service, DbusTestTask * task);
 void dbus_test_service_add_task_with_priority (DbusTestService * service, DbusTestTask * task, DbusTestServicePriority prio);
