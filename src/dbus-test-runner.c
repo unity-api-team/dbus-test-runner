@@ -185,6 +185,18 @@ main (int argc, char * argv[])
 		dbus_test_service_set_conf_file(service, dbus_configfile);
 	}
 
+	if (bustle_datafile != NULL) {
+		DbusTestBustle * bustler = dbus_test_bustle_new(bustle_datafile);
+		/* We want to ensure that bustle captures all the data so start it first */
+		dbus_test_service_add_task_with_priority(service, DBUS_TEST_TASK(bustler), DBUS_TEST_SERVICE_PRIORITY_FIRST);
+
+		if (bustle_cmd != NULL) {
+			dbus_test_bustle_set_executable(bustler, bustle_cmd);
+		}
+
+		g_object_unref(bustler);
+	}
+
 	if (max_wait > 0) {
 		g_timeout_add_seconds(max_wait, max_wait_hit, NULL);
 	}
