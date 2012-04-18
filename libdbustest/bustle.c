@@ -128,6 +128,8 @@ dbus_test_bustle_new (const gchar * filename)
 	g_free(bustler->priv->filename);
 	bustler->priv->filename = g_strdup(filename);
 
+	dbus_test_task_set_name(DBUS_TEST_TASK(bustler), "Bustle");
+
 	return bustler;
 }
 
@@ -160,9 +162,131 @@ bustle_watcher (GPid pid, gint status, gpointer data)
 	return;
 }
 
+static gboolean
+bustle_write_error (GIOChannel * channel, GIOCondition condition, gpointer data)
+{
+	gchar * line;
+	gsize termloc;
+
+	do {
+		GIOStatus status = g_io_channel_read_line (channel, &line, NULL, &termloc, NULL);
+
+		if (status == G_IO_STATUS_EOF) {
+			return FALSE;
+		}
+
+		if (status != G_IO_STATUS_NORMAL) {
+			continue;
+		}
+
+		line[termloc] = '\0';
+
+		dbus_test_task_print(DBUS_TEST_TASK(data), line);
+		g_free(line);
+	} while (G_IO_IN & g_io_channel_get_buffer_condition(channel));
+
+	return TRUE;
+}
+
+static gboolean
+bustle_writes (GIOChannel * channel, GIOCondition condition, gpointer data)
+{
+	gchar * line;
+	gsize termloc;
+
+	GIOStatus status = g_io_channel_read_line (channel, &line, NULL, &termloc, NULL);
+
+	if (status != G_IO_STATUS_NORMAL) {
+		return FALSE;
+	}
+
+	g_io_channel_write_chars((GIOChannel *)data,
+							 line,
+							 termloc,
+							 NULL,
+							 NULL);
+	g_io_channel_write_chars((GIOChannel *)data,
+							 "\n",
+							 1,
+							 NULL,
+							 NULL);
+
+	g_free(line);
+
+	return TRUE;
+}
+
 static void
 process_run (DbusTestTask * task)
 {
+	g_return_if_fail(DBUS_TEST_IS_BUSTLE(task));
+	DbusTestBustle * bustler = DBUS_TEST_BUSTLE(task);
+
+	if (bustler->priv->pid != 0) {
+		return;
+	}
+	
+	GError * error = NULL;
+
+	bustler->priv->file = g_io_channel_new_file(bustler->priv->filename, "w", &error);
+
+	if (error != NULL) {
+		g_critical("Unable to open bustle file '%s': %s", bustler->priv->filename, error->message);
+		g_error_free(error);
+
+		bustler->priv->crashed = TRUE;
+		g_signal_emit_by_name(G_OBJECT(bustler), DBUS_TEST_TASK_SIGNAL_STATE_CHANGED, DBUS_TEST_TASK_STATE_FINISHED, NULL);
+		return;
+	}
+
+	gint bustle_stdout_num;
+	gint bustle_stderr_num;
+	
+	gchar ** bustle_monitor = g_new0(gchar *, 3);
+	bustle_monitor[0] = (gchar *)bustler->priv->executable;
+	bustle_monitor[1] = "--session";
+
+	g_spawn_async_with_pipes(g_get_current_dir(),
+	                         bustle_monitor, /* argv */
+	                         NULL, /* envp */
+	                         /* G_SPAWN_SEARCH_PATH | G_SPAWN_STDERR_TO_DEV_NULL, */ /* flags */
+	                         G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD, /* flags */
+	                         NULL, /* child setup func */
+	                         NULL, /* child setup data */
+	                         &bustler->priv->pid, /* PID */
+	                         NULL, /* stdin */
+	                         &bustle_stdout_num, /* stdout */
+	                         &bustle_stderr_num, /* stderr */
+	                         &error); /* error */
+
+	if (error != NULL) {
+		g_critical("Unable to start bustling data: %s", error->message);
+		g_error_free(error);
+
+		bustler->priv->pid = 0; /* ensure this */
+		bustler->priv->crashed = TRUE;
+		g_signal_emit_by_name(G_OBJECT(bustler), DBUS_TEST_TASK_SIGNAL_STATE_CHANGED, DBUS_TEST_TASK_STATE_FINISHED, NULL);
+		return;
+	}
+
+	if (TRUE) {
+		gchar * start = g_strdup_printf("Starting bustle monitor.  PID: %d", bustler->priv->pid);
+		dbus_test_task_print(DBUS_TEST_TASK(bustler), start);
+		g_free(start);
+	}
+	bustler->priv->watch = g_child_watch_add(bustler->priv->pid, bustle_watcher, bustler);
+
+	bustler->priv->stdout = g_io_channel_unix_new(bustle_stdout_num);
+	g_io_add_watch(bustler->priv->stdout,
+	               G_IO_IN | G_IO_PRI, /* conditions */
+	               bustle_writes, /* func */
+	               bustler->priv->file); /* func data */
+
+	bustler->priv->stderr = g_io_channel_unix_new(bustle_stderr_num);
+	g_io_add_watch(bustler->priv->stderr,
+	               G_IO_IN, /* conditions */
+	               bustle_write_error, /* func */
+	               bustler); /* func data */
 
 	return;
 }
