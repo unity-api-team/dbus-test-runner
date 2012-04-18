@@ -178,6 +178,14 @@ main (int argc, char * argv[])
 		return 1;
 	}
 
+	if (dbus_daemon != NULL) {
+		dbus_test_service_set_daemon(service, dbus_daemon);
+	}
+
+	if (dbus_configfile != NULL) {
+		dbus_test_service_set_conf_file(service, dbus_configfile);
+	}
+
 	if (max_wait > 0) {
 		g_timeout_add_seconds(max_wait, max_wait_hit, NULL);
 	}
