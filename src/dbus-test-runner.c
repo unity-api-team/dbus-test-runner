@@ -207,6 +207,10 @@ main (int argc, char * argv[])
 	if (last_task != NULL) {
 		g_object_unref(last_task);
 		last_task = NULL;
+	} else {
+		g_critical("No tasks assigned");
+		g_object_unref(service);
+		return -1;
 	}
 
 	gint service_status = dbus_test_service_run(service);
