@@ -16,6 +16,9 @@ static void dbus_test_bustle_class_init (DbusTestBustleClass *klass);
 static void dbus_test_bustle_init       (DbusTestBustle *self);
 static void dbus_test_bustle_dispose    (GObject *object);
 static void dbus_test_bustle_finalize   (GObject *object);
+static void process_run                 (DbusTestTask * task);
+static DbusTestTaskState get_state      (DbusTestTask * task);
+static gboolean get_passed              (DbusTestTask * task);
 
 G_DEFINE_TYPE (DbusTestBustle, dbus_test_bustle, DBUS_TEST_TYPE_TASK);
 
@@ -28,6 +31,12 @@ dbus_test_bustle_class_init (DbusTestBustleClass *klass)
 
 	object_class->dispose = dbus_test_bustle_dispose;
 	object_class->finalize = dbus_test_bustle_finalize;
+
+	DbusTestTaskClass * task_class = DBUS_TEST_TASK_CLASS(klass);
+
+	task_class->run = process_run;
+	task_class->get_state = get_state;
+	task_class->get_passed = get_passed;
 
 	return;
 }
@@ -89,3 +98,25 @@ dbus_test_bustle_set_executable (DbusTestBustle * bustle, const gchar * executab
 
 	return;
 }
+
+static void
+process_run (DbusTestTask * task)
+{
+
+	return;
+}
+
+static DbusTestTaskState
+get_state (DbusTestTask * task)
+{
+
+	return DBUS_TEST_TASK_STATE_FINISHED;
+}
+
+static gboolean
+get_passed (DbusTestTask * task)
+{
+
+	return FALSE;
+}
+
