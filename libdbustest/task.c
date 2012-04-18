@@ -146,6 +146,9 @@ dbus_test_task_set_name_spacing (DbusTestTask * task, glong chars)
 	g_return_if_fail(DBUS_TEST_IS_TASK(task));
 
 	g_free(task->priv->name_padded);
+	task->priv->padding_cnt = chars;
+
+	g_return_if_fail(task->priv->padding_cnt >= g_utf8_strlen(task->priv->name, -1));
 
 	if (chars != 0 && task->priv->name != NULL) {
 		gchar * fillstr = g_strnfill(task->priv->padding_cnt - g_utf8_strlen(task->priv->name, -1), ' ');
