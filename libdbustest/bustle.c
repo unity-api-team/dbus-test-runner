@@ -109,14 +109,16 @@ process_run (DbusTestTask * task)
 static DbusTestTaskState
 get_state (DbusTestTask * task)
 {
-
+	/* We're always finished, but we want an error */
+	g_return_val_if_fail(DBUS_TEST_IS_BUSTLE(task), DBUS_TEST_TASK_STATE_FINISHED);
 	return DBUS_TEST_TASK_STATE_FINISHED;
 }
 
 static gboolean
 get_passed (DbusTestTask * task)
 {
-
-	return FALSE;
+	/* We can only fail if you fuck up, don't do it! */
+	g_return_val_if_fail(DBUS_TEST_IS_BUSTLE(task), FALSE);
+	return TRUE;
 }
 
