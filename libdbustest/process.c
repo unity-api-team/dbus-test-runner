@@ -25,6 +25,7 @@ static void dbus_test_process_dispose    (GObject *object);
 static void dbus_test_process_finalize   (GObject *object);
 static void process_run                  (DbusTestTask * task);
 static DbusTestTaskState get_state       (DbusTestTask * task);
+static gboolean get_passed               (DbusTestTask * task);
 
 G_DEFINE_TYPE (DbusTestProcess, dbus_test_process, DBUS_TEST_TYPE_TASK);
 
@@ -42,6 +43,7 @@ dbus_test_process_class_init (DbusTestProcessClass *klass)
 
 	task_class->run = process_run;
 	task_class->get_state = get_state;
+	task_class->get_passed = get_passed;
 
 	return;
 }
@@ -254,4 +256,21 @@ get_state (DbusTestTask * task)
 	}
 
 	return DBUS_TEST_TASK_STATE_INIT;
+}
+
+static gboolean
+get_passed (DbusTestTask * task)
+{
+	g_return_val_if_fail(DBUS_TEST_IS_PROCESS(task), FALSE);
+	DbusTestProcess * process = DBUS_TEST_PROCESS(task);
+
+	if (!process->priv->complete) {
+		return FALSE;
+	}
+
+	if (process->priv->status == 0) {
+		return TRUE;
+	}
+
+	return FALSE;
 }
