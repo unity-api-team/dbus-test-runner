@@ -6,12 +6,15 @@ API_VERSION = 1
 
 libdbustestincludedir=$(includedir)/libdbustest-$(API_VERSION)/libdbustest
 libdbustestinclude_HEADERS = \
+	bustle.h \
 	dbus-test.h \
 	process.h \
 	service.h \
 	task.h
 
 libdbustest_la_SOURCES = \
+	bustle.c \
+	bustle.h \
 	dbus-test.h \
 	process.c \
 	process.h \
