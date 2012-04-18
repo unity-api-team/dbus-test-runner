@@ -13,6 +13,8 @@ struct _DbusTestBustlePrivate {
 	GIOChannel * stderr;
 	GIOChannel * file;
 	GPid pid;
+
+	gboolean crashed;
 };
 
 #define DBUS_TEST_BUSTLE_GET_PRIVATE(o) \
@@ -60,6 +62,8 @@ dbus_test_bustle_init (DbusTestBustle *self)
 	self->priv->stderr = NULL;
 	self->priv->file = NULL;
 	self->priv->pid = 0;
+
+	self->priv->crashed = FALSE;
 
 	return;
 }
@@ -140,6 +144,23 @@ dbus_test_bustle_set_executable (DbusTestBustle * bustle, const gchar * executab
 }
 
 static void
+bustle_watcher (GPid pid, gint status, gpointer data)
+{
+	g_critical("Bustle Monitor exited abruptly!");
+	DbusTestBustle * bustler = DBUS_TEST_BUSTLE(data);
+
+	if (bustler->priv->pid != 0) {
+		g_spawn_close_pid(pid);
+		bustler->priv->pid = 0;
+	}
+
+	bustler->priv->crashed = TRUE;
+	g_signal_emit_by_name(G_OBJECT(bustler), DBUS_TEST_TASK_SIGNAL_STATE_CHANGED, DBUS_TEST_TASK_STATE_FINISHED, NULL);
+
+	return;
+}
+
+static void
 process_run (DbusTestTask * task)
 {
 
@@ -157,8 +178,13 @@ get_state (DbusTestTask * task)
 static gboolean
 get_passed (DbusTestTask * task)
 {
-	/* We can only fail if you fuck up, don't do it! */
 	g_return_val_if_fail(DBUS_TEST_IS_BUSTLE(task), FALSE);
-	return TRUE;
+	DbusTestBustle * bustler = DBUS_TEST_BUSTLE(task);
+
+	if (bustler->priv->crashed) {
+		return FALSE;
+	} else {
+		return TRUE;
+	}
 }
 
