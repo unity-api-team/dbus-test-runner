@@ -24,6 +24,7 @@ static void dbus_test_process_init       (DbusTestProcess *self);
 static void dbus_test_process_dispose    (GObject *object);
 static void dbus_test_process_finalize   (GObject *object);
 static void process_run                  (DbusTestTask * task);
+static DbusTestTaskState get_state       (DbusTestTask * task);
 
 G_DEFINE_TYPE (DbusTestProcess, dbus_test_process, DBUS_TEST_TYPE_TASK);
 
@@ -40,6 +41,7 @@ dbus_test_process_class_init (DbusTestProcessClass *klass)
 	DbusTestTaskClass * task_class = DBUS_TEST_TASK_CLASS(klass);
 
 	task_class->run = process_run;
+	task_class->get_state = get_state;
 
 	return;
 }
@@ -151,7 +153,6 @@ proc_writes (GIOChannel * channel, GIOCondition condition, gpointer data)
 		process->priv->complete = TRUE;
 		process->priv->status = -1;
 
-		g_debug("Task finished");
 		g_signal_emit_by_name(G_OBJECT(process), DBUS_TEST_TASK_SIGNAL_STATE_CHANGED, DBUS_TEST_TASK_STATE_FINISHED, NULL);
 	}
 
@@ -236,4 +237,21 @@ dbus_test_process_append_param (DbusTestProcess * process, const gchar * paramet
 	process->priv->parameters = g_list_append(process->priv->parameters, g_strdup(parameter));
 
 	return;
+}
+
+static DbusTestTaskState
+get_state (DbusTestTask * task)
+{
+	g_return_val_if_fail(DBUS_TEST_IS_PROCESS(task), DBUS_TEST_TASK_STATE_FINISHED);
+	DbusTestProcess * process = DBUS_TEST_PROCESS(task);
+
+	if (process->priv->complete) {
+		return DBUS_TEST_TASK_STATE_FINISHED;
+	}
+
+	if (process->priv->pid != 0) {
+		return DBUS_TEST_TASK_STATE_RUNNING;
+	}
+
+	return DBUS_TEST_TASK_STATE_INIT;
 }
