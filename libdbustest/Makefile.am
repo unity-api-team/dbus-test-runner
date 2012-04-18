@@ -24,6 +24,7 @@ libdbustest_la_CFLAGS = \
 	$(DBUS_TEST_RUNNER_CFLAGS) \
 	$(COVERAGE_CFLAGS) \
 	-I$(top_srcdir) \
+	-DDEFAULT_SESSION_CONF="\"$(datadir)/dbus-test-runner/session.conf\"" \
 	-DG_LOG_DOMAIN=\"libdbustest\" \
 	-Wall -Werror
 

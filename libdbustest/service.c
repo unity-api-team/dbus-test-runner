@@ -20,6 +20,14 @@ struct _DbusTestServicePrivate {
 
 	GMainLoop * mainloop;
 	ServiceState state;
+
+	gboolean daemon_crashed;
+
+	GPid dbus;
+	guint dbus_watch;
+	GIOChannel * dbus_io;
+	gchar * dbus_daemon;
+	gchar * dbus_configfile;
 };
 
 #define SERVICE_CHANGE_HANDLER  "dbus-test-service-change-handler"
@@ -57,6 +65,15 @@ dbus_test_service_init (DbusTestService *self)
 	g_queue_init(&self->priv->tasks_last);
 
 	self->priv->mainloop = g_main_loop_new(NULL, FALSE);
+	self->priv->state = STATE_INIT;
+
+	self->priv->daemon_crashed = FALSE;
+
+	self->priv->dbus = 0;
+	self->priv->dbus_watch = 0;
+	self->priv->dbus_io = NULL;
+	self->priv->dbus_daemon = g_strdup("dbus-daemon");
+	self->priv->dbus_configfile = g_strdup(DEFAULT_SESSION_CONF);
 
 	return;
 }
@@ -80,6 +97,22 @@ dbus_test_service_dispose (GObject *object)
 {
 	g_return_if_fail(DBUS_TEST_IS_SERVICE(object));
 	DbusTestService * self = DBUS_TEST_SERVICE(object);
+
+	if (self->priv->dbus_watch != 0) {
+		g_source_remove(self->priv->dbus_watch);
+		self->priv->dbus_watch = 0;
+	}
+
+	g_clear_object(&self->priv->dbus_io);
+
+	if (self->priv->dbus != 0) {
+		gchar * cmd = g_strdup_printf("kill -9 %d", self->priv->dbus);
+		g_spawn_command_line_async(cmd, NULL);
+		g_free(cmd);
+
+		g_spawn_close_pid(self->priv->dbus);
+		self->priv->dbus = 0;
+	}
 
 	if (!g_queue_is_empty(&self->priv->tasks_first)) {
 		g_queue_foreach(&self->priv->tasks_first, task_unref, NULL);
@@ -108,7 +141,13 @@ dbus_test_service_dispose (GObject *object)
 static void
 dbus_test_service_finalize (GObject *object)
 {
+	g_return_if_fail(DBUS_TEST_IS_SERVICE(object));
+	DbusTestService * self = DBUS_TEST_SERVICE(object);
 
+	g_free(self->priv->dbus_daemon);
+	self->priv->dbus_daemon = NULL;
+	g_free(self->priv->dbus_configfile);
+	self->priv->dbus_configfile = NULL;
 
 	G_OBJECT_CLASS (dbus_test_service_parent_class)->finalize (object);
 	return;
@@ -230,6 +269,88 @@ task_starter (gpointer data, gpointer user_data)
 	return;
 }
 
+gboolean
+dbus_writes (GIOChannel * channel, GIOCondition condition, gpointer data)
+{
+	if (condition & G_IO_ERR) {
+		g_critical("DBus writing failure!");
+		return FALSE;
+	}
+
+	gchar * line;
+	gsize termloc;
+	GIOStatus status = g_io_channel_read_line (channel, &line, NULL, &termloc, NULL);
+	g_return_val_if_fail(status == G_IO_STATUS_NORMAL, FALSE);
+	line[termloc] = '\0';
+
+	static gboolean first_time = TRUE;
+	g_print("DBus daemon: %s\n", line);
+
+	if (first_time) {
+		first_time = FALSE;
+
+		g_setenv("DBUS_SESSION_BUS_ADDRESS", line, TRUE);
+		g_setenv("DBUS_STARTER_ADDRESS", line, TRUE);
+		g_setenv("DBUS_STARTER_BUS_TYPE", "session", TRUE);
+	}
+
+	g_free(line);
+
+	return TRUE;
+}
+
+static void
+dbus_watcher (GPid pid, gint status, gpointer data)
+{
+	DbusTestService * service = DBUS_TEST_SERVICE(data);
+	g_critical("DBus Daemon exited abruptly!");
+
+	service->priv->daemon_crashed = TRUE;
+	g_main_loop_quit(DBUS_TEST_SERVICE(data)->priv->mainloop);
+
+	if (pid != 0) {
+		g_spawn_close_pid(pid);
+	}
+
+	return;
+}
+
+static void
+start_daemon (DbusTestService * service)
+{
+	gint dbus_stdout = 0;
+	GError * error = NULL;
+	gchar * blank[1] = {NULL};
+	gchar * dbus_startup[] = {service->priv->dbus_daemon, "--config-file", service->priv->dbus_configfile, "--print-address", NULL};
+	g_spawn_async_with_pipes(g_get_current_dir(),
+	                         dbus_startup, /* argv */
+	                         blank, /* envp */
+	                         G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD, /* flags */
+	                         NULL, /* child setup func */
+	                         NULL, /* child setup data */
+	                         &service->priv->dbus, /* PID */
+	                         NULL, /* stdin */
+	                         &dbus_stdout, /* stdout */
+	                         NULL, /* stderr */
+	                         &error); /* error */
+
+	if (error != NULL) {
+		g_critical("Unable to start dbus daemon: %s", error->message);
+		service->priv->daemon_crashed = TRUE;
+		return;
+	}
+
+	service->priv->dbus_watch = g_child_watch_add(service->priv->dbus, dbus_watcher, NULL);
+
+	service->priv->dbus_io = g_io_channel_unix_new(dbus_stdout);
+	g_io_add_watch(service->priv->dbus_io,
+	               G_IO_IN | G_IO_ERR, /* conditions */
+	               dbus_writes, /* func */
+	               service); /* func data */
+
+	return;
+}
+
 void
 dbus_test_service_start_tasks (DbusTestService * service)
 {
@@ -241,7 +362,8 @@ dbus_test_service_start_tasks (DbusTestService * service)
 
 	normalize_name_lengths(service);
 
-	/* TODO: Start dbus daemon */
+	start_daemon(service);
+	g_return_if_fail(g_getenv("DBUS_SESSION_BUS_ADDRESS") != NULL);
 
 	g_queue_foreach(&service->priv->tasks_first, task_starter, NULL);
 	/* TODO: Let some events through */
@@ -275,6 +397,10 @@ all_tasks_passed_helper (gpointer data, gpointer user_data)
 static int
 get_status (DbusTestService * service)
 {
+	if (service->priv->daemon_crashed) {
+		return -1;
+	}
+
 	if (all_tasks(service, all_tasks_passed_helper)) {
 		return 0;
 	} else {
