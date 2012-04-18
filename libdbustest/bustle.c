@@ -6,6 +6,7 @@
 
 struct _DbusTestBustlePrivate {
 	gchar * filename;
+	gchar * executable;
 };
 
 #define DBUS_TEST_BUSTLE_GET_PRIVATE(o) \
@@ -36,6 +37,9 @@ dbus_test_bustle_init (DbusTestBustle *self)
 {
 	self->priv = DBUS_TEST_BUSTLE_GET_PRIVATE(self);
 
+	self->priv->filename = g_strconcat(g_get_current_dir(), G_DIR_SEPARATOR_S, "bustle.log", NULL);
+	self->priv->executable = g_strdup("bustle-dbus-monitor");
+
 	return;
 }
 
@@ -54,6 +58,7 @@ dbus_test_bustle_finalize (GObject *object)
 	DbusTestBustle * bustler = DBUS_TEST_BUSTLE(object);
 
 	g_free(bustler->priv->filename);
+	g_free(bustler->priv->executable);
 
 	G_OBJECT_CLASS (dbus_test_bustle_parent_class)->finalize (object);
 	return;
@@ -67,6 +72,7 @@ dbus_test_bustle_new (const gchar * filename)
 	DbusTestBustle * bustler = g_object_new(DBUS_TEST_TYPE_BUSTLE,
 	                                        NULL);
 
+	g_free(bustler->priv->filename);
 	bustler->priv->filename = g_strdup(filename);
 
 	return bustler;
@@ -75,6 +81,11 @@ dbus_test_bustle_new (const gchar * filename)
 void
 dbus_test_bustle_set_executable (DbusTestBustle * bustle, const gchar * executable)
 {
+	g_return_if_fail(DBUS_TEST_IS_BUSTLE(bustle));
+	g_return_if_fail(executable != NULL);
+
+	g_free(bustle->priv->executable);
+	bustle->priv->executable = g_strdup(executable);
 
 	return;
 }
