@@ -388,9 +388,15 @@ dbus_test_service_start_tasks (DbusTestService * service)
 	g_return_if_fail(g_getenv("DBUS_SESSION_BUS_ADDRESS") != NULL);
 
 	g_queue_foreach(&service->priv->tasks_first, task_starter, NULL);
-	/* TODO: Let some events through */
+	if (!g_queue_is_empty(&service->priv->tasks_first)) {
+		g_usleep(100000);
+	}
+
 	g_queue_foreach(&service->priv->tasks_normal, task_starter, NULL);
-	/* TODO: Let some events through */
+
+	if (!g_queue_is_empty(&service->priv->tasks_last)) {
+		g_usleep(100000);
+	}
 	g_queue_foreach(&service->priv->tasks_last, task_starter, NULL);
 
 	service->priv->state = STATE_STARTING;
