@@ -5,7 +5,7 @@
 #include "dbus-test.h"
 
 struct _DbusTestBustlePrivate {
-	int dummy;
+	gchar * filename;
 };
 
 #define DBUS_TEST_BUSTLE_GET_PRIVATE(o) \
@@ -50,6 +50,10 @@ dbus_test_bustle_dispose (GObject *object)
 static void
 dbus_test_bustle_finalize (GObject *object)
 {
+	g_return_if_fail(DBUS_TEST_IS_BUSTLE(object));
+	DbusTestBustle * bustler = DBUS_TEST_BUSTLE(object);
+
+	g_free(bustler->priv->filename);
 
 	G_OBJECT_CLASS (dbus_test_bustle_parent_class)->finalize (object);
 	return;
@@ -58,8 +62,14 @@ dbus_test_bustle_finalize (GObject *object)
 DbusTestBustle *
 dbus_test_bustle_new (const gchar * filename)
 {
+	g_return_val_if_fail(filename != NULL, NULL);
 
-	return NULL;
+	DbusTestBustle * bustler = g_object_new(DBUS_TEST_TYPE_BUSTLE,
+	                                        NULL);
+
+	bustler->priv->filename = g_strdup(filename);
+
+	return bustler;
 }
 
 void
