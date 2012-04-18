@@ -105,7 +105,10 @@ dbus_test_service_dispose (GObject *object)
 		self->priv->dbus_watch = 0;
 	}
 
-	g_clear_object(&self->priv->dbus_io);
+	if (self->priv->dbus_io != NULL) {
+		g_io_channel_shutdown(self->priv->dbus_io, TRUE, NULL);
+		self->priv->dbus_io = NULL;
+	}
 
 	if (self->priv->dbus != 0) {
 		gchar * cmd = g_strdup_printf("kill -9 %d", self->priv->dbus);
