@@ -230,6 +230,7 @@ process_run (DbusTestTask * task)
 	                                         G_IO_IN, /* conditions */
 	                                         proc_writes, /* func */
 	                                         process); /* func data */
+	g_io_channel_unref(iochan);
 
 	process->priv->watcher = g_child_watch_add(process->priv->pid, proc_watcher, process);
 
