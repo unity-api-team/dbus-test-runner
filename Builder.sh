@@ -80,7 +80,7 @@ bzr merge "$packaging_branch"
 #sed -i 's/quilt/native/g' debian/source/format
 
 # Place any project specific replacements here
-#sed -i 's/--disable-scrollkeeper/--disable-scrollkeeper --enable-gcov/g' debian/rules
+sed -i 's/--disable-scrollkeeper/--disable-scrollkeeper --enable-gcov/g' debian/rules
 
 # Extract some packaging information
 version=`dpkg-parsechangelog | awk '/^Version/ {print $2}' | sed -e "s/\(.*\)-[0-9]ubuntu.*/\1/"`
