@@ -422,11 +422,14 @@ dbus_test_service_start_tasks (DbusTestService * service)
 	}
 	g_queue_foreach(&service->priv->tasks_last, task_starter, NULL);
 
-	service->priv->state = STATE_STARTING;
-	g_main_loop_run(service->priv->mainloop);
+	if (!all_tasks(service, all_tasks_started_helper)) {
+		service->priv->state = STATE_STARTING;
+		g_main_loop_run(service->priv->mainloop);
 
-	/* This should never happen, but let's be sure */
-	g_return_if_fail(all_tasks(service, all_tasks_started_helper));
+		/* This should never happen, but let's be sure */
+		g_return_if_fail(all_tasks(service, all_tasks_started_helper));
+	}
+
 	service->priv->state = STATE_STARTED;
 
 	return;
