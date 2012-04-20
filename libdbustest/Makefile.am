@@ -40,3 +40,20 @@ libdbustest_la_LDFLAGS = \
 	-version-info $(ABI_VERSION):0:0 \
 	-no-undefined \
 	-export-symbols-regex "^[^_].*"
+
+EXTRA_DIST = \
+	dbustest.pc.in
+
+pkgconfig_DATA = dbustest-$(API_VERSION).pc
+pkgconfigdir = $(libdir)/pkgconfig
+
+%-$(API_VERSION).pc: %.pc.in
+	sed \
+		-e "s:\@apiversion\@:$(API_VERSION):" \
+		-e "s:\@libdir\@:$(libdir):" \
+		-e "s:\@includedir\@:$(includedir):" \
+		-e "s:\@VERSION\@:$(VERSION):" \
+		$< > $@
+
+DISTCLEANFILES = \
+	dbustest-$(API_VERSION).pc
