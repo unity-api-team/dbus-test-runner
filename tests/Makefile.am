@@ -269,7 +269,9 @@ DISTCLEANFILES += test-daemon-junk-spitter
 # libdbustest
 ###########################
 
-check_PROGRAMS += test-libdbustest
+check_PROGRAMS += \
+	test-libdbustest \
+	test-libdbustest-getname
 TESTS += test-libdbustest-test
 
 test_libdbustest_SOURCES = \
@@ -283,9 +285,17 @@ test_libdbustest_LDADD = \
 	$(DBUS_TEST_RUNNER_LIBS) \
 	$(top_builddir)/libdbustest/libdbustest.la
 
+test_libdbustest_getname_SOURCES = \
+	test-libdbustest-getname.c
+test_libdbustest_getname_CFLAGS = \
+	$(DBUS_TEST_RUNNER_CFLAGS) \
+	-Wall -Werror
+test_libdbustest_getname_LDADD = \
+	$(DBUS_TEST_RUNNER_LIBS)
+
 LIBDBUSTEST_XML_REPORT = $(builddir)/libdbustest-results.xml
 
-test-libdbustest-test: test-libdbustest
+test-libdbustest-test: test-libdbustest test-libdbustest-getname
 	@echo "#!/bin/bash" > $@
 	@echo $(XVFB_RUN) >> $@
 	@echo gtester -k --verbose -o=$(LIBDBUSTEST_XML_REPORT) $(builddir)/test-libdbustest >> $@
