@@ -49,6 +49,8 @@ struct _DbusTestServicePrivate {
 	GIOChannel * dbus_io;
 	gchar * dbus_daemon;
 	gchar * dbus_configfile;
+
+	gboolean first_time;
 };
 
 #define SERVICE_CHANGE_HANDLER  "dbus-test-service-change-handler"
@@ -95,6 +97,8 @@ dbus_test_service_init (DbusTestService *self)
 	self->priv->dbus_io = NULL;
 	self->priv->dbus_daemon = g_strdup("dbus-daemon");
 	self->priv->dbus_configfile = g_strdup(DEFAULT_SESSION_CONF);
+
+	self->priv->first_time = TRUE;
 
 	return;
 }
@@ -309,11 +313,10 @@ dbus_writes (GIOChannel * channel, GIOCondition condition, gpointer data)
 	g_return_val_if_fail(status == G_IO_STATUS_NORMAL, FALSE);
 	line[termloc] = '\0';
 
-	static gboolean first_time = TRUE;
 	g_print("DBus daemon: %s\n", line);
 
-	if (first_time) {
-		first_time = FALSE;
+	if (service->priv->first_time) {
+		service->priv->first_time = FALSE;
 
 		g_setenv("DBUS_SESSION_BUS_ADDRESS", line, TRUE);
 		g_setenv("DBUS_STARTER_ADDRESS", line, TRUE);
