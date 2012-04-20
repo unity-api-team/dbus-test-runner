@@ -348,6 +348,10 @@ dbus_watcher (GPid pid, gint status, gpointer data)
 static void
 start_daemon (DbusTestService * service)
 {
+	if (service->priv->dbus != 0) {
+		return;
+	}
+
 	service->priv->state = STATE_DAEMON_STARTING;
 
 	gint dbus_stdout = 0;
@@ -392,6 +396,9 @@ dbus_test_service_start_tasks (DbusTestService * service)
 {
 	g_return_if_fail(DBUS_TEST_SERVICE(service));
 
+	start_daemon(service);
+	g_return_if_fail(g_getenv("DBUS_SESSION_BUS_ADDRESS") != NULL);
+
 	if (all_tasks(service, all_tasks_started_helper)) {
 		/* If we have all started we can mark it as such as long
 		   as we understand where we could hit this case */
@@ -402,9 +409,6 @@ dbus_test_service_start_tasks (DbusTestService * service)
 	}
 
 	normalize_name_lengths(service);
-
-	start_daemon(service);
-	g_return_if_fail(g_getenv("DBUS_SESSION_BUS_ADDRESS") != NULL);
 
 	g_queue_foreach(&service->priv->tasks_first, task_starter, NULL);
 	if (!g_queue_is_empty(&service->priv->tasks_first)) {
