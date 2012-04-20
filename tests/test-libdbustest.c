@@ -18,11 +18,34 @@ test_env_var (void)
 	return;
 }
 
+void
+test_task_start (void)
+{
+	DbusTestService * service = dbus_test_service_new(NULL);
+	g_assert(service != NULL);
+
+	dbus_test_service_set_conf_file(service, SESSION_CONF);
+
+	DbusTestTask * task = dbus_test_task_new();
+	g_assert(task != NULL);
+
+	dbus_test_service_add_task(service, task);
+	dbus_test_service_start_tasks(service);
+
+	g_assert(dbus_test_task_get_state(task) == DBUS_TEST_TASK_STATE_FINISHED);
+
+	g_object_unref(task);
+	g_object_unref(service);
+
+	return;
+}
+
 /* Build our test suite */
 void
 test_libdbustest_suite (void)
 {
 	g_test_add_func ("/libdbustest/env_var",    test_env_var);
+	g_test_add_func ("/libdbustest/task_start", test_task_start);
 
 	return;
 }
