@@ -47,6 +47,7 @@ struct _DbusTestServicePrivate {
 	GPid dbus;
 	guint dbus_watch;
 	GIOChannel * dbus_io;
+	guint dbus_io_watch;
 	gchar * dbus_daemon;
 	gchar * dbus_configfile;
 
@@ -95,6 +96,7 @@ dbus_test_service_init (DbusTestService *self)
 	self->priv->dbus = 0;
 	self->priv->dbus_watch = 0;
 	self->priv->dbus_io = NULL;
+	self->priv->dbus_io_watch = 0;
 	self->priv->dbus_daemon = g_strdup("dbus-daemon");
 	self->priv->dbus_configfile = g_strdup(DEFAULT_SESSION_CONF);
 
@@ -128,8 +130,14 @@ dbus_test_service_dispose (GObject *object)
 		self->priv->dbus_watch = 0;
 	}
 
+	if (self->priv->dbus_io_watch != 0) {
+		g_source_remove(self->priv->dbus_io_watch);
+		self->priv->dbus_io_watch = 0;
+	}
+
 	if (self->priv->dbus_io != NULL) {
 		g_io_channel_shutdown(self->priv->dbus_io, TRUE, NULL);
+		g_io_channel_unref(self->priv->dbus_io);
 		self->priv->dbus_io = NULL;
 	}
 
@@ -382,11 +390,10 @@ start_daemon (DbusTestService * service)
 	service->priv->dbus_watch = g_child_watch_add(service->priv->dbus, dbus_watcher, service);
 
 	service->priv->dbus_io = g_io_channel_unix_new(dbus_stdout);
-	g_io_add_watch(service->priv->dbus_io,
-	               G_IO_IN | G_IO_ERR, /* conditions */
-	               dbus_writes, /* func */
-	               service); /* func data */
-
+	service->priv->dbus_io_watch = g_io_add_watch(service->priv->dbus_io,
+	                                              G_IO_IN | G_IO_ERR, /* conditions */
+	                                              dbus_writes, /* func */
+	                                              service); /* func data */
 
 	g_main_loop_run(service->priv->mainloop);
 	service->priv->state = STATE_DAEMON_STARTED;
