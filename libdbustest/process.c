@@ -212,6 +212,8 @@ process_run (DbusTestTask * task)
 
 	if (error != NULL) {
 		g_warning("Unable to start process '%s': %s", process->priv->executable, error->message);
+		process->priv->complete = TRUE;
+		process->priv->status = -1;
 		g_signal_emit_by_name(G_OBJECT(process), DBUS_TEST_TASK_SIGNAL_STATE_CHANGED, DBUS_TEST_TASK_STATE_FINISHED, NULL);
 		return;
 	}
