@@ -280,6 +280,7 @@ test_libdbustest_CFLAGS = \
 	$(DBUS_TEST_RUNNER_CFLAGS) \
 	-I$(top_srcdir) \
 	-DSESSION_CONF="\"$(top_srcdir)/data/session.conf\"" \
+	-DGETNAME_PATH="\"$(abs_builddir)/test-libdbustest-getname\"" \
 	-Wall -Werror
 test_libdbustest_LDADD = \
 	$(DBUS_TEST_RUNNER_LIBS) \
