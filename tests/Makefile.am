@@ -265,6 +265,34 @@ test-daemon-junk-spitter: Makefile.am
 XFAIL_TESTS += test-daemon-junk
 DISTCLEANFILES += test-daemon-junk-spitter
 
+###########################
+# libdbustest
+###########################
+
+check_PROGRAMS += test-libdbustest
+TESTS += test-libdbustest-test
+
+test_libdbustest_SOURCES = \
+	test-libdbustest.c
+test_libdbustest_CFLAGS = \
+	$(DBUS_TEST_RUNNER_CFLAGS) \
+	-I$(top_srcdir) \
+	-DSESSION_CONF="\"$(top_srcdir)/data/session.conf\"" \
+	-Wall -Werror
+test_libdbustest_LDADD = \
+	$(DBUS_TEST_RUNNER_LIBS) \
+	$(top_builddir)/libdbustest/libdbustest.la
+
+LIBDBUSTEST_XML_REPORT = $(builddir)/libdbustest-results.xml
+
+test-libdbustest-test: test-libdbustest
+	@echo "#!/bin/bash" > $@
+	@echo $(XVFB_RUN) >> $@
+	@echo gtester -k --verbose -o=$(LIBDBUSTEST_XML_REPORT) $(builddir)/test-libdbustest >> $@
+	@chmod +x $@
+
+DISTCLEANFILES += $(LIBDBUSTEST_XML_REPORT)
+
 EXTRA_DIST = \
 	delayrm.sh \
 	test-bustle.reference \

@@ -1,0 +1,41 @@
+
+#include <glib.h>
+#include <libdbustest/dbus-test.h>
+
+void
+test_env_var (void)
+{
+	DbusTestService * service = dbus_test_service_new(NULL);
+	g_assert(service != NULL);
+
+	dbus_test_service_set_conf_file(service, SESSION_CONF);
+
+	g_unsetenv("DBUS_SESSION_BUS_ADDRESS");
+	dbus_test_service_start_tasks(service);
+	g_assert(g_getenv("DBUS_SESSION_BUS_ADDRESS") != NULL);
+
+	g_object_unref(service);
+	return;
+}
+
+/* Build our test suite */
+void
+test_libdbustest_suite (void)
+{
+	g_test_add_func ("/libdbustest/env_var",    test_env_var);
+
+	return;
+}
+
+int
+main (int argc, char ** argv)
+{
+	g_type_init (); 
+	g_test_init (&argc, &argv, NULL);
+
+	test_libdbustest_suite();
+
+	g_log_set_always_fatal(G_LOG_LEVEL_CRITICAL);
+
+	return g_test_run();
+}
