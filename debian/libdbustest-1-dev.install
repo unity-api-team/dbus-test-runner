@@ -1,4 +1,4 @@
 usr/lib/libdbustest.la
 usr/lib/libdbustest.so
-usr/include/libdbustest-1/*
+usr/include/libdbustest-1/libdbustest/*
 usr/lib/*/pkgconfig/*
