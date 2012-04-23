@@ -34,9 +34,11 @@ make generate-coverage-gcovr
 if [ -z "$RESULT_DIR" ]; then
     RESULT_DIR=`cat /tmp/buildd/ReportDir`
 fi
+mkdir -p "$RESULT_DIR/tests"
 
 # Save the test & coverage results
 cp coverage.xml "$RESULT_DIR"
 cp -R coveragereport "$RESULT_DIR"
+find tests -name "*.xml" | xargs cp -t "$RESULT_DIR/tests"
 
 exit $result
