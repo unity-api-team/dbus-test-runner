@@ -1,9 +1,9 @@
-dbus-test-runner (0.0.5-0ubuntu1~ppa3) UNRELEASED; urgency=low
+dbus-test-runner (0.0.5-0ubuntu1~ppa3) precise; urgency=low
 
   * Upstream Merge
     * Fixes from Charles and aligning to trunk
 
- -- Ted Gould <ted@ubuntu.com>  Mon, 23 Apr 2012 10:34:15 -0500
+ -- Ted Gould <ted@ubuntu.com>  Mon, 23 Apr 2012 10:35:46 -0500
 
 dbus-test-runner (0.0.5-0ubuntu1~ppa2) precise; urgency=low
 
