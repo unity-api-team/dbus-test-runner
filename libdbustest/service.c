@@ -305,7 +305,7 @@ task_starter (gpointer data, gpointer user_data)
 	return;
 }
 
-gboolean
+static gboolean
 dbus_writes (GIOChannel * channel, GIOCondition condition, gpointer data)
 {
 	DbusTestService * service = DBUS_TEST_SERVICE(data);
