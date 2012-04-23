@@ -21,7 +21,7 @@ fi
 export GTEST_OUTPUT=xml
 
 # Execute the unit test suite
-make
+make check
 
 # Remember the exit status of the unit tests.
 result=$?
@@ -37,8 +37,8 @@ fi
 mkdir -p "$RESULT_DIR/tests"
 
 # Save the test & coverage results
-cp coverage.xml "$RESULT_DIR"
-cp -R coveragereport "$RESULT_DIR"
-find tests -name "*.xml" | xargs cp -t "$RESULT_DIR/tests"
+cp -v coverage.xml "$RESULT_DIR"
+cp -vR coveragereport "$RESULT_DIR"
+find tests -name "*.xml" | xargs cp -vt "$RESULT_DIR/tests"
 
 exit $result
