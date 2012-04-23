@@ -2,14 +2,13 @@ Source: dbus-test-runner
 Section: gnome
 Priority: optional
 Maintainer: Ubuntu Desktop Team <ubuntu-desktop@lists.ubuntu.com>
-Build-Depends: debhelper (>= 5.0),
-               cdbs (>= 0.4.41),
+Build-Depends: debhelper (>= 9),
                libdbus-glib-1-dev,
                xvfb,
                bustle,
                gvfs-backends,
                dh-autoreconf
-Standards-Version: 3.9.2
+Standards-Version: 3.9.3
 Homepage: https://launchpad.net/dbus-test-runner
 
 Package: dbus-test-runner
@@ -21,3 +20,32 @@ Depends: ${shlibs:Depends},
 Description: Runs tests under a new DBus session
  A simple little executable for running a couple of programs under a 
  new DBus session.  
+
+Package: libdbustest1
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends},
+         ${misc:Depends},
+         bustle,
+         dbus
+Pre-Depends: ${misc:Pre-Depends}
+Multi-Arch: same
+Description: library for testing with clean DBus instances
+ libdbustest manages a unique DBus session bus that can be used for
+ creating test suites that are recreatable.
+ .
+ This package contains shared libraries to be used by applications.
+
+Package: libdbustest-1-dev
+Section: libdevel
+Architecture: any
+Depends: ${shlibs:Depends},
+         ${misc:Depends},
+         libdbustest1 (= ${binary:Version}),
+         libglib2.0-dev
+Multi-Arch: same
+Description: library for testing with clean DBus instances
+ libdbustest manages a unique DBus session bus that can be used for
+ creating test suites that are recreatable.
+ .
+ This package contains files that are needed to build applications.
