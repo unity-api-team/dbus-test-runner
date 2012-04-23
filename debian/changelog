@@ -1,11 +1,18 @@
 dbus-test-runner (0.0.5-0ubuntu1~ppa2) UNRELEASED; urgency=low
 
+  [ Ted Gould ]
   * Upstream Merge
   	* Splitting out libdbustest
   * debian/control: Adding libdbustest1 and libdbustest-1-dev
     packages to hold the new libs
 
- -- Ted Gould <ted@ubuntu.com>  Fri, 20 Apr 2012 21:53:36 -0500
+  [ Ken VanDine ]
+  * debian/control, debian/compat
+    - use debhelper >= 9
+  * debian/rules
+    - simplified with debhelper
+
+ -- Ken VanDine <ken.vandine@canonical.com>  Mon, 23 Apr 2012 10:11:05 -0400
 
 dbus-test-runner (0.0.5-0ubuntu1~ppa1) precise; urgency=low
 

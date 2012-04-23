@@ -1,4 +1,4 @@
-usr/lib/libdbustest.la
-usr/lib/libdbustest.so
-usr/include/libdbustest-1/libdbustest/*
-usr/lib/*/pkgconfig/*
+debian/tmp/usr/lib/*/libdbustest.la
+debian/tmp/usr/lib/*/libdbustest.so
+debian/tmp/usr/include/libdbustest-1/libdbustest/*
+debian/tmp/usr/lib/*/pkgconfig/*
