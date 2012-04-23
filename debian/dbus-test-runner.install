@@ -1,2 +1,2 @@
-debian/tmp/usr/share/dbus-test-runner/*
-debian/tmp/usr/bin/*
+usr/share/dbus-test-runner/*
+usr/bin/*
