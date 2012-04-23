@@ -40,7 +40,6 @@ G_BEGIN_DECLS
 typedef struct _DbusTestService         DbusTestService;
 typedef struct _DbusTestServiceClass    DbusTestServiceClass;
 typedef struct _DbusTestServicePrivate  DbusTestServicePrivate;
-typedef enum   _DbusTestServicePriority DbusTestServicePriority;
 
 struct _DbusTestServiceClass {
 	GObjectClass parent_class;
@@ -51,11 +50,12 @@ struct _DbusTestService {
 	DbusTestServicePrivate * priv;
 };
 
-enum _DbusTestServicePriority {
+typedef enum
+{
 	DBUS_TEST_SERVICE_PRIORITY_FIRST,
 	DBUS_TEST_SERVICE_PRIORITY_NORMAL,
 	DBUS_TEST_SERVICE_PRIORITY_LAST
-};
+} DbusTestServicePriority;
 
 GType dbus_test_service_get_type (void);
 DbusTestService * dbus_test_service_new (const gchar * address);

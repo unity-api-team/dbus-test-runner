@@ -142,7 +142,7 @@ proc_watcher (GPid pid, gint status, gpointer data)
 	return;
 }
 
-gboolean
+static gboolean
 proc_writes (GIOChannel * channel, GIOCondition condition, gpointer data)
 {
 	g_return_val_if_fail(DBUS_TEST_IS_PROCESS(data), FALSE);
@@ -180,7 +180,7 @@ proc_writes (GIOChannel * channel, GIOCondition condition, gpointer data)
 	return TRUE;
 }
 
-void
+static void
 process_run (DbusTestTask * task)
 {
 	g_return_if_fail(DBUS_TEST_IS_PROCESS(task));
