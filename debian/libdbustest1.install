@@ -1,1 +1,1 @@
-usr/lib/libdbustest.so.*
+usr/lib/*/libdbustest.so.*
