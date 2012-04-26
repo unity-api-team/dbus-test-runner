@@ -30,6 +30,9 @@ result=$?
 make generate-coverage-html
 make generate-coverage-gcovr
 
+# translate gtester results to be JUnit-compatible
+for i in `find tests -name "*.xml"`; do j=`echo $i | sec 's/\.xml/~junit.xml/g'`; xsltproc -o $j ~/gtester.xsl "$i"; done
+
 # Check for results dir
 if [ -z "$RESULT_DIR" ]; then
     RESULT_DIR=`cat /tmp/buildd/ReportDir`
