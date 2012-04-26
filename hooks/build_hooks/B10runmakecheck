@@ -31,7 +31,7 @@ make generate-coverage-html
 make generate-coverage-gcovr
 
 # translate gtester results to be JUnit-compatible
-for i in `find tests -name "*.xml"`; do j=`echo $i | sed 's/\.xml/-junit.xml/g'`; xsltproc -o $j ~/gtester.xsl "$i"; done
+#for i in `find tests -name "*.xml"`; do j=`echo $i | sed 's/\.xml/-junit.xml/g'`; xsltproc -o $j ~/gtester.xsl "$i"; done
 
 # Check for results dir
 if [ -z "$RESULT_DIR" ]; then
