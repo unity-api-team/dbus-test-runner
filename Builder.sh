@@ -12,9 +12,10 @@ work_dir=
 config_file=
 result_dir=
 hook_dir=
-chrooted=
+chrooted=""
+target_branch=
 
-while getopts "m:p:h:w:r:c" opt; do
+while getopts "m:p:h:w:r:ct:" opt; do
     case $opt in
 	m)
 	    echo "(m)ain branch: $OPTARG" >&2
@@ -40,6 +41,10 @@ while getopts "m:p:h:w:r:c" opt; do
 	    echo "Considering (c)hrooted build" >&2
 	    chrooted=1
 	    ;;
+	t)
+        echo "(t)arget branch: $OPTARG" >&2
+	    target_branch="$OPTARG"
+	    ;;
 	\p)
 	    echo "Invalid option: -$OPTARG" >&2
 	    exit 1
@@ -63,16 +68,27 @@ set -ex
 rm -rf "$work_dir"
 mkdir "$work_dir"
 
-# pull main branch and merge in packaging branch
-bzr branch $main_branch "$work_dir/trunk"
-cd "$work_dir/trunk"
-bzr merge "$packaging_branch"
+if [ -z "$target_branch" ]; then
+    bzr branch "$target_branch" "$work_dir/trunk"
+    cd "$work_dir/trunk"
+    bzr merge "$main_branch"
+else
+    # pull main branch and merge in packaging branch
+    bzr branch $main_branch "$work_dir/trunk"
+    cd "$work_dir/trunk"
+fi
+
+bzr merge  "$packaging_branch"
+
+#mv packaging/debian trunk/
+#cd trunk
 
 #if [ -f autogen.sh ]; then
 #    autoreconf -f -i
 #    aclocal
 #    grep -q IT_PROG_INTLTOOL configure.* && intltoolize
 #fi
+
 
 # This is potentially dangerous
 # but we force a native source format
