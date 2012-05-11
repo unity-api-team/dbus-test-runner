@@ -27,8 +27,9 @@ make check
 result=$?
 
 # Generate coverage results
-make generate-coverage-html
-make generate-coverage-gcovr
+make genereate-coverage-xml
+#make generate-coverage-html
+#make generate-coverage-gcovr
 
 # translate gtester results to be JUnit-compatible, renaming each
 for i in `find tests -name "*.xml"`; do j=`echo $i | sed 's/\.xml/-junit.xml/g'`; xsltproc -o $j ~/gtester.xsl "$i"; done
@@ -41,7 +42,7 @@ mkdir -p "$RESULT_DIR/tests"
 
 # Save the test & coverage results
 cp -v coverage.xml "$RESULT_DIR"
-cp -vR coveragereport "$RESULT_DIR"
-find tests -name "*.xml" | xargs cp -vt "$RESULT_DIR/tests"
+#cp -vR coveragereport "$RESULT_DIR"
+#find tests -name "*.xml" | xargs cp -vt "$RESULT_DIR/tests"
 
 exit $result
