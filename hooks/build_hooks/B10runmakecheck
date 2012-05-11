@@ -27,7 +27,7 @@ make check
 result=$?
 
 # Generate coverage results
-make genereate-coverage-xml
+make generate-coverage-xml
 #make generate-coverage-html
 #make generate-coverage-gcovr
 
