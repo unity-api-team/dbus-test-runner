@@ -76,6 +76,8 @@ else
     bzr branch "$target_branch" "$work_dir/trunk"
     cd "$work_dir/trunk"
     bzr merge "$main_branch"
+    bzr whoami 'Jenkins User <jenkins@jenkins>'
+    bzr commit -m 'merging target with autolanding candidate'
 fi
 
 bzr merge  "$packaging_branch"
