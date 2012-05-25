@@ -69,13 +69,13 @@ rm -rf "$work_dir"
 mkdir "$work_dir"
 
 if [ -z "$target_branch" ]; then
-    bzr branch "$target_branch" "$work_dir/trunk"
-    cd "$work_dir/trunk"
-    bzr merge "$main_branch"
-else
     # pull main branch and merge in packaging branch
     bzr branch $main_branch "$work_dir/trunk"
     cd "$work_dir/trunk"
+else
+    bzr branch "$target_branch" "$work_dir/trunk"
+    cd "$work_dir/trunk"
+    bzr merge "$main_branch"
 fi
 
 bzr merge  "$packaging_branch"
