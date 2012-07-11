@@ -1,11 +1,11 @@
 
-AC_INIT(dbus-test-runner, 12.10.11, ted@canonical.com)
+AC_INIT(dbus-test-runner, 12.10.0, ted@canonical.com)
 AC_COPYRIGHT([Copyright 2009 Canonical])
 
 AC_PREREQ(2.53)
 
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(dbus-test-runner, 12.10.11)
+AM_INIT_AUTOMAKE(dbus-test-runner, 12.10.0)
 
 AM_MAINTAINER_MODE
 
