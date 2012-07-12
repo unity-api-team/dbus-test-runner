@@ -1,3 +1,10 @@
+dbus-test-runner (12.10.0-0ubuntu2) quantal; urgency=low
+
+  * debian/control:
+    - dbus-test-runner Build Depends on dbus
+
+ -- Adam Stokes <adam.stokes@canonical.com>  Thu, 12 Jul 2012 14:49:44 -0400
+
 dbus-test-runner (12.10.0-0ubuntu1) quantal; urgency=low
 
   * New upstream release.
