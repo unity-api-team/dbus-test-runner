@@ -1,3 +1,17 @@
+dbus-test-runner (12.10.0-0ubuntu1) UNRELEASED; urgency=low
+
+  * New upstream release.
+  * debian/control, debian/dbus-test-runner.install, 
+    debian/libdbustest1-dev.install, debian/libdbustest1.install:
+    - created new binaries for the shared library
+  * debian/control:
+    - dbus-test-runner Depends on dbus
+    - updated standards version
+    - updated debhelper requirement
+  * debian/compat: updated compat number
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Thu, 12 Jul 2012 17:56:54 +0200
+
 dbus-test-runner (0.0.5-0ubuntu1) precise; urgency=low
 
   [ Ted Gould ]
