@@ -1,3 +1,44 @@
+dbus-test-runner (12.10.0-0ubuntu2) quantal; urgency=low
+
+  * debian/control:
+    - dbus-test-runner Build Depends on dbus
+
+ -- Adam Stokes <adam.stokes@canonical.com>  Thu, 12 Jul 2012 14:49:44 -0400
+
+dbus-test-runner (12.10.0-0ubuntu1) quantal; urgency=low
+
+  * New upstream release.
+  * debian/control, debian/dbus-test-runner.install, 
+    debian/libdbustest1-dev.install, debian/libdbustest1.install:
+    - created new binaries for the shared library
+  * debian/control:
+    - dbus-test-runner Depends on dbus
+    - updated standards version
+    - updated debhelper requirement
+  * debian/compat: updated compat number
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Thu, 12 Jul 2012 19:39:58 +0200
+
+dbus-test-runner (0.0.5-0ubuntu1) precise; urgency=low
+
+  [ Ted Gould ]
+  * New upstream release.
+    * Improved test suite and small fixes to enable it
+    * Setting session bus explicitly in default config
+  * Upstream Merge
+    * Fixing the bustle failure test
+
+  [ Ken VanDine ]
+  * debian/source/format
+    - dropped, 3.0 (quilt) does not play well with packages where we often
+      cherry pick fixes with bzr
+  * debian/patches/disable-bustle-tests.patch:
+    - dropped, merged inline to handle quilt failures
+  * tests/Makefile.am
+    - Disable tests that require bustle
+
+ -- Ken VanDine <ken.vandine@canonical.com>  Tue, 21 Feb 2012 16:19:32 -0500
+
 dbus-test-runner (0.0.5-0ubuntu1~ppa3) precise; urgency=low
 
   * Upstream Merge
@@ -30,6 +71,18 @@ dbus-test-runner (0.0.5-0ubuntu1~ppa1) precise; urgency=low
     * Fixing the bustle failure test
 
  -- Ted Gould <ted@ubuntu.com>  Mon, 20 Feb 2012 14:19:33 -0600
+
+dbus-test-runner (0.0.4-0ubuntu2) precise; urgency=low
+
+  * debian/source/format:
+    - Make "3.0 (quilt)"
+  * debian/control:
+    - Drop bustle from Build-Depends (for MIR)
+    - Demote bustle from Depends to Suggests
+  * debian/patches/disable-bustle-tests.patch:
+    - Disable tests that require bustle
+
+ -- Michael Terry <mterry@ubuntu.com>  Fri, 13 Jan 2012 12:38:02 +0100
 
 dbus-test-runner (0.0.4-0ubuntu1) precise; urgency=low
 

@@ -1,2 +1,3 @@
-usr/share/dbus-test-runner/*
-usr/bin/*
+usr/bin
+usr/share
+
