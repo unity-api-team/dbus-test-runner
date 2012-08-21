@@ -1,3 +1,11 @@
+dbus-test-runner (12.10.0-0ubuntu3) UNRELEASED; urgency=low
+
+  * debian/dbus-test-runner.install, debian/libdbustest1.install:
+    Moving the configuration file to the library as it's needed there
+    and the binary depends on the lib.
+
+ -- Ted Gould <ted@ubuntu.com>  Tue, 21 Aug 2012 08:45:25 -0500
+
 dbus-test-runner (12.10.0-0ubuntu2) quantal; urgency=low
 
   * debian/control:
