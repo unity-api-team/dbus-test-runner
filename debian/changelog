@@ -4,7 +4,8 @@ dbus-test-runner (12.10.0-0ubuntu3) UNRELEASED; urgency=low
     Moving the configuration file to the library as it's needed there
     and the binary depends on the lib.
   * debian/libdbustest1.install: Add a * to include architecture dirs. 
-  * debian/libdbustest1-dev.install: Add a * to include architecture dirs. 
+  * debian/libdbustest1-dev.install: Add a * to include architecture dirs.  
+    for *.so and pkgconfig files.
 
  -- Ted Gould <ted@ubuntu.com>  Tue, 21 Aug 2012 08:45:25 -0500
 
