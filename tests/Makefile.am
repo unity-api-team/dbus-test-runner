@@ -214,6 +214,7 @@ test-bustle-data: Makefile.am
 	@echo "--task $(srcdir)/test-bustle-list.sh \\" >> $@
 	@echo "--task $(srcdir)/test-bustle-list.sh \\" >> $@
 	@echo "--task $(srcdir)/test-bustle-list.sh" >> $@
+	@echo "$(srcdir)/test-bustle-data-check.sh \"$(builddir)/test-bustle-data.bustle\" 12" >> $@
 	@chmod +x $@
 DISTCLEANFILES += test-bustle-data.bustle
 
@@ -307,4 +308,5 @@ DISTCLEANFILES += $(LIBDBUSTEST_XML_REPORT)
 EXTRA_DIST = \
 	delayrm.sh \
 	test-bustle.reference \
+	test-bustle-data-check.sh \
 	test-bustle-list.sh
