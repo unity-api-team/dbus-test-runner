@@ -213,7 +213,7 @@ test-bustle-data: Makefile.am
 	@echo "--task $(srcdir)/test-bustle-list.sh \\" >> $@
 	@echo "--task $(srcdir)/test-bustle-list.sh \\" >> $@
 	@echo "--task $(srcdir)/test-bustle-list.sh \\" >> $@
-	@echo "--task $(srcdir)/test-bustle-list.sh \\" >> $@
+	@echo "--task $(srcdir)/test-bustle-list.sh" >> $@
 	@chmod +x $@
 DISTCLEANFILES += test-bustle-data.bustle
 
