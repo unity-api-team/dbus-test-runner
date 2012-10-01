@@ -30,6 +30,7 @@ struct _DbusTestProcessPrivate {
 	GPid pid;
 	guint io_watch;
 	guint watcher;
+	GIOChannel * io_chan;
 
 	gboolean complete;
 	gint status;
@@ -74,6 +75,7 @@ dbus_test_process_init (DbusTestProcess *self)
 
 	self->priv->executable = NULL;
 	self->priv->parameters = NULL;
+	self->priv->io_chan = NULL;
 
 	return;
 }
@@ -101,6 +103,28 @@ dbus_test_process_dispose (GObject *object)
 
 		g_spawn_close_pid(process->priv->pid);
 		process->priv->pid = 0;
+	}
+
+	if (process->priv->io_chan != NULL) {
+		GIOStatus status = G_IO_STATUS_NORMAL;
+
+		while ((G_IO_IN & g_io_channel_get_buffer_condition(process->priv->io_chan)) && status == G_IO_STATUS_NORMAL) {
+			gchar * line = NULL;
+			gsize termloc;
+
+			status = g_io_channel_read_line (process->priv->io_chan, &line, NULL, &termloc, NULL);
+
+			if (status != G_IO_STATUS_NORMAL) {
+				continue;
+			}
+
+			line[termloc] = '\0';
+
+			dbus_test_task_print(DBUS_TEST_TASK(process), line);
+			g_free(line);
+		}
+
+		g_clear_pointer(&process->priv->io_chan, g_io_channel_unref);
 	}
 
 	G_OBJECT_CLASS (dbus_test_process_parent_class)->dispose (object);
@@ -224,13 +248,12 @@ process_run (DbusTestTask * task)
 		g_free(message);
 	}
 
-	GIOChannel * iochan = g_io_channel_unix_new(proc_stdout);
-	g_io_channel_set_buffer_size(iochan, 10 * 1024 * 1024); /* 10 MB should be enough for anyone */
-	process->priv->io_watch = g_io_add_watch(iochan,
+	process->priv->io_chan = g_io_channel_unix_new(proc_stdout);
+	g_io_channel_set_buffer_size(process->priv->io_chan, 10 * 1024 * 1024); /* 10 MB should be enough for anyone */
+	process->priv->io_watch = g_io_add_watch(process->priv->io_chan,
 	                                         G_IO_IN, /* conditions */
 	                                         proc_writes, /* func */
 	                                         process); /* func data */
-	g_io_channel_unref(iochan);
 
 	process->priv->watcher = g_child_watch_add(process->priv->pid, proc_watcher, process);
 
