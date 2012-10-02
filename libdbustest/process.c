@@ -118,8 +118,6 @@ dbus_test_process_dispose (GObject *object)
 				continue;
 			}
 
-			line[termloc] = '\0';
-
 			dbus_test_task_print(DBUS_TEST_TASK(process), line);
 			g_free(line);
 		}
@@ -187,8 +185,6 @@ proc_writes (GIOChannel * channel, G_GNUC_UNUSED GIOCondition condition, gpointe
 		if (status != G_IO_STATUS_NORMAL) {
 			continue;
 		}
-
-		line[termloc] = '\0';
 
 		dbus_test_task_print(DBUS_TEST_TASK(process), line);
 		g_free(line);
