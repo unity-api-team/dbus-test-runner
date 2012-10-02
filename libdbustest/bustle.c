@@ -178,7 +178,7 @@ dbus_test_bustle_set_executable (DbusTestBustle * bustle, const gchar * executab
 }
 
 static void
-bustle_watcher (GPid pid, gint status, gpointer data)
+bustle_watcher (GPid pid, G_GNUC_UNUSED gint status, gpointer data)
 {
 	g_critical("Bustle Monitor exited abruptly!");
 	DbusTestBustle * bustler = DBUS_TEST_BUSTLE(data);
@@ -195,7 +195,7 @@ bustle_watcher (GPid pid, gint status, gpointer data)
 }
 
 static gboolean
-bustle_write_error (GIOChannel * channel, GIOCondition condition, gpointer data)
+bustle_write_error (GIOChannel * channel, G_GNUC_UNUSED GIOCondition condition, gpointer data)
 {
 	gchar * line;
 	gsize termloc;
@@ -221,7 +221,7 @@ bustle_write_error (GIOChannel * channel, GIOCondition condition, gpointer data)
 }
 
 static gboolean
-bustle_writes (GIOChannel * channel, GIOCondition condition, gpointer data)
+bustle_writes (GIOChannel * channel, G_GNUC_UNUSED GIOCondition condition, gpointer data)
 {
 	gchar * line;
 	gsize termloc;

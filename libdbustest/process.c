@@ -167,7 +167,7 @@ proc_watcher (GPid pid, gint status, gpointer data)
 }
 
 static gboolean
-proc_writes (GIOChannel * channel, GIOCondition condition, gpointer data)
+proc_writes (GIOChannel * channel, G_GNUC_UNUSED GIOCondition condition, gpointer data)
 {
 	g_return_val_if_fail(DBUS_TEST_IS_PROCESS(data), FALSE);
 	DbusTestProcess * process = DBUS_TEST_PROCESS(data);
@@ -214,7 +214,7 @@ process_run (DbusTestTask * task)
 	argv = g_new0(gchar *, g_list_length(process->priv->parameters) + 2);
 
 	argv[0] = process->priv->executable;
-	int i;
+	guint i;
 	for (i = 0; i < g_list_length(process->priv->parameters); i++) {
 		argv[i + 1] = (gchar *)g_list_nth(process->priv->parameters, i)->data;
 	}
