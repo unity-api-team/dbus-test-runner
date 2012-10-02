@@ -24,3 +24,7 @@ tests/test-timeout
 test-check-name
 test-own-name
 test-wait-for
+test-wait-output.filtered
+test-wait-output.output
+test-wait-output
+test-wait-output.output-only
