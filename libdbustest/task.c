@@ -346,3 +346,33 @@ dbus_test_task_get_wait_for (DbusTestTask * task)
 
 	return task->priv->wait_for;
 }
+
+/**
+ * dbus_test_task_set_wait_finished:
+ * @task: Task to adjust the value on
+ * @wait_till_complete: Set this task to wait until complete
+ *    even if we don't care about the return value.
+ *
+ * If this task has the value of its return set to ignore this
+ * means we won't exit early.
+ */
+void
+dbus_test_task_set_wait_finished (DbusTestTask * task, gboolean wait_till_complete)
+{
+
+	return;
+}
+
+/**
+ * dbus_test_task_set_wait_finished:
+ * @task: Task to get the value from
+ *
+ * Check to see if we should wait on this taks irregardless
+ * of whether we care about the return value.
+ */
+gboolean
+dbus_test_task_get_wait_finished (DbusTestTask * task)
+{
+
+	return FALSE;
+}
