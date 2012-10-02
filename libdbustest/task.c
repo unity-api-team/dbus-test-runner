@@ -35,6 +35,7 @@ struct _DbusTestTaskPrivate {
 	glong padding_cnt;
 
 	gboolean been_run;
+	gboolean wait_until_complete;
 };
 
 /* Signals */
@@ -97,6 +98,7 @@ dbus_test_task_init (DbusTestTask *self)
 	self->priv->padding_cnt = 0;
 
 	self->priv->been_run = FALSE;
+	self->priv->wait_until_complete = FALSE;
 
 	return;
 }
@@ -359,6 +361,9 @@ dbus_test_task_get_wait_for (DbusTestTask * task)
 void
 dbus_test_task_set_wait_finished (DbusTestTask * task, gboolean wait_till_complete)
 {
+	g_return_if_fail(DBUS_TEST_IS_TASK(task));
+
+	task->priv->wait_until_complete = wait_till_complete;
 
 	return;
 }
@@ -373,6 +378,7 @@ dbus_test_task_set_wait_finished (DbusTestTask * task, gboolean wait_till_comple
 gboolean
 dbus_test_task_get_wait_finished (DbusTestTask * task)
 {
+	g_return_val_if_fail(DBUS_TEST_IS_TASK(task), FALSE);
 
-	return FALSE;
+	return task->priv->wait_until_complete;
 }
