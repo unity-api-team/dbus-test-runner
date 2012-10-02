@@ -1,9 +1,9 @@
-dbus-test-runner (12.10.0-0ubuntu3~ppa1) UNRELEASED; urgency=low
+dbus-test-runner (12.10.0-0ubuntu3~ppa1) quantal; urgency=low
 
   * debian/control:
     * Adding a build dep on bustle for the test suite
 
- -- Ted Gould <ted@ubuntu.com>  Tue, 02 Oct 2012 15:55:42 -0500
+ -- Ted Gould <ted@ubuntu.com>  Tue, 02 Oct 2012 15:56:56 -0500
 
 dbus-test-runner (12.10.0-0ubuntu2) quantal; urgency=low
 
