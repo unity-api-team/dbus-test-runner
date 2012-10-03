@@ -106,7 +106,7 @@ dbus_test_service_init (DbusTestService *self)
 }
 
 static void
-task_unref (gpointer data, gpointer user_data)
+task_unref (gpointer data, G_GNUC_UNUSED gpointer user_data)
 {
 	DbusTestTask * task = DBUS_TEST_TASK(data);
 
@@ -190,7 +190,7 @@ dbus_test_service_finalize (GObject *object)
 }
 
 DbusTestService *
-dbus_test_service_new (const gchar * address)
+dbus_test_service_new (G_GNUC_UNUSED const gchar * address)
 {
 	DbusTestService * service = g_object_new(DBUS_TEST_TYPE_SERVICE,
 	                                         NULL);
@@ -296,7 +296,7 @@ normalize_name_lengths (DbusTestService * service)
 }
 
 static void
-task_starter (gpointer data, gpointer user_data)
+task_starter (gpointer data, G_GNUC_UNUSED gpointer user_data)
 {
 	DbusTestTask * task = DBUS_TEST_TASK(data);
 
@@ -341,7 +341,7 @@ dbus_writes (GIOChannel * channel, GIOCondition condition, gpointer data)
 }
 
 static void
-dbus_watcher (GPid pid, gint status, gpointer data)
+dbus_watcher (GPid pid, G_GNUC_UNUSED gint status, gpointer data)
 {
 	DbusTestService * service = DBUS_TEST_SERVICE(data);
 	g_critical("DBus Daemon exited abruptly!");
@@ -495,7 +495,7 @@ dbus_test_service_run (DbusTestService * service)
 }
 
 static void
-task_state_changed (DbusTestTask * task, DbusTestTaskState state, gpointer user_data)
+task_state_changed (G_GNUC_UNUSED DbusTestTask * task, G_GNUC_UNUSED DbusTestTaskState state, gpointer user_data)
 {
 	g_return_if_fail(DBUS_TEST_IS_SERVICE(user_data));
 	DbusTestService * service = DBUS_TEST_SERVICE(user_data);

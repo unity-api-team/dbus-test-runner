@@ -147,10 +147,7 @@ test-no-tasks: Makefile.am
 	@chmod +x $@
 XFAIL_TESTS += test-no-tasks
 
-# This test is failing on Jenkins for an unknown reason, we're disabiling
-# to unblock Jenkins.  Result tracked in LP: #1010739
-
-# TESTS += test-output
+TESTS += test-output
 test-output: Makefile.am
 	@echo "#!/bin/sh -e" > $@
 	@echo "$(DBUS_RUNNER) --task cat --parameter \"$(top_srcdir)/src/dbus-test-runner.c\" --task-name \"cat1\" --task cat --parameter \"$(top_srcdir)/src/dbus-test-runner.c\" --task-name \"cat2\" > testcat.output.txt" >> $@
@@ -173,7 +170,7 @@ TESTS += test-bustle
 test-bustle: Makefile.am test-bustle.reference
 	@echo "#!/bin/sh -e" > $@
 	@echo $(DBUS_RUNNER) --bustle-data \"$(builddir)/test-bustle.bustle\" --task $(srcdir)/test-bustle-list.sh >> $@
-	@echo "grep ^mc \"$(builddir)/test-bustle.bustle\" | grep ":1.1" | grep "ListNames" | cut -f 5-9 > test-bustle.filtered" >> $@
+	@echo "grep ^sig \"$(builddir)/test-bustle.bustle\" | grep ":1.1" | grep "com.launchpad.dbustestrunner" | cut -f 5-9 > test-bustle.filtered" >> $@
 	@echo "diff \"$(srcdir)/test-bustle.reference\" \"$(builddir)/test-bustle.filtered\"" >> $@
 	@chmod +x $@
 DISTCLEANFILES += test-bustle.bustle test-bustle.filtered
@@ -216,7 +213,8 @@ test-bustle-data: Makefile.am
 	@echo "--task $(srcdir)/test-bustle-list.sh \\" >> $@
 	@echo "--task $(srcdir)/test-bustle-list.sh \\" >> $@
 	@echo "--task $(srcdir)/test-bustle-list.sh \\" >> $@
-	@echo "--task $(srcdir)/test-bustle-list.sh \\" >> $@
+	@echo "--task $(srcdir)/test-bustle-list.sh" >> $@
+	@echo "$(srcdir)/test-bustle-data-check.sh \"$(builddir)/test-bustle-data.bustle\" 12" >> $@
 	@chmod +x $@
 DISTCLEANFILES += test-bustle-data.bustle
 
@@ -310,4 +308,5 @@ DISTCLEANFILES += $(LIBDBUSTEST_XML_REPORT)
 EXTRA_DIST = \
 	delayrm.sh \
 	test-bustle.reference \
+	test-bustle-data-check.sh \
 	test-bustle-list.sh
