@@ -1,1 +1,1 @@
-:1.1	org.freedesktop.DBus	/org/freedesktop/DBus	org.freedesktop.DBus	ListNames
+:1.1	/test/dbustestrunner/signal	com.launchpad.dbustestrunner	signal
