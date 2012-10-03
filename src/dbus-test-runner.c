@@ -62,6 +62,23 @@ option_taskname (G_GNUC_UNUSED const gchar * arg, const gchar * value, G_GNUC_UN
 }
 
 static gboolean
+option_complete (G_GNUC_UNUSED const gchar * arg, G_GNUC_UNUSED const gchar * value, G_GNUC_UNUSED gpointer data, GError ** error)
+{
+	if (last_task == NULL) {
+		g_set_error(error, G_OPTION_ERROR, G_OPTION_ERROR_BAD_VALUE, "No task to put adjust return on.");
+		return FALSE;
+	}
+
+	if (dbus_test_task_get_wait_finished(DBUS_TEST_TASK(last_task))) {
+		g_set_error(error, G_OPTION_ERROR, G_OPTION_ERROR_BAD_VALUE, "Task has already be setup to wait until finished.");
+		return FALSE;
+	}
+
+	dbus_test_task_set_wait_finished(DBUS_TEST_TASK(last_task), TRUE);
+	return TRUE;
+}
+
+static gboolean
 option_noreturn (G_GNUC_UNUSED const gchar * arg, G_GNUC_UNUSED const gchar * value, G_GNUC_UNUSED gpointer data, GError ** error)
 {
 	if (last_task == NULL) {
@@ -154,6 +171,7 @@ static GOptionEntry task_options[] = {
 	{"invert-return", 'i',  G_OPTION_FLAG_NO_ARG,     G_OPTION_ARG_CALLBACK,  option_invert,   "Invert the return value of the task before calculating whether the test passes or fails.", NULL},
 	{"parameter",     'p',  0,                        G_OPTION_ARG_CALLBACK,  option_param,    "Add a parameter to the call of this utility.  May be called as many times as you'd like.", NULL},
 	{"wait-for",      'f',  0,                        G_OPTION_ARG_CALLBACK,  option_wait,     "A dbus-name that should appear on the bus before this task is started", "dbus-name"},
+	{"wait-until-complete", 'c', G_OPTION_FLAG_NO_ARG,G_OPTION_ARG_CALLBACK,  option_complete, "Signal that we should wait until this task exits even if we don't need the return value", NULL},
 	{NULL}
 };
 
