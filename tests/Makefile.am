@@ -272,7 +272,7 @@ test-wait-output: Makefile.am test-wait-outputer
 	@echo $(DBUS_RUNNER) --task "$(srcdir)/test-wait-outputer" --task-name output --ignore-return --wait-until-complete \| tee $(builddir)/test-wait-output.output >> $@
 	@echo "grep ^output: $(builddir)/test-wait-output.output | tail -n +2 > $(builddir)/test-wait-output.output-only" >> $@
 	@echo "sed -e s/output:\\ //g $(builddir)/test-wait-output.output-only > $(builddir)/test-wait-output.filtered" >> $@
-	@echo diff test-wait-output.reference test-wait-output.filtered >> $@
+	@echo diff $(srcdir)/test-wait-output.reference $(builddir)/test-wait-output.filtered >> $@
 	@chmod +x $@
 DISTCLEANFILES += \
 	test-wait-output.output \
