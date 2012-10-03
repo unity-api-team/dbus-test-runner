@@ -21,6 +21,7 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "config.h"
 #endif
 
+#include <glib.h>
 #include "dbus-test.h"
 
 struct _DbusTestBustlePrivate {
@@ -46,6 +47,12 @@ static void dbus_test_bustle_finalize   (GObject *object);
 static void process_run                 (DbusTestTask * task);
 static DbusTestTaskState get_state      (DbusTestTask * task);
 static gboolean get_passed              (DbusTestTask * task);
+static gboolean bustle_writes           (GIOChannel *          channel,
+                                         GIOCondition          condition,
+                                         gpointer              data);
+static gboolean bustle_write_error      (GIOChannel *          channel,
+                                         GIOCondition          condition,
+                                         gpointer              data);
 
 G_DEFINE_TYPE (DbusTestBustle, dbus_test_bustle, DBUS_TEST_TYPE_TASK);
 
@@ -105,18 +112,24 @@ dbus_test_bustle_dispose (GObject *object)
 	}
 
 	if (bustler->priv->stdout != NULL) {
-		g_io_channel_shutdown(bustler->priv->stdout, TRUE, NULL);
-		bustler->priv->stdout = NULL;
+		while (G_IO_IN & g_io_channel_get_buffer_condition(bustler->priv->stdout)) {
+			bustle_writes(bustler->priv->stdout, 0 /* unused */, bustler->priv->file);
+		}
+
+		g_clear_pointer(&bustler->priv->stdout, g_io_channel_unref);
 	}
 
 	if (bustler->priv->stderr != NULL) {
-		g_io_channel_shutdown(bustler->priv->stderr, TRUE, NULL);
-		bustler->priv->stderr = NULL;
+		while (G_IO_IN & g_io_channel_get_buffer_condition(bustler->priv->stderr)) {
+			bustle_write_error(bustler->priv->stderr, 0 /* unused */, bustler);
+		}
+
+		g_clear_pointer(&bustler->priv->stderr, g_io_channel_unref);
 	}
 
 	if (bustler->priv->file != NULL) {
 		g_io_channel_shutdown(bustler->priv->file, TRUE, NULL);
-		bustler->priv->file = NULL;
+		g_clear_pointer(&bustler->priv->file, g_io_channel_unref);
 	}
 
 	G_OBJECT_CLASS (dbus_test_bustle_parent_class)->dispose (object);
@@ -165,7 +178,7 @@ dbus_test_bustle_set_executable (DbusTestBustle * bustle, const gchar * executab
 }
 
 static void
-bustle_watcher (GPid pid, gint status, gpointer data)
+bustle_watcher (GPid pid, G_GNUC_UNUSED gint status, gpointer data)
 {
 	g_critical("Bustle Monitor exited abruptly!");
 	DbusTestBustle * bustler = DBUS_TEST_BUSTLE(data);
@@ -182,7 +195,7 @@ bustle_watcher (GPid pid, gint status, gpointer data)
 }
 
 static gboolean
-bustle_write_error (GIOChannel * channel, GIOCondition condition, gpointer data)
+bustle_write_error (GIOChannel * channel, G_GNUC_UNUSED GIOCondition condition, gpointer data)
 {
 	gchar * line;
 	gsize termloc;
@@ -208,7 +221,7 @@ bustle_write_error (GIOChannel * channel, GIOCondition condition, gpointer data)
 }
 
 static gboolean
-bustle_writes (GIOChannel * channel, GIOCondition condition, gpointer data)
+bustle_writes (GIOChannel * channel, G_GNUC_UNUSED GIOCondition condition, gpointer data)
 {
 	gchar * line;
 	gsize termloc;

@@ -1,3 +1,3 @@
 #!/bin/sh
 sleep 1
-dbus-send --session --print-reply --dest=org.freedesktop.DBus /org/freedesktop/DBus org.freedesktop.DBus.ListNames
+gdbus emit --session --object-path /test/dbustestrunner/signal --signal com.launchpad.dbustestrunner.signal

@@ -260,7 +260,7 @@ dbus_test_task_get_return (DbusTestTask * task)
 }
 
 static void
-wait_for_found (GDBusConnection * connection, const gchar * name, const gchar * name_owner, gpointer user_data)
+wait_for_found (G_GNUC_UNUSED GDBusConnection * connection, G_GNUC_UNUSED const gchar * name, G_GNUC_UNUSED const gchar * name_owner, gpointer user_data)
 {
 	g_return_if_fail(DBUS_TEST_IS_TASK(user_data));
 	DbusTestTask * task = DBUS_TEST_TASK(user_data);
