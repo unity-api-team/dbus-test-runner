@@ -29,7 +29,7 @@ libdbustest_la_CFLAGS = \
 	-I$(top_srcdir) \
 	-DDEFAULT_SESSION_CONF="\"$(datadir)/dbus-test-runner/session.conf\"" \
 	-DG_LOG_DOMAIN=\"libdbustest\" \
-	-Wall -Werror
+	-Wall -Werror -Wextra
 
 libdbustest_la_LIBADD = \
 	$(DBUS_TEST_RUNNER_LIBS)
