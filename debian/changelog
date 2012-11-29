@@ -2,6 +2,7 @@ dbus-test-runner (12.10.2-0ubuntu1) UNRELEASED; urgency=low
 
   * debian/control:
     - Update style to use commas at the end of dependency lists.
+    - Drop Build-Depends on cdbs.
 
  -- Mathieu Trudel-Lapierre <mathieu-tl@ubuntu.com>  Thu, 29 Nov 2012 15:53:54 -0500
 
