@@ -3,11 +3,11 @@ Section: gnome
 Priority: optional
 Maintainer: Ubuntu Desktop Team <ubuntu-desktop@lists.ubuntu.com>
 Build-Depends: debhelper (>= 9),
-               gnome-common,
-               libdbus-glib-1-dev,
-               xvfb,
-               gvfs-backends,
                dh-autoreconf,
+               gnome-common,
+               xvfb,
+               libdbus-glib-1-dev,
+               gvfs-backends,
                dbus,
 Standards-Version: 3.9.3
 Homepage: https://launchpad.net/dbus-test-runner

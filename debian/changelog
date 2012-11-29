@@ -4,6 +4,7 @@ dbus-test-runner (12.10.2-0ubuntu1) UNRELEASED; urgency=low
     - Update style to use commas at the end of dependency lists.
     - Drop Build-Depends on cdbs.
     - Add gnome-common to Build-Depends.
+    - Reorganize Build-Depends for clarity.
   * debian/rules:
     - Migrate from cdbs to debhelper 9 sequencer.
     - Override dh_autoreconf to call autogen.sh and not run configure.
