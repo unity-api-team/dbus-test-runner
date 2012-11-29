@@ -8,7 +8,7 @@ Build-Depends: debhelper (>= 9),
                xvfb,
                gvfs-backends,
                dh-autoreconf,
-               dbus
+               dbus,
 Standards-Version: 3.9.3
 Homepage: https://launchpad.net/dbus-test-runner
 
@@ -17,8 +17,8 @@ Architecture: any
 Depends: ${shlibs:Depends},
          ${misc:Depends},
          gvfs-backends,
-         dbus
-Suggests: bustle
+         dbus,
+Suggests: bustle,
 Description: Runs tests under a new DBus session
  A simple little executable for running a couple of programs under a 
  new DBus session.
@@ -27,7 +27,7 @@ Package: libdbustest1
 Section: libs
 Architecture: any
 Depends: ${shlibs:Depends},
-         ${misc:Depends}
+         ${misc:Depends},
 Description: Runs tests under a new DBus session
  A simple little executable for running a couple of programs under a 
  new DBus session.
@@ -40,7 +40,7 @@ Architecture: any
 Depends: ${shlibs:Depends},
          ${misc:Depends},
          libglib2.0-dev,
-         libdbustest1 (= ${binary:Version})
+         libdbustest1 (= ${binary:Version}),
 Description: Runs tests under a new DBus session
  A simple little executable for running a couple of programs under a 
  new DBus session.
