@@ -167,11 +167,16 @@ test-output: Makefile.am
 DISTCLEANFILES += testcat.output.txt testcat.output.cat1.txt testcat.output.cat2.txt testcat.output.cat1.filtered.txt testcat.output.cat2.filtered.txt
 
 TESTS += test-bustle
-test-bustle: Makefile.am test-bustle.reference
+test-bustle: Makefile.am test-bustle.reference test-bustle.0.4.reference
 	@echo "#!/bin/sh -e" > $@
 	@echo $(DBUS_RUNNER) --bustle-monitor $(top_srcdir)/libdbustest/dbus-test-bustle-handler --bustle-data \"$(builddir)/test-bustle.bustle\" --task $(srcdir)/test-bustle-list.sh >> $@
+	@echo "if [ -x /usr/bin/bustle-count ] ; then" >> $@
 	@echo "grep ^sig \"$(builddir)/test-bustle.bustle\" | grep ":1.1" | grep "com.launchpad.dbustestrunner" | cut -f 5-9 > test-bustle.filtered" >> $@
 	@echo "diff \"$(srcdir)/test-bustle.reference\" \"$(builddir)/test-bustle.filtered\"" >> $@
+	@echo "else" >> $@
+	@echo "bustle --count \"$(builddir)/test-bustle.bustle\" > \"$(builddir)/test-bustle.filtered\"" >> $@
+	@echo "diff \"$(srcdir)/test-bustle.0.4.reference\" \"$(builddir)/test-bustle.filtered\"" >> $@
+	@echo "fi" >> $@
 	@chmod +x $@
 DISTCLEANFILES += test-bustle.bustle test-bustle.filtered
 
@@ -323,5 +328,6 @@ EXTRA_DIST = \
 	test-wait-output.reference \
 	delayrm.sh \
 	test-bustle.reference \
+	test-bustle.0.4.reference \
 	test-bustle-data-check.sh \
 	test-bustle-list.sh
