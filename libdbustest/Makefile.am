@@ -41,7 +41,11 @@ libdbustest_la_LDFLAGS = \
 	-no-undefined \
 	-export-symbols-regex "^[^_].*"
 
+pkgdatadir_SCRIPTS = \
+	dbus-test-bustle-handler
+
 EXTRA_DIST = \
+	dbus-test-bustle-handler \
 	dbustest.pc.in
 
 pkgconfig_DATA = dbustest-$(API_VERSION).pc
