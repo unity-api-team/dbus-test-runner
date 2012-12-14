@@ -219,7 +219,11 @@ test-bustle-data: Makefile.am
 	@echo "--task $(srcdir)/test-bustle-list.sh \\" >> $@
 	@echo "--task $(srcdir)/test-bustle-list.sh \\" >> $@
 	@echo "--task $(srcdir)/test-bustle-list.sh" >> $@
+	@echo "if [ -x /usr/bin/bustle-count ] ; then" >> $@
 	@echo "$(srcdir)/test-bustle-data-check.sh \"$(builddir)/test-bustle-data.bustle\" 12" >> $@
+	@echo "else" >> $@
+	@echo "$(srcdir)/test-bustle-data-check.0.4.sh \"$(builddir)/test-bustle-data.bustle\" 12" >> $@
+	@echo "fi" >> $@
 	@chmod +x $@
 DISTCLEANFILES += test-bustle-data.bustle
 
@@ -330,4 +334,5 @@ EXTRA_DIST = \
 	test-bustle.reference \
 	test-bustle.0.4.reference \
 	test-bustle-data-check.sh \
+	test-bustle-data-check.0.4.sh \
 	test-bustle-list.sh
