@@ -274,9 +274,8 @@ process_run (DbusTestTask * task)
 	gint bustle_stdout_num;
 	gint bustle_stderr_num;
 	
-	gchar ** bustle_monitor = g_new0(gchar *, 3);
+	gchar ** bustle_monitor = g_new0(gchar *, 2);
 	bustle_monitor[0] = (gchar *)bustler->priv->executable;
-	bustle_monitor[1] = "--session";
 
 	g_spawn_async_with_pipes(g_get_current_dir(),
 	                         bustle_monitor, /* argv */
