@@ -81,7 +81,7 @@ dbus_test_bustle_init (DbusTestBustle *self)
 	self->priv = DBUS_TEST_BUSTLE_GET_PRIVATE(self);
 
 	self->priv->filename = g_strconcat(g_get_current_dir(), G_DIR_SEPARATOR_S, "bustle.log", NULL);
-	self->priv->executable = g_strdup("bustle-dbus-monitor");
+	self->priv->executable = g_strdup(BUSTLE_DUAL_MONITOR);
 
 	self->priv->watch = 0;
 	self->priv->stdout = NULL;
