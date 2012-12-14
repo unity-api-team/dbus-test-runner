@@ -101,8 +101,7 @@ dbus_test_bustle_dispose (GObject *object)
 	}
 
 	if (bustler->priv->pid != 0) {
-		/* TODO: Send a single dbus message */
-		gchar * command = g_strdup_printf("kill %d", bustler->priv->pid);
+		gchar * command = g_strdup_printf("kill -INT %d", bustler->priv->pid);
 		g_spawn_command_line_sync(command, NULL, NULL, NULL, NULL);
 		g_free(command);
 
