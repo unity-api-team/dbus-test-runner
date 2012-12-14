@@ -169,7 +169,7 @@ DISTCLEANFILES += testcat.output.txt testcat.output.cat1.txt testcat.output.cat2
 TESTS += test-bustle
 test-bustle: Makefile.am test-bustle.reference
 	@echo "#!/bin/sh -e" > $@
-	@echo $(DBUS_RUNNER) --bustle-data \"$(builddir)/test-bustle.bustle\" --task $(srcdir)/test-bustle-list.sh >> $@
+	@echo $(DBUS_RUNNER) --bustle-monitor $(top_srcdir)/libdbustest/dbus-test-bustle-handler --bustle-data \"$(builddir)/test-bustle.bustle\" --task $(srcdir)/test-bustle-list.sh >> $@
 	@echo "grep ^sig \"$(builddir)/test-bustle.bustle\" | grep ":1.1" | grep "com.launchpad.dbustestrunner" | cut -f 5-9 > test-bustle.filtered" >> $@
 	@echo "diff \"$(srcdir)/test-bustle.reference\" \"$(builddir)/test-bustle.filtered\"" >> $@
 	@chmod +x $@
@@ -178,7 +178,7 @@ DISTCLEANFILES += test-bustle.bustle test-bustle.filtered
 TESTS += test-bustle-bad-file
 test-bustle-bad-file: Makefile.am
 	@echo "#!/bin/sh -e" > $@
-	@echo $(DBUS_RUNNER) --bustle-data \"$(builddir)\" --task true >> $@
+	@echo $(DBUS_RUNNER) --bustle-monitor $(top_srcdir)/libdbustest/dbus-test-bustle-handler --bustle-data \"$(builddir)\" --task true >> $@
 	@chmod +x $@
 XFAIL_TESTS += test-bustle-bad-file
 
@@ -201,7 +201,7 @@ DISTCLEANFILES += test-bustle-bad-monitor-error.bustle
 TESTS += test-bustle-data
 test-bustle-data: Makefile.am
 	@echo "#!/bin/sh -e" > $@
-	@echo "$(DBUS_RUNNER) --bustle-data \"$(builddir)/test-bustle-data.bustle\" \\" >> $@
+	@echo "$(DBUS_RUNNER) --bustle-monitor $(top_srcdir)/libdbustest/dbus-test-bustle-handler --bustle-data \"$(builddir)/test-bustle-data.bustle\" \\" >> $@
 	@echo "--task $(srcdir)/test-bustle-list.sh \\" >> $@
 	@echo "--task $(srcdir)/test-bustle-list.sh \\" >> $@
 	@echo "--task $(srcdir)/test-bustle-list.sh \\" >> $@
