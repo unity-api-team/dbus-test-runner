@@ -41,7 +41,7 @@ libdbustest_la_LDFLAGS = \
 	-no-undefined \
 	-export-symbols-regex "^[^_].*"
 
-pkgdatadir_SCRIPTS = \
+pkgdata_SCRIPTS = \
 	dbus-test-bustle-handler
 
 EXTRA_DIST = \
