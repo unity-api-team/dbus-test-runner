@@ -29,7 +29,6 @@ struct _DbusTestBustlePrivate {
 	gchar * executable;
 
 	guint watch;
-	GIOChannel * stdout;
 	GIOChannel * stderr;
 	GIOChannel * file;
 	GPid pid;
@@ -47,9 +46,6 @@ static void dbus_test_bustle_finalize   (GObject *object);
 static void process_run                 (DbusTestTask * task);
 static DbusTestTaskState get_state      (DbusTestTask * task);
 static gboolean get_passed              (DbusTestTask * task);
-static gboolean bustle_writes           (GIOChannel *          channel,
-                                         GIOCondition          condition,
-                                         gpointer              data);
 static gboolean bustle_write_error      (GIOChannel *          channel,
                                          GIOCondition          condition,
                                          gpointer              data);
@@ -81,10 +77,9 @@ dbus_test_bustle_init (DbusTestBustle *self)
 	self->priv = DBUS_TEST_BUSTLE_GET_PRIVATE(self);
 
 	self->priv->filename = g_strconcat(g_get_current_dir(), G_DIR_SEPARATOR_S, "bustle.log", NULL);
-	self->priv->executable = g_strdup("bustle-dbus-monitor");
+	self->priv->executable = g_strdup(BUSTLE_DUAL_MONITOR);
 
 	self->priv->watch = 0;
-	self->priv->stdout = NULL;
 	self->priv->stderr = NULL;
 	self->priv->file = NULL;
 	self->priv->pid = 0;
@@ -106,17 +101,11 @@ dbus_test_bustle_dispose (GObject *object)
 	}
 
 	if (bustler->priv->pid != 0) {
-		/* TODO: Send a single dbus message */
+		gchar * command = g_strdup_printf("kill -INT %d", bustler->priv->pid);
+		g_spawn_command_line_sync(command, NULL, NULL, NULL, NULL);
+		g_free(command);
 
 		g_spawn_close_pid(bustler->priv->pid);
-	}
-
-	if (bustler->priv->stdout != NULL) {
-		while (G_IO_IN & g_io_channel_get_buffer_condition(bustler->priv->stdout)) {
-			bustle_writes(bustler->priv->stdout, 0 /* unused */, bustler->priv->file);
-		}
-
-		g_clear_pointer(&bustler->priv->stdout, g_io_channel_unref);
 	}
 
 	if (bustler->priv->stderr != NULL) {
@@ -220,34 +209,6 @@ bustle_write_error (GIOChannel * channel, G_GNUC_UNUSED GIOCondition condition, 
 	return TRUE;
 }
 
-static gboolean
-bustle_writes (GIOChannel * channel, G_GNUC_UNUSED GIOCondition condition, gpointer data)
-{
-	gchar * line;
-	gsize termloc;
-
-	GIOStatus status = g_io_channel_read_line (channel, &line, NULL, &termloc, NULL);
-
-	if (status != G_IO_STATUS_NORMAL) {
-		return FALSE;
-	}
-
-	g_io_channel_write_chars((GIOChannel *)data,
-							 line,
-							 termloc,
-							 NULL,
-							 NULL);
-	g_io_channel_write_chars((GIOChannel *)data,
-							 "\n",
-							 1,
-							 NULL,
-							 NULL);
-
-	g_free(line);
-
-	return TRUE;
-}
-
 static void
 process_run (DbusTestTask * task)
 {
@@ -271,12 +232,11 @@ process_run (DbusTestTask * task)
 		return;
 	}
 
-	gint bustle_stdout_num;
 	gint bustle_stderr_num;
 	
 	gchar ** bustle_monitor = g_new0(gchar *, 3);
 	bustle_monitor[0] = (gchar *)bustler->priv->executable;
-	bustle_monitor[1] = "--session";
+	bustle_monitor[1] = (gchar *)bustler->priv->filename;
 
 	g_spawn_async_with_pipes(g_get_current_dir(),
 	                         bustle_monitor, /* argv */
@@ -287,7 +247,7 @@ process_run (DbusTestTask * task)
 	                         NULL, /* child setup data */
 	                         &bustler->priv->pid, /* PID */
 	                         NULL, /* stdin */
-	                         &bustle_stdout_num, /* stdout */
+	                         NULL, /* stdout */
 	                         &bustle_stderr_num, /* stderr */
 	                         &error); /* error */
 
@@ -307,12 +267,6 @@ process_run (DbusTestTask * task)
 		g_free(start);
 	}
 	bustler->priv->watch = g_child_watch_add(bustler->priv->pid, bustle_watcher, bustler);
-
-	bustler->priv->stdout = g_io_channel_unix_new(bustle_stdout_num);
-	g_io_add_watch(bustler->priv->stdout,
-	               G_IO_IN | G_IO_PRI, /* conditions */
-	               bustle_writes, /* func */
-	               bustler->priv->file); /* func data */
 
 	bustler->priv->stderr = g_io_channel_unix_new(bustle_stderr_num);
 	g_io_add_watch(bustler->priv->stderr,

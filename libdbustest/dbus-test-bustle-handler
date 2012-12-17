@@ -1,0 +1,13 @@
+#!/bin/bash -e
+
+if [ -x /usr/bin/bustle-pcap ]; then
+	exec /usr/bin/bustle-pcap $1
+fi
+
+if [ -x /usr/bin/bustle-dbus-monitor ]; then
+	exec /usr/bin/bustle-dbus-monitor --session > $1
+fi
+
+echo "Unable to find a suitable Bustle capture tool"
+exit 1
+

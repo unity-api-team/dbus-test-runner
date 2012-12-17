@@ -125,6 +125,21 @@ dbus_test_service_dispose (GObject *object)
 	g_return_if_fail(DBUS_TEST_IS_SERVICE(object));
 	DbusTestService * self = DBUS_TEST_SERVICE(object);
 
+	if (!g_queue_is_empty(&self->priv->tasks_last)) {
+		g_queue_foreach(&self->priv->tasks_last, task_unref, NULL);
+		g_queue_clear(&self->priv->tasks_last);
+	}
+
+	if (!g_queue_is_empty(&self->priv->tasks_normal)) {
+		g_queue_foreach(&self->priv->tasks_normal, task_unref, NULL);
+		g_queue_clear(&self->priv->tasks_normal);
+	}
+
+	if (!g_queue_is_empty(&self->priv->tasks_first)) {
+		g_queue_foreach(&self->priv->tasks_first, task_unref, NULL);
+		g_queue_clear(&self->priv->tasks_first);
+	}
+
 	if (self->priv->dbus_watch != 0) {
 		g_source_remove(self->priv->dbus_watch);
 		self->priv->dbus_watch = 0;
@@ -141,6 +156,7 @@ dbus_test_service_dispose (GObject *object)
 		self->priv->dbus_io = NULL;
 	}
 
+	g_print("DBus daemon: Shutdown\n");
 	if (self->priv->dbus != 0) {
 		gchar * cmd = g_strdup_printf("kill -9 %d", self->priv->dbus);
 		g_spawn_command_line_async(cmd, NULL);
@@ -148,21 +164,6 @@ dbus_test_service_dispose (GObject *object)
 
 		g_spawn_close_pid(self->priv->dbus);
 		self->priv->dbus = 0;
-	}
-
-	if (!g_queue_is_empty(&self->priv->tasks_first)) {
-		g_queue_foreach(&self->priv->tasks_first, task_unref, NULL);
-		g_queue_clear(&self->priv->tasks_first);
-	}
-
-	if (!g_queue_is_empty(&self->priv->tasks_normal)) {
-		g_queue_foreach(&self->priv->tasks_normal, task_unref, NULL);
-		g_queue_clear(&self->priv->tasks_normal);
-	}
-
-	if (!g_queue_is_empty(&self->priv->tasks_last)) {
-		g_queue_foreach(&self->priv->tasks_last, task_unref, NULL);
-		g_queue_clear(&self->priv->tasks_last);
 	}
 
 	if (self->priv->mainloop != NULL) {
