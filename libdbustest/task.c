@@ -124,6 +124,8 @@ dbus_test_task_finalize (GObject *object)
 	g_return_if_fail(DBUS_TEST_IS_TASK(object));
 	DbusTestTask * self = DBUS_TEST_TASK(object);
 
+	g_print("%s: Shutting down\n", self->priv->name);
+
 	g_free(self->priv->name);
 	g_free(self->priv->name_padded);
 	g_free(self->priv->wait_for);

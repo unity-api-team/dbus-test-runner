@@ -152,9 +152,9 @@ test-output: Makefile.am
 	@echo "#!/bin/sh -e" > $@
 	@echo "$(DBUS_RUNNER) --task cat --parameter \"$(top_srcdir)/src/dbus-test-runner.c\" --task-name \"cat1\" --task cat --parameter \"$(top_srcdir)/src/dbus-test-runner.c\" --task-name \"cat2\" > testcat.output.txt" >> $@
 	@echo "echo Finding cat1 data" >> $@
-	@echo "grep ^cat1: testcat.output.txt | tail -n +2 > testcat.output.cat1.txt" >> $@
+	@echo "grep ^cat1: testcat.output.txt | tail -n +2 | head -n -1 > testcat.output.cat1.txt" >> $@
 	@echo "echo Finding cat2 data" >> $@
-	@echo "grep ^cat2: testcat.output.txt | tail -n +2 > testcat.output.cat2.txt" >> $@
+	@echo "grep ^cat2: testcat.output.txt | tail -n +2 | head -n -1 > testcat.output.cat2.txt" >> $@
 	@echo "echo Filtering cat1 data" >> $@
 	@echo "sed -e s/cat1:\\ //g testcat.output.cat1.txt > testcat.output.cat1.filtered.txt" >> $@
 	@echo "echo Filtering cat2 data" >> $@
@@ -167,18 +167,23 @@ test-output: Makefile.am
 DISTCLEANFILES += testcat.output.txt testcat.output.cat1.txt testcat.output.cat2.txt testcat.output.cat1.filtered.txt testcat.output.cat2.filtered.txt
 
 TESTS += test-bustle
-test-bustle: Makefile.am test-bustle.reference
+test-bustle: Makefile.am test-bustle.reference test-bustle.0.4.reference
 	@echo "#!/bin/sh -e" > $@
-	@echo $(DBUS_RUNNER) --bustle-data \"$(builddir)/test-bustle.bustle\" --task $(srcdir)/test-bustle-list.sh >> $@
+	@echo $(DBUS_RUNNER) --bustle-monitor $(top_srcdir)/libdbustest/dbus-test-bustle-handler --bustle-data \"$(builddir)/test-bustle.bustle\" --task $(srcdir)/test-bustle-list.sh >> $@
+	@echo "if [ -x /usr/bin/bustle-count ] ; then" >> $@
 	@echo "grep ^sig \"$(builddir)/test-bustle.bustle\" | grep ":1.1" | grep "com.launchpad.dbustestrunner" | cut -f 5-9 > test-bustle.filtered" >> $@
 	@echo "diff \"$(srcdir)/test-bustle.reference\" \"$(builddir)/test-bustle.filtered\"" >> $@
+	@echo "else" >> $@
+	@echo "bustle --count \"$(builddir)/test-bustle.bustle\" > \"$(builddir)/test-bustle.filtered\"" >> $@
+	@echo "diff \"$(srcdir)/test-bustle.0.4.reference\" \"$(builddir)/test-bustle.filtered\"" >> $@
+	@echo "fi" >> $@
 	@chmod +x $@
 DISTCLEANFILES += test-bustle.bustle test-bustle.filtered
 
 TESTS += test-bustle-bad-file
 test-bustle-bad-file: Makefile.am
 	@echo "#!/bin/sh -e" > $@
-	@echo $(DBUS_RUNNER) --bustle-data \"$(builddir)\" --task true >> $@
+	@echo $(DBUS_RUNNER) --bustle-monitor $(top_srcdir)/libdbustest/dbus-test-bustle-handler --bustle-data \"$(builddir)\" --task true >> $@
 	@chmod +x $@
 XFAIL_TESTS += test-bustle-bad-file
 
@@ -201,7 +206,7 @@ DISTCLEANFILES += test-bustle-bad-monitor-error.bustle
 TESTS += test-bustle-data
 test-bustle-data: Makefile.am
 	@echo "#!/bin/sh -e" > $@
-	@echo "$(DBUS_RUNNER) --bustle-data \"$(builddir)/test-bustle-data.bustle\" \\" >> $@
+	@echo "$(DBUS_RUNNER) --bustle-monitor $(top_srcdir)/libdbustest/dbus-test-bustle-handler --bustle-data \"$(builddir)/test-bustle-data.bustle\" \\" >> $@
 	@echo "--task $(srcdir)/test-bustle-list.sh \\" >> $@
 	@echo "--task $(srcdir)/test-bustle-list.sh \\" >> $@
 	@echo "--task $(srcdir)/test-bustle-list.sh \\" >> $@
@@ -214,7 +219,11 @@ test-bustle-data: Makefile.am
 	@echo "--task $(srcdir)/test-bustle-list.sh \\" >> $@
 	@echo "--task $(srcdir)/test-bustle-list.sh \\" >> $@
 	@echo "--task $(srcdir)/test-bustle-list.sh" >> $@
+	@echo "if [ -x /usr/bin/bustle-count ] ; then" >> $@
 	@echo "$(srcdir)/test-bustle-data-check.sh \"$(builddir)/test-bustle-data.bustle\" 12" >> $@
+	@echo "else" >> $@
+	@echo "$(srcdir)/test-bustle-data-check.0.4.sh \"$(builddir)/test-bustle-data.bustle\" 12" >> $@
+	@echo "fi" >> $@
 	@chmod +x $@
 DISTCLEANFILES += test-bustle-data.bustle
 
@@ -323,5 +332,7 @@ EXTRA_DIST = \
 	test-wait-output.reference \
 	delayrm.sh \
 	test-bustle.reference \
+	test-bustle.0.4.reference \
 	test-bustle-data-check.sh \
+	test-bustle-data-check.0.4.sh \
 	test-bustle-list.sh

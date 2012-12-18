@@ -28,6 +28,7 @@ libdbustest_la_CFLAGS = \
 	$(COVERAGE_CFLAGS) \
 	-I$(top_srcdir) \
 	-DDEFAULT_SESSION_CONF="\"$(datadir)/dbus-test-runner/session.conf\"" \
+	-DBUSTLE_DUAL_MONITOR="\"$(pkgdatadir)/dbus-test-bustle-handler\"" \
 	-DG_LOG_DOMAIN=\"libdbustest\" \
 	-Wall -Werror -Wextra
 
@@ -41,7 +42,11 @@ libdbustest_la_LDFLAGS = \
 	-no-undefined \
 	-export-symbols-regex "^[^_].*"
 
+pkgdata_SCRIPTS = \
+	dbus-test-bustle-handler
+
 EXTRA_DIST = \
+	dbus-test-bustle-handler \
 	dbustest.pc.in
 
 pkgconfig_DATA = dbustest-$(API_VERSION).pc
