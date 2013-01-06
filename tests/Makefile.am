@@ -223,8 +223,10 @@ test-bustle-data: Makefile.am
 	@echo "--task $(srcdir)/test-bustle-list.sh \\" >> $@
 	@echo "--task $(srcdir)/test-bustle-list.sh" >> $@
 	@echo "if [ -x /usr/bin/bustle-count ] ; then" >> $@
+	@echo "chmod +x $(srcdir)/test-bustle-data-check.sh" >> $@
 	@echo "$(srcdir)/test-bustle-data-check.sh \"$(builddir)/test-bustle-data.bustle\" 12" >> $@
 	@echo "else" >> $@
+	@echo "chmod +x $(srcdir)/test-bustle-data-check.0.4.sh" >> $@
 	@echo "$(srcdir)/test-bustle-data-check.0.4.sh \"$(builddir)/test-bustle-data.bustle\" 12" >> $@
 	@echo "fi" >> $@
 	@chmod +x $@
