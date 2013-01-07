@@ -169,6 +169,7 @@ DISTCLEANFILES += testcat.output.txt testcat.output.cat1.txt testcat.output.cat2
 TESTS += test-bustle
 test-bustle: Makefile.am test-bustle.reference test-bustle.0.4.reference
 	@echo "#!/bin/sh -e" > $@
+	@echo "chmod +x $(top_srcdir)/libdbustest/dbus-test-bustle-handler" >> $@
 	@echo $(DBUS_RUNNER) --bustle-monitor $(top_srcdir)/libdbustest/dbus-test-bustle-handler --bustle-data \"$(builddir)/test-bustle.bustle\" --task $(srcdir)/test-bustle-list.sh >> $@
 	@echo "if [ -x /usr/bin/bustle-count ] ; then" >> $@
 	@echo "grep ^sig \"$(builddir)/test-bustle.bustle\" | grep ":1.1" | grep "com.launchpad.dbustestrunner" | cut -f 5-9 > test-bustle.filtered" >> $@
@@ -183,6 +184,7 @@ DISTCLEANFILES += test-bustle.bustle test-bustle.filtered
 TESTS += test-bustle-bad-file
 test-bustle-bad-file: Makefile.am
 	@echo "#!/bin/sh -e" > $@
+	@echo "chmod +x $(top_srcdir)/libdbustest/dbus-test-bustle-handler" >> $@
 	@echo $(DBUS_RUNNER) --bustle-monitor $(top_srcdir)/libdbustest/dbus-test-bustle-handler --bustle-data \"$(builddir)\" --task true >> $@
 	@chmod +x $@
 XFAIL_TESTS += test-bustle-bad-file
@@ -206,6 +208,7 @@ DISTCLEANFILES += test-bustle-bad-monitor-error.bustle
 TESTS += test-bustle-data
 test-bustle-data: Makefile.am
 	@echo "#!/bin/sh -e" > $@
+	@echo "chmod +x $(top_srcdir)/libdbustest/dbus-test-bustle-handler" >> $@
 	@echo "$(DBUS_RUNNER) --bustle-monitor $(top_srcdir)/libdbustest/dbus-test-bustle-handler --bustle-data \"$(builddir)/test-bustle-data.bustle\" \\" >> $@
 	@echo "--task $(srcdir)/test-bustle-list.sh \\" >> $@
 	@echo "--task $(srcdir)/test-bustle-list.sh \\" >> $@
@@ -220,8 +223,10 @@ test-bustle-data: Makefile.am
 	@echo "--task $(srcdir)/test-bustle-list.sh \\" >> $@
 	@echo "--task $(srcdir)/test-bustle-list.sh" >> $@
 	@echo "if [ -x /usr/bin/bustle-count ] ; then" >> $@
+	@echo "chmod +x $(srcdir)/test-bustle-data-check.sh" >> $@
 	@echo "$(srcdir)/test-bustle-data-check.sh \"$(builddir)/test-bustle-data.bustle\" 12" >> $@
 	@echo "else" >> $@
+	@echo "chmod +x $(srcdir)/test-bustle-data-check.0.4.sh" >> $@
 	@echo "$(srcdir)/test-bustle-data-check.0.4.sh \"$(builddir)/test-bustle-data.bustle\" 12" >> $@
 	@echo "fi" >> $@
 	@chmod +x $@

@@ -1,0 +1,17 @@
+#!/usr/bin/make -f
+
+LDFLAGS += -Wl,-z,defs -Wl,--as-needed
+
+%:
+	dh $@ --with autoreconf
+
+override_dh_autoreconf:
+	NOCONFIGURE=1 dh_autoreconf ./autogen.sh
+
+override_dh_auto_configure:
+	dh_auto_configure -- --disable-scrollkeeper
+
+override_dh_install:
+	find debian/ -name \*.la -delete
+	find debian/ -name \*.a -delete
+	dh_install --fail-missing
