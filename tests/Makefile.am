@@ -166,6 +166,7 @@ test-output: Makefile.am
 	@chmod +x $@
 DISTCLEANFILES += testcat.output.txt testcat.output.cat1.txt testcat.output.cat2.txt testcat.output.cat1.filtered.txt testcat.output.cat2.filtered.txt
 
+if TEST_BUSTLE
 TESTS += test-bustle
 test-bustle: Makefile.am test-bustle.reference test-bustle.0.4.reference
 	@echo "#!/bin/sh -e" > $@
@@ -231,6 +232,7 @@ test-bustle-data: Makefile.am
 	@echo "fi" >> $@
 	@chmod +x $@
 DISTCLEANFILES += test-bustle-data.bustle
+endif
 
 test_own_name_SOURCES = \
 	test-own-name.c
