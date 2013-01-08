@@ -12,8 +12,10 @@ dbus-test-runner (12.10.2-0ubuntu1) UNRELEASED; urgency=low
   * debian/libdbustest1-dev.install: remove debian/tmp from paths.
   * debian/libdbustest1.install, debian/libdbustest1-dev.install: update paths
     for the architecture triplets.
+  * debian/control, debian/tests/control, debian/tests/with-bustle:
+    add autopkgtest testing for dbus-test-runner using bustle.
 
- -- Mathieu Trudel-Lapierre <mathieu-tl@ubuntu.com>  Thu, 29 Nov 2012 15:53:54 -0500
+ -- Mathieu Trudel-Lapierre <mathieu-tl@ubuntu.com>  Mon, 07 Jan 2013 14:45:22 -0500
 
 dbus-test-runner (12.10.1-0ubuntu1) quantal; urgency=low
 
