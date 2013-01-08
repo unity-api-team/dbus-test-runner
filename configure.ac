@@ -60,6 +60,13 @@ AC_SUBST(COVERAGE_CXXFLAGS)
 AC_SUBST(COVERAGE_LDFLAGS)
 
 ###########################
+# Enable bustle tests
+###########################
+
+AC_CHECK_PROG([have_bustle], [bustle], [yes],,,)
+AM_CONDITIONAL([TEST_BUSTLE], [test "x$ac_cv_prog_have_bustle" = xyes])
+
+###########################
 # Files
 ###########################
 

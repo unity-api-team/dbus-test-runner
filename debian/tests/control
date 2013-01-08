@@ -1,0 +1,3 @@
+Tests: with-bustle
+Depends: dbus-test-runner, bustle
+Restrictions: build-needed
