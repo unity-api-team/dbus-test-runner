@@ -14,6 +14,7 @@ dbus-test-runner (12.10.2-0ubuntu1) UNRELEASED; urgency=low
     for the architecture triplets.
   * debian/control, debian/tests/control, debian/tests/with-bustle:
     add autopkgtest testing for dbus-test-runner using bustle.
+  * Automatic snapshot from revision 50 (bootstrap)
 
  -- Mathieu Trudel-Lapierre <mathieu-tl@ubuntu.com>  Mon, 07 Jan 2013 14:45:22 -0500
 
