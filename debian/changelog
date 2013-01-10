@@ -1,4 +1,4 @@
-dbus-test-runner (12.10.2-0ubuntu1) UNRELEASED; urgency=low
+dbus-test-runner (12.10.2daily13.01.10-0ubuntu1) raring; urgency=low
 
   [ Mathieu Trudel-Lapierre ]
   * debian/control:
@@ -19,7 +19,10 @@ dbus-test-runner (12.10.2-0ubuntu1) UNRELEASED; urgency=low
   [ Didier Roche ]
   * Automatic snapshot from revision 50 (bootstrap)
 
- -- Mathieu Trudel-Lapierre <mathieu-tl@ubuntu.com>  Tue, 08 Jan 2013 12:07:06 -0500
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 52
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Thu, 10 Jan 2013 16:12:21 +0000
 
 dbus-test-runner (12.10.1-0ubuntu1) quantal; urgency=low
 
