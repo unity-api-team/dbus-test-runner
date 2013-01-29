@@ -22,6 +22,7 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 #endif
 
 #include "dbus-test.h"
+#include "watchdog.h"
 
 typedef enum _ServiceState ServiceState;
 enum _ServiceState {
@@ -52,6 +53,8 @@ struct _DbusTestServicePrivate {
 	gchar * dbus_configfile;
 
 	gboolean first_time;
+
+	DbusTestWatchdog * watchdog;
 };
 
 #define SERVICE_CHANGE_HANDLER  "dbus-test-service-change-handler"
@@ -101,6 +104,8 @@ dbus_test_service_init (DbusTestService *self)
 	self->priv->dbus_configfile = g_strdup(DEFAULT_SESSION_CONF);
 
 	self->priv->first_time = TRUE;
+
+	self->priv->watchdog = g_object_new(DBUS_TEST_TYPE_WATCHDOG, NULL);
 
 	return;
 }
@@ -170,6 +175,8 @@ dbus_test_service_dispose (GObject *object)
 		g_main_loop_unref(self->priv->mainloop);
 		self->priv->mainloop = NULL;
 	}
+
+	g_clear_object(&self->priv->watchdog);
 
 	G_OBJECT_CLASS (dbus_test_service_parent_class)->dispose (object);
 	return;
