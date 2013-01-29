@@ -23,6 +23,7 @@ struct _DbusTestWatchdogClass {
 
 struct _DbusTestWatchdog {
 	GObject parent;
+	DbusTestWatchdogPrivate * priv;
 };
 
 GType dbus_test_watchdog_get_type        (void);
