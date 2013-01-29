@@ -60,5 +60,15 @@ pkgconfigdir = $(libdir)/pkgconfig
 		-e "s:\@VERSION\@:$(VERSION):" \
 		$< > $@
 
+pkglibexec_PROGRAMS = \
+	dbus-test-watchdog
+
+dbus_test_watchdog_SOURCES = \
+	leash.c
+dbus_test_watchdog_LDADD = \
+	$(DBUS_TEST_RUNNER_LIBS)
+dbus_test_watchdog_CFLAGS = \
+	$(DBUS_TEST_RUNNER_CFLAGS)
+
 DISTCLEANFILES = \
 	dbustest-$(API_VERSION).pc
