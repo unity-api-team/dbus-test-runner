@@ -18,7 +18,9 @@ end_of_line (gpointer user_data)
 int
 main (int argc, char * argv[])
 {
+#ifndef GLIB_VERSION_2_36
 	g_type_init();
+#endif
 
 	if (argc != 2) {
 		g_error("ARG, need a single argument");

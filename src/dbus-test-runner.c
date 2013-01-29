@@ -181,7 +181,9 @@ main (int argc, char * argv[])
 	GError * error = NULL;
 	GOptionContext * context;
 
+#ifndef GLIB_VERSION_2_36
 	g_type_init();
+#endif
 
 	service = dbus_test_service_new(NULL);
 
