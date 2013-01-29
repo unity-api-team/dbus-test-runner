@@ -57,3 +57,31 @@ dbus_test_watchdog_finalize (GObject *object)
 	G_OBJECT_CLASS (dbus_test_watchdog_parent_class)->finalize (object);
 	return;
 }
+
+/**
+ * dbus_test_watchdog_add_pid:
+ * @watchdog: Instance of #DbusTestWatchdog
+ * @pid: PID to kill
+ *
+ * Adds a PID for the watchdog to watch.
+ */
+void
+dbus_test_watchdog_add_pid (DbusTestWatchdog * watchdog, GPid pid)
+{
+
+
+	return;
+}
+
+/**
+ * dbus_test_watchdog_add_pid:
+ * @watchdog: Instance of #DbusTestWatchdog
+ *
+ * Tell the watchdog not to kill.  For now.
+ */
+void
+dbus_test_watchdog_ping (DbusTestWatchdog * watchdog)
+{
+
+	return;
+}

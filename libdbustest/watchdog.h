@@ -25,7 +25,10 @@ struct _DbusTestWatchdog {
 	GObject parent;
 };
 
-GType dbus_test_watchdog_get_type (void);
+GType dbus_test_watchdog_get_type        (void);
+void  dbus_test_watchdog_add_pid         (DbusTestWatchdog * watchdog,
+                                          GPid                pid);
+void  dbus_test_watchdog_ping            (DbusTestWatchdog * watchdog);
 
 G_END_DECLS
 
