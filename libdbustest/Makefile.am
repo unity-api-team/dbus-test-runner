@@ -21,7 +21,9 @@ libdbustest_la_SOURCES = \
 	service.c \
 	service.h \
 	task.c \
-	task.h
+	task.h \
+	watchdog.c \
+	watchdog.h
 
 libdbustest_la_CFLAGS = \
 	$(DBUS_TEST_RUNNER_CFLAGS) \
@@ -29,6 +31,7 @@ libdbustest_la_CFLAGS = \
 	-I$(top_srcdir) \
 	-DDEFAULT_SESSION_CONF="\"$(datadir)/dbus-test-runner/session.conf\"" \
 	-DBUSTLE_DUAL_MONITOR="\"$(pkgdatadir)/dbus-test-bustle-handler\"" \
+	-DWATCHDOG="\"$(pkglibexecdir)/dbus-test-watchdog\"" \
 	-DG_LOG_DOMAIN=\"libdbustest\" \
 	-Wall -Werror -Wextra
 
@@ -59,6 +62,16 @@ pkgconfigdir = $(libdir)/pkgconfig
 		-e "s:\@includedir\@:$(includedir):" \
 		-e "s:\@VERSION\@:$(VERSION):" \
 		$< > $@
+
+pkglibexec_PROGRAMS = \
+	dbus-test-watchdog
+
+dbus_test_watchdog_SOURCES = \
+	leash.c
+dbus_test_watchdog_LDADD = \
+	$(DBUS_TEST_RUNNER_LIBS)
+dbus_test_watchdog_CFLAGS = \
+	$(DBUS_TEST_RUNNER_CFLAGS)
 
 DISTCLEANFILES = \
 	dbustest-$(API_VERSION).pc
