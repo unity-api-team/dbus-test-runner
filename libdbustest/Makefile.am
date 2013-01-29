@@ -29,6 +29,7 @@ libdbustest_la_CFLAGS = \
 	-I$(top_srcdir) \
 	-DDEFAULT_SESSION_CONF="\"$(datadir)/dbus-test-runner/session.conf\"" \
 	-DBUSTLE_DUAL_MONITOR="\"$(pkgdatadir)/dbus-test-bustle-handler\"" \
+	-DWATCHDOG="\"$(pkglibexecdir)/dbus-test-watchdog\"" \
 	-DG_LOG_DOMAIN=\"libdbustest\" \
 	-Wall -Werror -Wextra
 
