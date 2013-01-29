@@ -55,6 +55,7 @@ struct _DbusTestServicePrivate {
 	gboolean first_time;
 
 	DbusTestWatchdog * watchdog;
+	guint watchdog_source;
 };
 
 #define SERVICE_CHANGE_HANDLER  "dbus-test-service-change-handler"
@@ -66,6 +67,7 @@ static void dbus_test_service_class_init (DbusTestServiceClass *klass);
 static void dbus_test_service_init       (DbusTestService *self);
 static void dbus_test_service_dispose    (GObject *object);
 static void dbus_test_service_finalize   (GObject *object);
+static gboolean watchdog_ping            (gpointer user_data);
 
 G_DEFINE_TYPE (DbusTestService, dbus_test_service, G_TYPE_OBJECT);
 
@@ -106,6 +108,11 @@ dbus_test_service_init (DbusTestService *self)
 	self->priv->first_time = TRUE;
 
 	self->priv->watchdog = g_object_new(DBUS_TEST_TYPE_WATCHDOG, NULL);
+	self->priv->watchdog_source = g_timeout_add_seconds_full(G_PRIORITY_DEFAULT,
+	                                                         5,
+	                                                         watchdog_ping,
+	                                                         g_object_ref(self->priv->watchdog),
+	                                                         g_object_unref);
 
 	return;
 }
@@ -178,6 +185,11 @@ dbus_test_service_dispose (GObject *object)
 
 	g_clear_object(&self->priv->watchdog);
 
+	if (self->priv->watchdog_source != 0) {
+		g_source_remove(self->priv->watchdog_source);
+		self->priv->watchdog_source = 0;
+	}
+
 	G_OBJECT_CLASS (dbus_test_service_parent_class)->dispose (object);
 	return;
 }
@@ -206,6 +218,17 @@ dbus_test_service_new (G_GNUC_UNUSED const gchar * address)
 	/* TODO: Use the address */
 
 	return service;
+}
+
+/* Ping the watchdog so that it knows we're still alive */
+static gboolean
+watchdog_ping (gpointer user_data)
+{
+	DbusTestWatchdog * watchdog = DBUS_TEST_WATCHDOG(user_data);
+
+	dbus_test_watchdog_ping(watchdog);
+
+	return TRUE;
 }
 
 static void
