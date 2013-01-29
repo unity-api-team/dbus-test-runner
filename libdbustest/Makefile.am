@@ -21,7 +21,9 @@ libdbustest_la_SOURCES = \
 	service.c \
 	service.h \
 	task.c \
-	task.h
+	task.h \
+	watchdog.c \
+	watchdog.h
 
 libdbustest_la_CFLAGS = \
 	$(DBUS_TEST_RUNNER_CFLAGS) \
