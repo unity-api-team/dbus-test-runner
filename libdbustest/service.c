@@ -395,6 +395,8 @@ start_daemon (DbusTestService * service)
 		return;
 	}
 
+	dbus_test_watchdog_add_pid(service->priv->watchdog, service->priv->dbus);
+
 	service->priv->dbus_watch = g_child_watch_add(service->priv->dbus, dbus_watcher, service);
 
 	service->priv->dbus_io = g_io_channel_unix_new(dbus_stdout);
