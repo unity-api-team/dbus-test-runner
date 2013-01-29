@@ -67,7 +67,7 @@ dbus_test_watchdog_add_pid (DbusTestWatchdog * watchdog, GPid pid)
 {
 	g_return_if_fail(DBUS_TEST_IS_WATCHDOG(watchdog));
 	g_return_if_fail(pid != 0);
-	g_return_if_fail(watchdog->priv->watchdog != 0);
+	g_return_if_fail(watchdog->priv->watchdog == 0);
 
 	/* Setting up argument vector */
 	gchar * strpid = g_strdup_printf("%d", pid);
