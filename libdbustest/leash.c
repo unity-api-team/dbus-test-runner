@@ -70,7 +70,9 @@ main (int argc, char * argv[])
 		return -1;
 	}
 
+#ifndef GLIB_VERSION_2_36
 	g_type_init();
+#endif
 
 	signal(SIGTERM, sigterm_graceful_exit);
 	signal(SIGHUP, sighup_dont_die);

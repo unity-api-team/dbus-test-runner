@@ -29,7 +29,9 @@ main (int argc, gchar * argv[])
 		return -1;
 	}
 
+#ifndef GLIB_VERSION_2_36
 	g_type_init();
+#endif
 
 	guint name = g_bus_own_name(G_BUS_TYPE_SESSION,
 	                            argv[1], /* name */
