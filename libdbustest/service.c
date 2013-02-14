@@ -21,6 +21,8 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "config.h"
 #endif
 
+#include <unistd.h>
+
 #include "dbus-test.h"
 #include "watchdog.h"
 
@@ -388,6 +390,12 @@ dbus_watcher (GPid pid, G_GNUC_UNUSED gint status, gpointer data)
 }
 
 static void
+dbus_child_setup ()
+{
+	setpgrp();
+}
+
+static void
 start_daemon (DbusTestService * service)
 {
 	if (service->priv->dbus != 0) {
@@ -404,7 +412,7 @@ start_daemon (DbusTestService * service)
 	                         dbus_startup, /* argv */
 	                         blank, /* envp */
 	                         G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD, /* flags */
-	                         NULL, /* child setup func */
+	                         (GSpawnChildSetupFunc) dbus_child_setup, /* child setup func */
 	                         NULL, /* child setup data */
 	                         &service->priv->dbus, /* PID */
 	                         NULL, /* stdin */
