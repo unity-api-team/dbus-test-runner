@@ -1,3 +1,13 @@
+dbus-test-runner (12.10.2daily13.02.15.1-0ubuntu1) raring; urgency=low
+
+  [ Mathieu Trudel-Lapierre ]
+  * dbus-test-runner is not killing dbus reliably (LP: #1122948)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 57
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Fri, 15 Feb 2013 07:49:35 +0000
+
 dbus-test-runner (12.10.2daily13.01.31-0ubuntu1) raring; urgency=low
 
   * Automatic snapshot from revision 55
