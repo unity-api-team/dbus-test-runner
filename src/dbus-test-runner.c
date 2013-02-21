@@ -161,7 +161,7 @@ static GOptionEntry general_options[] = {
 	{"bustle-monitor", 0,   0,                       G_OPTION_ARG_FILENAME,  &bustle_cmd,      "Path to the Bustle DBus Monitor to use.  Defaults to 'bustle-dbus-monitor'.", "executable"},
 	{"bustle-data",  'b',   0,                       G_OPTION_ARG_FILENAME,  &bustle_datafile, "A file to write out data from the bustle logger to.", "data_file"},
 	{"max-wait",     'm',   0,                       G_OPTION_ARG_INT,       &max_wait,        "The maximum amount of time the test runner will wait for the test to complete.  Default is 30 seconds.", "seconds"},
-	{NULL}
+	{ NULL, 0, 0, 0, NULL, NULL, NULL }
 };
 
 static GOptionEntry task_options[] = {
@@ -172,7 +172,7 @@ static GOptionEntry task_options[] = {
 	{"parameter",     'p',  0,                        G_OPTION_ARG_CALLBACK,  option_param,    "Add a parameter to the call of this utility.  May be called as many times as you'd like.", NULL},
 	{"wait-for",      'f',  0,                        G_OPTION_ARG_CALLBACK,  option_wait,     "A dbus-name that should appear on the bus before this task is started", "dbus-name"},
 	{"wait-until-complete", 'c', G_OPTION_FLAG_NO_ARG,G_OPTION_ARG_CALLBACK,  option_complete, "Signal that we should wait until this task exits even if we don't need the return value", NULL},
-	{NULL}
+	{ NULL, 0, 0, 0, NULL, NULL, NULL }
 };
 
 int
