@@ -23,6 +23,8 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "dbus-test.h"
 
+#include "glib-compat.h"
+
 struct _DbusTestProcessPrivate {
 	gchar * executable;
 	GList * parameters;
