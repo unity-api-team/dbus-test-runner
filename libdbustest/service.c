@@ -21,6 +21,9 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "config.h"
 #endif
 
+#include <glib.h>
+#include "glib-compat.h"
+
 #include "dbus-test.h"
 
 typedef enum _ServiceState ServiceState;
