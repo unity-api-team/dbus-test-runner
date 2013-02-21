@@ -2,7 +2,7 @@
 Copyright 2012 Canonical Ltd.
 
 Authors:
-    Ted Gould <ted@canonical.com>
+    David Barth <david.barth@canonical.com>
 
 This program is free software: you can redistribute it and/or modify it 
 under the terms of the GNU General Public License version 3, as published 
@@ -27,13 +27,16 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
     /* Only one access, please */                                              \
     gpointer *_pp = (gpointer *) (pp);                                         \
     gpointer _p;                                                               \
+    /* This assignment is needed to avoid a gcc warning */                     \
+    GDestroyNotify _destroy = (GDestroyNotify) (destroy);                      \
                                                                                \
+    (void) (0 ? (gpointer) *(pp) : 0);                                         \
     do                                                                         \
       _p = g_atomic_pointer_get (_pp);                                         \
     while G_UNLIKELY (!g_atomic_pointer_compare_and_exchange (_pp, _p, NULL)); \
                                                                                \
     if (_p)                                                                    \
-      ((GDestroyNotify) (destroy)) (_p);								       \
+      _destroy (_p);                                                           \
   } G_STMT_END
 #endif
 
