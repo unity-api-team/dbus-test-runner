@@ -22,6 +22,7 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 #endif
 
 #include <glib.h>
+#include "glib-compat.h"
 #include "dbus-test.h"
 
 struct _DbusTestBustlePrivate {
