@@ -1,3 +1,9 @@
+dbus-test-runner (12.10.2daily13.05.03ubuntu.unity.next-0ubuntu1) raring; urgency=low
+
+  * Automatic snapshot from revision 60 (ubuntu-unity/next)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 03 May 2013 00:00:54 +0000
+
 dbus-test-runner (12.10.2daily13.02.26-0ubuntu1) raring; urgency=low
 
   * Automatic snapshot from revision 59
