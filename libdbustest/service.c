@@ -58,6 +58,7 @@ struct _DbusTestServicePrivate {
 	gchar * dbus_configfile;
 
 	gboolean first_time;
+	gboolean keep_env;
 
 	DbusTestWatchdog * watchdog;
 	guint watchdog_source;
@@ -111,6 +112,7 @@ dbus_test_service_init (DbusTestService *self)
 	self->priv->dbus_configfile = g_strdup(DEFAULT_SESSION_CONF);
 
 	self->priv->first_time = TRUE;
+	self->priv->keep_env = FALSE;
 
 	self->priv->watchdog = g_object_new(DBUS_TEST_TYPE_WATCHDOG, NULL);
 	self->priv->watchdog_source = g_timeout_add_seconds_full(G_PRIORITY_DEFAULT,
@@ -413,7 +415,7 @@ start_daemon (DbusTestService * service)
 	gchar * dbus_startup[] = {service->priv->dbus_daemon, "--config-file", service->priv->dbus_configfile, "--print-address", NULL};
 	g_spawn_async_with_pipes(g_get_current_dir(),
 	                         dbus_startup, /* argv */
-	                         blank, /* envp */
+	                         service->priv->keep_env ? NULL : blank, /* envp */
 	                         G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD, /* flags */
 	                         (GSpawnChildSetupFunc) dbus_child_setup, /* child setup func */
 	                         NULL, /* child setup data */
@@ -610,6 +612,13 @@ dbus_test_service_set_conf_file (DbusTestService * service, const gchar * conffi
 	g_free(service->priv->dbus_configfile);
 	service->priv->dbus_configfile = g_strdup(conffile);
 	return;
+}
+
+void
+dbus_test_service_set_keep_environment (DbusTestService * service, gboolean keep_env)
+{
+	g_return_if_fail(DBUS_TEST_IS_SERVICE(service));
+	service->priv->keep_env = keep_env;
 }
 
 void
