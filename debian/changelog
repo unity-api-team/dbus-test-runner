@@ -1,3 +1,17 @@
+dbus-test-runner (12.10.2+13.10.20130717-0ubuntu1) saucy; urgency=low
+
+  [ Alberto Mardegan ]
+  * Propagate the current environment to activated services Do not clear
+    the environment when starting dbus-daemon. This means that the
+    current environment will be available to all the services activated
+    by the daemon, in the same way that it is available to the processes
+    given to the dbus-test-runner command line. . (LP: #1201409)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 63
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 17 Jul 2013 00:01:41 +0000
+
 dbus-test-runner (12.10.2daily13.06.05-0ubuntu1) saucy; urgency=low
 
   * Automatic snapshot from revision 61
