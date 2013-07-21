@@ -120,6 +120,7 @@ dbus_test_process_dispose (GObject *object)
 				continue;
 			}
 
+			line[termloc] = '\0';
 			dbus_test_task_print(DBUS_TEST_TASK(process), line);
 			g_free(line);
 		}
@@ -150,6 +151,7 @@ dbus_test_process_finalize (GObject *object)
 static void
 proc_watcher (GPid pid, gint status, gpointer data)
 {
+	gchar *message;
 	g_return_if_fail(DBUS_TEST_IS_PROCESS(data));
 	DbusTestProcess * process = DBUS_TEST_PROCESS(data);
 
@@ -160,6 +162,10 @@ proc_watcher (GPid pid, gint status, gpointer data)
 
 	process->priv->complete = TRUE;
 	process->priv->status = status;
+
+	message = g_strdup_printf("Exitted with status %d", status);
+	dbus_test_task_print(DBUS_TEST_TASK(process), message);
+	g_free(message);
 
 	g_signal_emit_by_name(G_OBJECT(process), DBUS_TEST_TASK_SIGNAL_STATE_CHANGED, DBUS_TEST_TASK_STATE_FINISHED, NULL);
 
@@ -188,15 +194,15 @@ proc_writes (GIOChannel * channel, G_GNUC_UNUSED GIOCondition condition, gpointe
 			continue;
 		}
 
+		line[termloc] = '\0';
 		dbus_test_task_print(DBUS_TEST_TASK(process), line);
 		g_free(line);
 	} while (G_IO_IN & g_io_channel_get_buffer_condition(channel));
 
 	if (done) {
-		process->priv->complete = TRUE;
-		process->priv->status = -1;
-
-		g_signal_emit_by_name(G_OBJECT(process), DBUS_TEST_TASK_SIGNAL_STATE_CHANGED, DBUS_TEST_TASK_STATE_FINISHED, NULL);
+		process->priv->io_watch = 0;
+		// wait for proc_watcher to switch state to FINISHED
+		return FALSE;
 	}
 
 	return TRUE;
@@ -249,7 +255,7 @@ process_run (DbusTestTask * task)
 	process->priv->io_chan = g_io_channel_unix_new(proc_stdout);
 	g_io_channel_set_buffer_size(process->priv->io_chan, 10 * 1024 * 1024); /* 10 MB should be enough for anyone */
 	process->priv->io_watch = g_io_add_watch(process->priv->io_chan,
-	                                         G_IO_IN, /* conditions */
+	                                         G_IO_IN | G_IO_HUP | G_IO_ERR, /* conditions */
 	                                         proc_writes, /* func */
 	                                         process); /* func data */
 

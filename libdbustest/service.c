@@ -437,7 +437,7 @@ start_daemon (DbusTestService * service)
 
 	service->priv->dbus_io = g_io_channel_unix_new(dbus_stdout);
 	service->priv->dbus_io_watch = g_io_add_watch(service->priv->dbus_io,
-	                                              G_IO_IN | G_IO_ERR, /* conditions */
+	                                              G_IO_IN | G_IO_HUP | G_IO_ERR, /* conditions */
 	                                              dbus_writes, /* func */
 	                                              service); /* func data */
 
