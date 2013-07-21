@@ -4,6 +4,8 @@ lib_LTLIBRARIES = libdbustest.la
 ABI_VERSION = 1
 API_VERSION = 1
 
+AM_CFLAGS = -Wall
+
 libdbustestincludedir=$(includedir)/libdbustest-$(API_VERSION)/libdbustest
 libdbustestinclude_HEADERS = \
 	bustle.h \
