@@ -163,9 +163,11 @@ proc_watcher (GPid pid, gint status, gpointer data)
 	process->priv->complete = TRUE;
 	process->priv->status = status;
 
-	message = g_strdup_printf("Exitted with status %d", status);
-	dbus_test_task_print(DBUS_TEST_TASK(process), message);
-	g_free(message);
+	if (status) {
+		message = g_strdup_printf("Exitted with status %d", status);
+		dbus_test_task_print(DBUS_TEST_TASK(process), message);
+		g_free(message);
+	}
 
 	g_signal_emit_by_name(G_OBJECT(process), DBUS_TEST_TASK_SIGNAL_STATE_CHANGED, DBUS_TEST_TASK_STATE_FINISHED, NULL);
 
