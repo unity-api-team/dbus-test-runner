@@ -18,12 +18,13 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include <glib.h>
+#include <glib-unix.h>
 
 GMainLoop * mainloop = NULL;
-gulong timer = 0;
+guint timer = 0;
 pid_t victim = 0;
 
-static void sigterm_graceful_exit (int signal);
+static gboolean sigterm_graceful_exit (gpointer user_data);
 
 static gboolean
 destroy_everyone (gpointer user_data)
@@ -33,7 +34,7 @@ destroy_everyone (gpointer user_data)
 	}
 
 	sigterm_graceful_exit(0);
-	return;
+	return FALSE;
 }
 
 static void
@@ -48,18 +49,18 @@ restart_handler (void)
 	return;
 }
 
-static void
-sighup_dont_die (int signal)
+static gboolean
+sighup_dont_die (gpointer user_data)
 {
 	restart_handler();
-	return;
+	return TRUE;
 }
 
-static void
-sigterm_graceful_exit (int signal)
+static gboolean
+sigterm_graceful_exit (gpointer user_data)
 {
 	g_main_loop_quit(mainloop);
-	return;
+	return FALSE;
 }
 
 int
@@ -74,8 +75,8 @@ main (int argc, char * argv[])
 	g_type_init();
 #endif
 
-	signal(SIGTERM, sigterm_graceful_exit);
-	signal(SIGHUP, sighup_dont_die);
+	g_unix_signal_add (SIGTERM, sigterm_graceful_exit, NULL);
+	g_unix_signal_add (SIGHUP, sighup_dont_die, NULL);
 
 	victim = atoi(argv[1]);
 
