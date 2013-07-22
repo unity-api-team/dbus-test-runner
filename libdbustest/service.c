@@ -458,6 +458,8 @@ start_daemon (DbusTestService * service)
 			break;
 		}
 	}
+	g_strfreev(tokens);
+
 	if (is_valid) {
 		service->priv->state = STATE_DAEMON_FAILED;
 		g_critical ("DBus daemon failed: Bus address is not supported");
