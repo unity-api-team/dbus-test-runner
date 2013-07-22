@@ -164,7 +164,7 @@ proc_watcher (GPid pid, gint status, gpointer data)
 	process->priv->status = status;
 
 	if (status) {
-		message = g_strdup_printf("Exitted with status %d", status);
+		message = g_strdup_printf("Exited with status %d", status);
 		dbus_test_task_print(DBUS_TEST_TASK(process), message);
 		g_free(message);
 	}
