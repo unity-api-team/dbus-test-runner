@@ -532,7 +532,7 @@ all_tasks_passed_helper (gpointer data, gpointer user_data)
 static int
 get_status (DbusTestService * service)
 {
-	if (service->priv->daemon_crashed) {
+	if (service->priv->daemon_crashed || service->priv->state == STATE_DAEMON_FAILED) {
 		return -1;
 	}
 
