@@ -22,8 +22,10 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 #endif
 
 #include <unistd.h>
+#include <string.h>
 
 #include <glib.h>
+#include <gio/gio.h>
 #include "glib-compat.h"
 
 #include "dbus-test.h"
@@ -34,6 +36,7 @@ enum _ServiceState {
 	STATE_INIT,
 	STATE_DAEMON_STARTING,
 	STATE_DAEMON_STARTED,
+	STATE_DAEMON_FAILED,
 	STATE_STARTING,
 	STATE_STARTED,
 	STATE_RUNNING,
@@ -427,6 +430,7 @@ start_daemon (DbusTestService * service)
 
 	if (error != NULL) {
 		g_critical("Unable to start dbus daemon: %s", error->message);
+		g_error_free(error);
 		service->priv->daemon_crashed = TRUE;
 		return;
 	}
@@ -437,13 +441,33 @@ start_daemon (DbusTestService * service)
 
 	service->priv->dbus_io = g_io_channel_unix_new(dbus_stdout);
 	service->priv->dbus_io_watch = g_io_add_watch(service->priv->dbus_io,
-	                                              G_IO_IN | G_IO_ERR, /* conditions */
+	                                              G_IO_IN | G_IO_HUP | G_IO_ERR, /* conditions */
 	                                              dbus_writes, /* func */
 	                                              service); /* func data */
 
 	g_main_loop_run(service->priv->mainloop);
-	service->priv->state = STATE_DAEMON_STARTED;
 
+	/* we should have a usable connection now, let's check */
+	gchar **tokens = g_strsplit (g_getenv ("DBUS_SESSION_BUS_ADDRESS"),
+	                             ",", 0);
+	guint i;
+	gboolean is_valid = FALSE;
+	for (i = 0; i < g_strv_length (tokens); i++) {
+		if (strlen (tokens[i]) && g_dbus_is_supported_address (tokens[i], NULL)) {
+			is_valid = TRUE;
+			break;
+		}
+	}
+	g_strfreev(tokens);
+
+	if (!is_valid) {
+		service->priv->state = STATE_DAEMON_FAILED;
+		g_critical ("DBus daemon failed: Bus address is not supported");
+		g_error_free (error);
+		return;
+	}
+
+	service->priv->state = STATE_DAEMON_STARTED;
 	return;
 }
 
@@ -454,6 +478,7 @@ dbus_test_service_start_tasks (DbusTestService * service)
 
 	start_daemon(service);
 	g_return_if_fail(g_getenv("DBUS_SESSION_BUS_ADDRESS") != NULL);
+	g_return_if_fail(service->priv->state != STATE_DAEMON_FAILED);
 
 	if (all_tasks(service, all_tasks_started_helper)) {
 		/* If we have all started we can mark it as such as long
@@ -507,7 +532,7 @@ all_tasks_passed_helper (gpointer data, gpointer user_data)
 static int
 get_status (DbusTestService * service)
 {
-	if (service->priv->daemon_crashed) {
+	if (service->priv->daemon_crashed || service->priv->state == STATE_DAEMON_FAILED) {
 		return -1;
 	}
 

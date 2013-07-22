@@ -271,7 +271,7 @@ process_run (DbusTestTask * task)
 
 	bustler->priv->stderr = g_io_channel_unix_new(bustle_stderr_num);
 	g_io_add_watch(bustler->priv->stderr,
-	               G_IO_IN, /* conditions */
+	               G_IO_IN | G_IO_HUP | G_IO_ERR, /* conditions */
 	               bustle_write_error, /* func */
 	               bustler); /* func data */
 
