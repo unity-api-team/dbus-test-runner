@@ -24,6 +24,7 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unistd.h>
 
 #include <glib.h>
+#include <gio/gio.h>
 #include "glib-compat.h"
 
 #include "dbus-test.h"
@@ -34,6 +35,7 @@ enum _ServiceState {
 	STATE_INIT,
 	STATE_DAEMON_STARTING,
 	STATE_DAEMON_STARTED,
+	STATE_DAEMON_FAILED,
 	STATE_STARTING,
 	STATE_STARTED,
 	STATE_RUNNING,
@@ -427,6 +429,7 @@ start_daemon (DbusTestService * service)
 
 	if (error != NULL) {
 		g_critical("Unable to start dbus daemon: %s", error->message);
+		g_error_free(error);
 		service->priv->daemon_crashed = TRUE;
 		return;
 	}
@@ -442,8 +445,25 @@ start_daemon (DbusTestService * service)
 	                                              service); /* func data */
 
 	g_main_loop_run(service->priv->mainloop);
-	service->priv->state = STATE_DAEMON_STARTED;
 
+	/* we should have a usable connection now, let's check */
+	GDBusConnection *connection_test;
+	connection_test = g_dbus_connection_new_for_address_sync (
+	    g_getenv ("DBUS_SESSION_BUS_ADDRESS"),
+	    G_DBUS_CONNECTION_FLAGS_NONE,
+	    NULL,
+	    NULL,
+	    &error);
+	if (error != NULL) {
+		service->priv->state = STATE_DAEMON_FAILED;
+		g_critical ("DBus daemon failed: %s", error->message);
+		g_error_free (error);
+		return;
+	}
+
+	g_object_unref (connection_test);
+
+	service->priv->state = STATE_DAEMON_STARTED;
 	return;
 }
 
@@ -454,6 +474,7 @@ dbus_test_service_start_tasks (DbusTestService * service)
 
 	start_daemon(service);
 	g_return_if_fail(g_getenv("DBUS_SESSION_BUS_ADDRESS") != NULL);
+	g_return_if_fail(service->priv->state != STATE_DAEMON_FAILED);
 
 	if (all_tasks(service, all_tasks_started_helper)) {
 		/* If we have all started we can mark it as such as long
