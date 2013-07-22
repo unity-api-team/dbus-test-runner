@@ -449,7 +449,7 @@ start_daemon (DbusTestService * service)
 
 	/* we should have a usable connection now, let's check */
 	gchar **tokens = g_strsplit (g_getenv ("DBUS_SESSION_BUS_ADDRESS"),
-	                             ";", 0);
+	                             ",", 0);
 	guint i;
 	gboolean is_valid = FALSE;
 	for (i = 0; i < g_strv_length (tokens); i++) {
@@ -460,7 +460,7 @@ start_daemon (DbusTestService * service)
 	}
 	g_strfreev(tokens);
 
-	if (is_valid) {
+	if (!is_valid) {
 		service->priv->state = STATE_DAEMON_FAILED;
 		g_critical ("DBus daemon failed: Bus address is not supported");
 		g_error_free (error);
