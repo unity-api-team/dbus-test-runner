@@ -22,6 +22,7 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 #endif
 
 #include <unistd.h>
+#include <string.h>
 
 #include <glib.h>
 #include <gio/gio.h>
@@ -452,7 +453,7 @@ start_daemon (DbusTestService * service)
 	guint i;
 	gboolean is_valid = FALSE;
 	for (i = 0; i < g_strv_length (tokens); i++) {
-		if (g_dbus_is_supported_address (tokens[i], NULL)) {
+		if (strlen (tokens[i]) && g_dbus_is_supported_address (tokens[i], NULL)) {
 			is_valid = TRUE;
 			break;
 		}
