@@ -447,21 +447,22 @@ start_daemon (DbusTestService * service)
 	g_main_loop_run(service->priv->mainloop);
 
 	/* we should have a usable connection now, let's check */
-	GDBusConnection *connection_test;
-	connection_test = g_dbus_connection_new_for_address_sync (
-	    g_getenv ("DBUS_SESSION_BUS_ADDRESS"),
-	    G_DBUS_CONNECTION_FLAGS_NONE,
-	    NULL,
-	    NULL,
-	    &error);
-	if (error != NULL) {
+	gchar **tokens = g_strsplit (g_getenv ("DBUS_SESSION_BUS_ADDRESS"),
+	                             ";", 0);
+	guint i;
+	gboolean is_valid = FALSE;
+	for (i = 0; i < g_strv_length (tokens); i++) {
+		if (g_dbus_is_supported_address (tokens[i], NULL)) {
+			is_valid = TRUE;
+			break;
+		}
+	}
+	if (is_valid) {
 		service->priv->state = STATE_DAEMON_FAILED;
-		g_critical ("DBus daemon failed: %s", error->message);
+		g_critical ("DBus daemon failed: Bus address is not supported");
 		g_error_free (error);
 		return;
 	}
-
-	g_object_unref (connection_test);
 
 	service->priv->state = STATE_DAEMON_STARTED;
 	return;
