@@ -1,3 +1,14 @@
+dbus-test-runner (12.10.2+13.10.20130724-0ubuntu1) saucy; urgency=low
+
+  [ Michal Hruby ]
+  * Watch created pipes for the G_IO_HUP event, as when a pipe closes,
+    polling it will return this event.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 65
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 24 Jul 2013 00:01:57 +0000
+
 dbus-test-runner (12.10.2+13.10.20130717-0ubuntu1) saucy; urgency=low
 
   [ Alberto Mardegan ]
