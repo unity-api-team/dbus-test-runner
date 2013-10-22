@@ -9,6 +9,7 @@ AM_CFLAGS = -Wall
 libdbustestincludedir=$(includedir)/libdbustest-$(API_VERSION)/libdbustest
 libdbustestinclude_HEADERS = \
 	bustle.h \
+	dbus-mock.h \
 	dbus-test.h \
 	process.h \
 	service.h \
@@ -17,6 +18,8 @@ libdbustestinclude_HEADERS = \
 libdbustest_la_SOURCES = \
 	bustle.c \
 	bustle.h \
+	dbus-mock.h \
+	dbus-mock.c \
 	dbus-test.h \
 	process.c \
 	process.h \
