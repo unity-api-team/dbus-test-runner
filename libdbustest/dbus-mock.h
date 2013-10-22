@@ -35,6 +35,7 @@ G_BEGIN_DECLS
 typedef struct _DbusTestDbusMock         DbusTestDbusMock;
 typedef struct _DbusTestDbusMockClass    DbusTestDbusMockClass;
 typedef struct _DbusTestDbusMockPrivate  DbusTestDbusMockPrivate;
+typedef struct _DbusTestDbusMockObject   DbusTestDbusMockObject;
 
 struct _DbusTestDbusMockClass {
 	DbusTestProcessClass parent_class;
@@ -46,6 +47,56 @@ struct _DbusTestDbusMock {
 };
 
 GType dbus_test_dbus_mock_get_type (void);
+
+DbusTestDbusMock *          dbus_test_dbus_mock_new                       (const gchar *             bus_name);
+
+
+/* Object stuff */
+
+DbusTestDbusMockObject *    dbus_test_dbus_mock_get_object                (DbusTestDbusMock *        mock,
+                                                                           const gchar *             path,
+                                                                           const gchar *             interface);
+
+gboolean                    dbus_test_dbus_mock_object_notify             (DbusTestDbusMock *        mock,
+                                                                           DbusTestDbusMockObject *  obj);
+
+gboolean                    dbus_test_dbus_mock_object_add_method         (DbusTestDbusMock *        mock,
+                                                                           DbusTestDbusMockObject *  obj,
+                                                                           const gchar *             method,
+                                                                           GVariantType *            inparams,
+                                                                           GVariantType *            outparams,
+                                                                           const gchar *             python_code);
+
+gboolean                    dbus_test_dbus_mock_object_check_method_call  (DbusTestDbusMock *        mock,
+                                                                           DbusTestDbusMockObject *  obj,
+                                                                           const gchar *             method,
+                                                                           GVariant *                params);
+
+gboolean                    dbus_test_dbus_mock_object_clear_method_calls (DbusTestDbusMock *        mock,
+                                                                           DbusTestDbusMockObject *  obj,
+                                                                           const gchar *             method);
+
+GList *                     dbus_test_dbus_mock_object_get_method_calls   (DbusTestDbusMock *        mock,
+                                                                           DbusTestDbusMockObject *  obj,
+                                                                           const gchar *             method);
+
+gboolean                    dbus_test_dbus_mock_object_add_property       (DbusTestDbusMock *        mock,
+                                                                           DbusTestDbusMockObject *  obj,
+                                                                           const gchar *             name,
+                                                                           GVariantType *            type,
+                                                                           GVariant *                value);
+
+gboolean                    dbus_test_dbus_mock_object_update_property    (DbusTestDbusMock *        mock,
+                                                                           DbusTestDbusMockObject *  obj,
+                                                                           const gchar *             name,
+                                                                           GVariant *                value,
+                                                                           gboolean                  signal);
+
+gboolean                    dbus_test_dbus_mock_object_emit_signal        (DbusTestDbusMock *        mock,
+                                                                           DbusTestDbusMockObject *  obj,
+                                                                           const gchar *             name,
+                                                                           GVariantType *            params,
+                                                                           GVariant *                values);
 
 G_END_DECLS
 
