@@ -76,3 +76,73 @@ dbus_test_dbus_mock_finalize (GObject *object)
 	G_OBJECT_CLASS (dbus_test_dbus_mock_parent_class)->finalize (object);
 	return;
 }
+
+DbusTestDbusMock *
+dbus_test_dbus_mock_new (const gchar * bus_name)
+{
+
+	return NULL;
+}
+
+DbusTestDbusMockObject *
+dbus_test_dbus_mock_get_object (DbusTestDbusMock * mock, const gchar * path, const gchar * interface)
+{
+
+	return NULL;
+}
+
+gboolean
+dbus_test_dbus_mock_object_notify (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj)
+{
+
+	return FALSE;
+}
+
+gboolean
+dbus_test_dbus_mock_object_add_method (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * method, GVariantType * inparams, GVariantType * outparams, const gchar * python_code)
+{
+
+	return FALSE;
+}
+
+gboolean
+dbus_test_dbus_mock_object_check_method_call (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * method, GVariant * params)
+{
+
+	return FALSE;
+}
+
+gboolean
+dbus_test_dbus_mock_object_clear_method_calls (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * method)
+{
+
+	return FALSE;
+}
+
+GList *
+dbus_test_dbus_mock_object_get_method_calls (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * method)
+{
+
+	return NULL;
+}
+
+gboolean
+dbus_test_dbus_mock_object_add_property (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * name, GVariantType * type, GVariant * value)
+{
+
+	return FALSE;
+}
+
+gboolean
+dbus_test_dbus_mock_object_update_property (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * name, GVariant * value, gboolean signal)
+{
+
+	return FALSE;
+}
+
+gboolean
+dbus_test_dbus_mock_object_emit_signal (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * name, GVariantType * params, GVariant * values)
+{
+
+	return FALSE;
+}
