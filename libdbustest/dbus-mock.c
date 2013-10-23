@@ -24,7 +24,13 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "dbus-mock.h"
 
 struct _DbusTestDbusMockPrivate {
-	int dummy;
+	gchar * name;
+};
+
+enum {
+	PROP_0,
+	PROP_DBUS_NAME,
+	NUM_PROPS
 };
 
 #define DBUS_TEST_DBUS_MOCK_GET_PRIVATE(o) \
@@ -35,6 +41,14 @@ static void dbus_test_dbus_mock_init       (DbusTestDbusMock *self);
 static void dbus_test_dbus_mock_dispose    (GObject *object);
 static void dbus_test_dbus_mock_finalize   (GObject *object);
 static void run                            (DbusTestTask * task);
+static void get_property                   (GObject * object,
+                                            guint property_id,
+                                            GValue * value,
+                                            GParamSpec * pspec);
+static void set_property                   (GObject * object,
+                                            guint property_id,
+                                            const GValue * value,
+                                            GParamSpec * pspec);
 
 G_DEFINE_TYPE (DbusTestDbusMock, dbus_test_dbus_mock, DBUS_TEST_TYPE_PROCESS);
 
@@ -48,6 +62,15 @@ dbus_test_dbus_mock_class_init (DbusTestDbusMockClass *klass)
 
 	object_class->dispose = dbus_test_dbus_mock_dispose;
 	object_class->finalize = dbus_test_dbus_mock_finalize;
+	object_class->get_property = get_property;
+	object_class->set_property = set_property;
+
+	g_object_class_install_property (object_class, PROP_DBUS_NAME,
+	                                 g_param_spec_string("dbus-name",
+	                                                     "DBus Name",
+	                                                     "The well known name for dbusmock on the session bus",
+	                                                     "com.canonical.DBusTestRunner.DBusMock", /* default */
+	                                                     G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT_ONLY));
 
 	DbusTestTaskClass * tclass = DBUS_TEST_TASK_CLASS(klass);
 
@@ -60,7 +83,7 @@ dbus_test_dbus_mock_class_init (DbusTestDbusMockClass *klass)
 static void
 dbus_test_dbus_mock_init (G_GNUC_UNUSED DbusTestDbusMock *self)
 {
-
+	self->priv = DBUS_TEST_DBUS_MOCK_GET_PRIVATE(self);
 	return;
 }
 
@@ -81,6 +104,42 @@ dbus_test_dbus_mock_finalize (GObject *object)
 	G_OBJECT_CLASS (dbus_test_dbus_mock_parent_class)->finalize (object);
 	return;
 }
+
+/* Get a property */
+static void
+get_property (GObject * object, guint property_id, G_GNUC_UNUSED GValue * value, GParamSpec * pspec)
+{
+	DbusTestDbusMock * self = DBUS_TEST_DBUS_MOCK(object);
+
+	switch (property_id) {
+	case PROP_DBUS_NAME:
+		g_value_set_string(value, self->priv->name);
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+	}
+
+	return;
+}
+
+/* Set a property */
+static void
+set_property (GObject * object, guint property_id, G_GNUC_UNUSED const GValue * value, GParamSpec * pspec)
+{
+	DbusTestDbusMock * self = DBUS_TEST_DBUS_MOCK(object);
+
+	switch (property_id) {
+	case PROP_DBUS_NAME:
+		g_free(self->priv->name);
+		self->priv->name = g_value_dup_string(value);
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+	}
+
+	return;
+}
+
 
 /* Run the mock */
 static void
