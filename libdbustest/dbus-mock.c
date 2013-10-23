@@ -25,6 +25,14 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 struct _DbusTestDbusMockPrivate {
 	gchar * name;
+	/* Entries of DbusTestDbusMockObject */
+	GArray * objects;
+};
+
+/* Represents every object on the bus that we're mocking */
+struct _DbusTestDbusMockObject {
+	gchar * object_path;
+	gchar * interface;
 };
 
 enum {
@@ -50,6 +58,7 @@ static void set_property                   (GObject * object,
                                             guint property_id,
                                             const GValue * value,
                                             GParamSpec * pspec);
+static void object_free                    (gpointer data);
 
 G_DEFINE_TYPE (DbusTestDbusMock, dbus_test_dbus_mock, DBUS_TEST_TYPE_PROCESS);
 
@@ -86,6 +95,10 @@ static void
 dbus_test_dbus_mock_init (G_GNUC_UNUSED DbusTestDbusMock *self)
 {
 	self->priv = DBUS_TEST_DBUS_MOCK_GET_PRIVATE(self);
+
+	self->priv->objects = g_array_new(FALSE, FALSE, sizeof(DbusTestDbusMockObject));
+	g_array_set_clear_func(self->priv->objects, object_free);
+
 	return;
 }
 
@@ -118,6 +131,9 @@ constructed (GObject * object)
 static void
 dbus_test_dbus_mock_dispose (GObject *object)
 {
+	DbusTestDbusMock * self = DBUS_TEST_DBUS_MOCK(object);
+
+	g_array_set_size(self->priv->objects, 0);
 
 	G_OBJECT_CLASS (dbus_test_dbus_mock_parent_class)->dispose (object);
 	return;
@@ -127,6 +143,10 @@ dbus_test_dbus_mock_dispose (GObject *object)
 static void
 dbus_test_dbus_mock_finalize (GObject *object)
 {
+	DbusTestDbusMock * self = DBUS_TEST_DBUS_MOCK(object);
+
+	g_free(self->priv->name);
+	g_array_free(self->priv->objects, TRUE);
 
 	G_OBJECT_CLASS (dbus_test_dbus_mock_parent_class)->finalize (object);
 	return;
@@ -224,6 +244,20 @@ dbus_test_dbus_mock_get_object (DbusTestDbusMock * mock, const gchar * path, con
 
 
 	return NULL;
+}
+
+/* Objects are initialized in dbus_test_dbus_mock_get_object() and
+   they are free'd in this function */
+static void
+object_free (gpointer data)
+{
+	DbusTestDbusMockObject * obj = (DbusTestDbusMockObject *)data;
+
+	g_free(obj->interface);
+	g_free(obj->object_path);
+
+	/* NOTE: No free'ing of data */
+	return;
 }
 
 /**
