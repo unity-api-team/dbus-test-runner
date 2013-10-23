@@ -27,7 +27,7 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 struct _DbusTestProcessPrivate {
 	gchar * executable;
-	GList * parameters;
+	GArray * parameters;
 
 	GPid pid;
 	guint io_watch;
@@ -70,13 +70,27 @@ dbus_test_process_class_init (DbusTestProcessClass *klass)
 	return;
 }
 
+/* Small helper to free the result of the pointer */
+static void
+array_free_helper (gpointer data)
+{
+	gchar ** typed_data = (gchar **)data;
+	g_free(*typed_data);
+	return;
+}
+
 static void
 dbus_test_process_init (DbusTestProcess *self)
 {
 	self->priv = DBUS_TEST_PROCESS_GET_PRIVATE(self);
 
 	self->priv->executable = NULL;
-	self->priv->parameters = NULL;
+
+	self->priv->parameters = g_array_new(TRUE /* zero terminated */,
+	                                     TRUE /* clear */,
+	                                     sizeof(gchar *));
+	g_array_set_clear_func(self->priv->parameters, array_free_helper);
+
 	self->priv->io_chan = NULL;
 
 	return;
@@ -141,7 +155,7 @@ dbus_test_process_finalize (GObject *object)
 	g_free(process->priv->executable);
 	process->priv->executable = NULL;
 
-	g_list_free_full(process->priv->parameters, g_free);
+	g_array_free(process->priv->parameters, TRUE /* free segment */);
 	process->priv->parameters = NULL;
 
 	G_OBJECT_CLASS (dbus_test_process_parent_class)->finalize (object);
@@ -217,12 +231,12 @@ process_run (DbusTestTask * task)
 	DbusTestProcess * process = DBUS_TEST_PROCESS(task);
 
 	gchar ** argv;
-	argv = g_new0(gchar *, g_list_length(process->priv->parameters) + 2);
+	argv = g_new0(gchar *, process->priv->parameters->len + 2);
 
 	argv[0] = process->priv->executable;
 	guint i;
-	for (i = 0; i < g_list_length(process->priv->parameters); i++) {
-		argv[i + 1] = (gchar *)g_list_nth(process->priv->parameters, i)->data;
+	for (i = 0; i < process->priv->parameters->len; i++) {
+		argv[i + 1] = g_array_index(process->priv->parameters, gchar *, i);
 	}
 
 	GError * error = NULL;
@@ -307,7 +321,8 @@ dbus_test_process_append_param (DbusTestProcess * process, const gchar * paramet
 	g_return_if_fail(DBUS_TEST_IS_PROCESS(process));
 	g_return_if_fail(parameter != NULL);
 
-	process->priv->parameters = g_list_append(process->priv->parameters, g_strdup(parameter));
+	gchar * newstr = g_strdup(parameter);
+	process->priv->parameters = g_array_append_val(process->priv->parameters, newstr);
 
 	return;
 }
