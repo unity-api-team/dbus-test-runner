@@ -34,6 +34,7 @@ static void dbus_test_dbus_mock_class_init (DbusTestDbusMockClass *klass);
 static void dbus_test_dbus_mock_init       (DbusTestDbusMock *self);
 static void dbus_test_dbus_mock_dispose    (GObject *object);
 static void dbus_test_dbus_mock_finalize   (GObject *object);
+static void run                            (DbusTestTask * task);
 
 G_DEFINE_TYPE (DbusTestDbusMock, dbus_test_dbus_mock, DBUS_TEST_TYPE_PROCESS);
 
@@ -47,6 +48,10 @@ dbus_test_dbus_mock_class_init (DbusTestDbusMockClass *klass)
 
 	object_class->dispose = dbus_test_dbus_mock_dispose;
 	object_class->finalize = dbus_test_dbus_mock_finalize;
+
+	DbusTestTaskClass * tclass = DBUS_TEST_TASK_CLASS(klass);
+
+	tclass->run = run;
 
 	return;
 }
@@ -74,6 +79,18 @@ dbus_test_dbus_mock_finalize (GObject *object)
 {
 
 	G_OBJECT_CLASS (dbus_test_dbus_mock_parent_class)->finalize (object);
+	return;
+}
+
+/* Run the mock */
+static void
+run (DbusTestTask * task)
+{
+	/* Use the process code to get the process running */
+	DBUS_TEST_TASK_CLASS (dbus_test_dbus_mock_parent_class)->run (task);
+
+	/* Initialize the DBus Mock instance */
+
 	return;
 }
 
