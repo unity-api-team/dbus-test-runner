@@ -365,9 +365,8 @@ dbus_test_process_new (const gchar * executable)
 	g_return_val_if_fail(executable != NULL, NULL);
 
 	DbusTestProcess * proc = g_object_new(DBUS_TEST_TYPE_PROCESS,
+	                                      "executable", executable,
 	                                      NULL);
-
-	proc->priv->executable = g_strdup(executable);
 
 	return proc;
 }
