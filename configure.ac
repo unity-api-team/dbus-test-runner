@@ -31,6 +31,7 @@ GIO_REQUIRED_VERSION=2.30
 
 PKG_CHECK_MODULES(DBUS_TEST_RUNNER, glib-2.0 >= $GLIB_REQUIRED_VERSION
                                     gio-2.0 >= $GIO_REQUIRED_VERSION
+                                    gio-unix-2.0 >= $GIO_REQUIRED_VERSION
                                     dbus-glib-1 >= $DBUS_REQUIRED_VERSION)
 AC_SUBST(DBUS_TEST_RUNNER_CFLAGS)
 AC_SUBST(DBUS_TEST_RUNNER_LIBS)

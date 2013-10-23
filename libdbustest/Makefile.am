@@ -41,6 +41,7 @@ libdbustest_la_CFLAGS = \
 	-Wall -Werror -Wextra
 
 libdbustest_la_LIBADD = \
+	libdbustest-generated.la \
 	$(DBUS_TEST_RUNNER_LIBS)
 
 libdbustest_la_LDFLAGS = \
@@ -50,10 +51,30 @@ libdbustest_la_LDFLAGS = \
 	-no-undefined \
 	-export-symbols-regex "^[^_].*"
 
+noinst_LTLIBRARIES = libdbustest-generated.la
+
+libdbustest_generated_la_CFLAGS = \
+	$(DBUS_TEST_RUNNER_CFLAGS) \
+	-DG_LOG_DOMAIN=\"libdbustest\" \
+	-Wall -Werror
+
+libdbustest_generated_la_SOURCES = \
+	dbus-mock-iface.h \
+	dbus-mock-iface.c
+
+dbus-mock-iface.c: dbus-mock-iface.xml
+	$(AM_V_GEN) gdbus-codegen \
+		--interface-prefix org.freedesktop.DBus.Mock. \
+		--generate-c-code dbus-mock-iface \
+		--c-namespace DbusMockIface \
+		$^
+dbus-mock-iface.h: dbus-mock-iface.c
+
 pkgdata_SCRIPTS = \
 	dbus-test-bustle-handler
 
 EXTRA_DIST = \
+	dbus-mock-iface.xml \
 	dbus-test-bustle-handler \
 	dbustest.pc.in
 
@@ -79,4 +100,5 @@ dbus_test_watchdog_CFLAGS = \
 	$(DBUS_TEST_RUNNER_CFLAGS)
 
 DISTCLEANFILES = \
+	dbus-mock-iface.c dbus-mock-iface.h \
 	dbustest-$(API_VERSION).pc
