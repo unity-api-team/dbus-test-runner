@@ -23,6 +23,9 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "dbus-mock.h"
 
+typedef struct _MockObjectProperty MockObjectProperty;
+typedef struct _MockObjectMethod MockObjectMethod;
+
 struct _DbusTestDbusMockPrivate {
 	gchar * name;
 	/* Entries of DbusTestDbusMockObject */
@@ -33,6 +36,18 @@ struct _DbusTestDbusMockPrivate {
 struct _DbusTestDbusMockObject {
 	gchar * object_path;
 	gchar * interface;
+	GArray * properties;
+	GArray * methods;
+};
+
+/* A property on an object */
+struct _MockObjectProperty {
+	gchar * name;
+};
+
+/* A method on an object */
+struct _MockObjectMethod {
+	gchar * name;
 };
 
 enum {
@@ -59,6 +74,8 @@ static void set_property                   (GObject * object,
                                             const GValue * value,
                                             GParamSpec * pspec);
 static void object_free                    (gpointer data);
+static void method_free                    (gpointer data);
+static void property_free                  (gpointer data);
 
 G_DEFINE_TYPE (DbusTestDbusMock, dbus_test_dbus_mock, DBUS_TEST_TYPE_PROCESS);
 
@@ -258,6 +275,10 @@ dbus_test_dbus_mock_get_object (DbusTestDbusMock * mock, const gchar * path, con
 
 	newobj.object_path = g_strdup(path);
 	newobj.interface = g_strdup(interface);
+	newobj.properties = g_array_new(FALSE, FALSE, sizeof(MockObjectProperty));
+	g_array_set_clear_func(newobj.properties, property_free);
+	newobj.methods = g_array_new(FALSE, FALSE, sizeof(MockObjectMethod));
+	g_array_set_clear_func(newobj.methods, method_free);
 
 	g_array_append_val(mock->priv->objects, newobj);
 	return &g_array_index(mock->priv->objects, DbusTestDbusMockObject, mock->priv->objects->len - 1);
@@ -272,6 +293,8 @@ object_free (gpointer data)
 
 	g_free(obj->interface);
 	g_free(obj->object_path);
+	g_array_free(obj->properties, TRUE);
+	g_array_free(obj->methods, TRUE);
 
 	/* NOTE: No free'ing of data */
 	return;
@@ -322,6 +345,18 @@ dbus_test_dbus_mock_object_add_method (DbusTestDbusMock * mock, DbusTestDbusMock
 
 
 	return FALSE;
+}
+
+/* Free the data allocated in dbus_test_dbus_mock_object_add_method() */
+static void
+method_free (gpointer data)
+{
+	MockObjectMethod * method = (MockObjectMethod *)data;
+
+	g_free(method->name);
+
+	/* NOTE: No free of 'data' */
+	return;
 }
 
 /**
@@ -412,6 +447,19 @@ dbus_test_dbus_mock_object_add_property (DbusTestDbusMock * mock, DbusTestDbusMo
 
 	return FALSE;
 }
+
+/* Free the data allocated in dbus_test_dbus_mock_object_add_property() */
+static void
+property_free (gpointer data)
+{
+	MockObjectProperty * property = (MockObjectProperty *)data;
+
+	g_free(property->name);
+
+	/* NOTE: No free of 'data' */
+	return;
+}
+
 
 /**
  * dbus_test_dbus_mock_object_update_property:
