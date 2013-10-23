@@ -196,10 +196,14 @@ dbus_test_process_finalize (GObject *object)
 static void
 get_property (GObject * object, guint property_id, G_GNUC_UNUSED GValue * value, GParamSpec * pspec)
 {
+	DbusTestProcess * self = DBUS_TEST_PROCESS(object);
+
 	switch (property_id) {
 	case PROP_EXECUTABLE:
+		g_value_set_string(value, self->priv->executable);
 		break;
 	case PROP_PARAMETERS:
+		g_value_set_boxed(value, self->priv->parameters);
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
@@ -212,10 +216,21 @@ get_property (GObject * object, guint property_id, G_GNUC_UNUSED GValue * value,
 static void
 set_property (GObject * object, guint property_id, G_GNUC_UNUSED const GValue * value, GParamSpec * pspec)
 {
+	if (get_state(DBUS_TEST_TASK(object)) == DBUS_TEST_TASK_STATE_RUNNING) {
+		g_warning("Can't set properties on a running process");
+		return;
+	}
+
+	DbusTestProcess * self = DBUS_TEST_PROCESS(object);
+
 	switch (property_id) {
 	case PROP_EXECUTABLE:
+		g_free(self->priv->executable);
+		self->priv->executable = g_value_dup_string(value);
 		break;
 	case PROP_PARAMETERS:
+		g_array_free(self->priv->parameters, TRUE);
+		self->priv->parameters = g_value_dup_boxed(value);
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
