@@ -85,7 +85,7 @@ dbus_test_process_class_init (DbusTestProcessClass *klass)
 	                                                     "", /* default */
 	                                                     G_PARAM_STATIC_STRINGS | G_PARAM_READWRITE));
 	g_object_class_install_property (object_class, PROP_PARAMETERS,
-	                                 g_param_spec_gtype("parameters",
+	                                 g_param_spec_boxed("parameters",
 	                                                    "Parameters",
 	                                                    "Parameters to pass to the executable",
 	                                                    G_TYPE_ARRAY,
