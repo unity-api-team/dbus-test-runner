@@ -38,6 +38,7 @@ enum {
 
 static void dbus_test_dbus_mock_class_init (DbusTestDbusMockClass *klass);
 static void dbus_test_dbus_mock_init       (DbusTestDbusMock *self);
+static void constructed                    (GObject * object);
 static void dbus_test_dbus_mock_dispose    (GObject *object);
 static void dbus_test_dbus_mock_finalize   (GObject *object);
 static void run                            (DbusTestTask * task);
@@ -64,6 +65,7 @@ dbus_test_dbus_mock_class_init (DbusTestDbusMockClass *klass)
 	object_class->finalize = dbus_test_dbus_mock_finalize;
 	object_class->get_property = get_property;
 	object_class->set_property = set_property;
+	object_class->constructed = constructed;
 
 	g_object_class_install_property (object_class, PROP_DBUS_NAME,
 	                                 g_param_spec_string("dbus-name",
@@ -84,6 +86,31 @@ static void
 dbus_test_dbus_mock_init (G_GNUC_UNUSED DbusTestDbusMock *self)
 {
 	self->priv = DBUS_TEST_DBUS_MOCK_GET_PRIVATE(self);
+	return;
+}
+
+/* Finish init with our properties set */
+static void
+constructed (GObject * object)
+{
+	DbusTestDbusMock * self = DBUS_TEST_DBUS_MOCK(object);
+	const gchar * paramval = NULL;
+
+	/* Execute: python3 -m dbusmock $name / com.canonical.DbusTest.DbusMock */
+	g_object_set(object, "executable", "python3", NULL);
+
+	GArray * params = g_array_new(TRUE, TRUE, sizeof(gchar *));
+	/* NOTE: No free func, none of the memory is managed by the array */
+
+	paramval = "-m"; g_array_append_val(params, paramval);
+	paramval = "dbusmock"; g_array_append_val(params, paramval);
+	g_array_append_val(params, self->priv->name);
+	paramval = "/"; g_array_append_val(params, paramval);
+	paramval = "com.canonical.DbusTest.DbusMock"; g_array_append_val(params, paramval);
+
+	g_object_set(object, "parameters", params, NULL);
+	g_array_unref(params);
+
 	return;
 }
 
@@ -168,7 +195,11 @@ dbus_test_dbus_mock_new (const gchar * bus_name)
 {
 	g_return_val_if_fail(bus_name != NULL, NULL);
 
-	return NULL;
+	DbusTestDbusMock * mock = g_object_new(DBUS_TEST_TYPE_DBUS_MOCK,
+	                                       "dbus-name", bus_name,
+	                                       NULL);
+
+	return mock;
 }
 
 /**
