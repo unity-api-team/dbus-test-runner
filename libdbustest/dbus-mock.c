@@ -50,6 +50,9 @@ struct _MockObjectProperty {
 /* A method on an object */
 struct _MockObjectMethod {
 	gchar * name;
+	GVariantType * in;
+	GVariantType * out;
+	gchar * code;
 };
 
 enum {
@@ -320,6 +323,21 @@ dbus_test_dbus_mock_object_notify (DbusTestDbusMock * mock, DbusTestDbusMockObje
 	return FALSE;
 }
 
+/* Little helper to get a method */
+static inline MockObjectMethod *
+get_obj_method (DbusTestDbusMockObject * obj, const gchar * name)
+{
+	guint i;
+	for (i = 0; i < obj->methods->len; i++) {
+		MockObjectMethod * method = &g_array_index(obj->methods, MockObjectMethod, i);
+		if (g_strcmp0(method->name, name) == 0) {
+			return method;
+		}
+	}
+
+	return NULL;
+}
+
 /**
  * dbus_test_dbus_mock_object_add_method:
  * @mock: A #DbusTestDbusMock instance
@@ -345,7 +363,25 @@ dbus_test_dbus_mock_object_add_method (DbusTestDbusMock * mock, DbusTestDbusMock
 	g_return_val_if_fail(outparams != NULL, FALSE);
 	g_return_val_if_fail(python_code != NULL, FALSE);
 
+	/* Check to make sure it doesn't already exist */
+	MockObjectMethod * meth = get_obj_method(obj, method);
+	g_return_val_if_fail(meth == NULL, FALSE);
 
+	/* Build a new one */
+	MockObjectMethod newmethod;
+	newmethod.name = g_strdup(method);
+	newmethod.in = g_variant_type_copy(inparams);
+	newmethod.out = g_variant_type_copy(outparams);
+	newmethod.code = g_strdup(python_code);
+
+	g_array_append_val(obj->methods, newmethod);
+
+	/* If we're not running we can just leave it here */
+	if (dbus_test_task_get_state(DBUS_TEST_TASK(mock)) != DBUS_TEST_TASK_STATE_RUNNING) {
+		return TRUE;
+	}
+
+	/* TODO: Add to running instance */
 	return FALSE;
 }
 
@@ -356,6 +392,9 @@ method_free (gpointer data)
 	MockObjectMethod * method = (MockObjectMethod *)data;
 
 	g_free(method->name);
+	g_variant_type_free(method->in);
+	g_variant_type_free(method->out);
+	g_free(method->code);
 
 	/* NOTE: No free of 'data' */
 	return;
