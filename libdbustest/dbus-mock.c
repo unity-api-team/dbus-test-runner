@@ -92,7 +92,7 @@ dbus_test_dbus_mock_class_init (DbusTestDbusMockClass *klass)
 
 /* Initialize Instance */
 static void
-dbus_test_dbus_mock_init (G_GNUC_UNUSED DbusTestDbusMock *self)
+dbus_test_dbus_mock_init (DbusTestDbusMock *self)
 {
 	self->priv = DBUS_TEST_DBUS_MOCK_GET_PRIVATE(self);
 
@@ -154,7 +154,7 @@ dbus_test_dbus_mock_finalize (GObject *object)
 
 /* Get a property */
 static void
-get_property (GObject * object, guint property_id, G_GNUC_UNUSED GValue * value, GParamSpec * pspec)
+get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec)
 {
 	DbusTestDbusMock * self = DBUS_TEST_DBUS_MOCK(object);
 
@@ -171,7 +171,7 @@ get_property (GObject * object, guint property_id, G_GNUC_UNUSED GValue * value,
 
 /* Set a property */
 static void
-set_property (GObject * object, guint property_id, G_GNUC_UNUSED const GValue * value, GParamSpec * pspec)
+set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec)
 {
 	DbusTestDbusMock * self = DBUS_TEST_DBUS_MOCK(object);
 
