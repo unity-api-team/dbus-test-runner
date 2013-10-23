@@ -43,6 +43,8 @@ struct _DbusTestDbusMockObject {
 /* A property on an object */
 struct _MockObjectProperty {
 	gchar * name;
+	GVariantType * type;
+	GVariant * value;
 };
 
 /* A method on an object */
@@ -423,6 +425,21 @@ dbus_test_dbus_mock_object_get_method_calls (DbusTestDbusMock * mock, DbusTestDb
 	return NULL;
 }
 
+/* Quick helper to get an object property */
+static inline MockObjectProperty *
+get_obj_property (DbusTestDbusMockObject * obj, const gchar * name)
+{
+	guint i;
+	for (i = 0; i < obj->properties->len; i++) {
+		MockObjectProperty * prop = &g_array_index(obj->properties, MockObjectProperty, i);
+		if (g_strcmp0(prop->name, name) == 0) {
+			return prop;
+		}
+	}
+
+	return NULL;
+}
+
 /**
  * dbus_test_dbus_mock_object_add_property:
  * @mock: A #DbusTestDbusMock instance
@@ -443,8 +460,26 @@ dbus_test_dbus_mock_object_add_property (DbusTestDbusMock * mock, DbusTestDbusMo
 	g_return_val_if_fail(name != NULL, FALSE);
 	g_return_val_if_fail(type != NULL, FALSE);
 	g_return_val_if_fail(value != NULL, FALSE);
+	g_return_val_if_fail(g_variant_is_of_type(value, type), FALSE);
 
+	/* Check to see if we have the property */
+	MockObjectProperty * prop = get_obj_property(obj, name);
+	g_return_val_if_fail(prop == NULL, FALSE);
 
+	/* Build a new one */
+	MockObjectProperty newprop;
+	newprop.name = g_strdup(name);
+	newprop.type = g_variant_type_copy(type);
+	newprop.value = g_variant_ref_sink(value);
+
+	g_array_append_val(obj->properties, newprop);
+
+	/* If we're not running we can just leave it here */
+	if (dbus_test_task_get_state(DBUS_TEST_TASK(mock)) != DBUS_TEST_TASK_STATE_RUNNING) {
+		return TRUE;
+	}
+
+	/* TODO: Add to running instance */
 	return FALSE;
 }
 
@@ -455,6 +490,8 @@ property_free (gpointer data)
 	MockObjectProperty * property = (MockObjectProperty *)data;
 
 	g_free(property->name);
+	g_variant_type_free(property->type);
+	g_variant_unref(property->value);
 
 	/* NOTE: No free of 'data' */
 	return;
