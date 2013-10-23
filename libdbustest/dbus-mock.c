@@ -242,8 +242,25 @@ dbus_test_dbus_mock_get_object (DbusTestDbusMock * mock, const gchar * path, con
 	g_return_val_if_fail(path != NULL, NULL);
 	g_return_val_if_fail(interface != NULL, NULL);
 
+	/* Check to see if we have that one */
+	guint i;
+	for (i = 0; i < mock->priv->objects->len; i++) {
+		DbusTestDbusMockObject * obj = &g_array_index(mock->priv->objects, DbusTestDbusMockObject, i);
 
-	return NULL;
+		if (g_strcmp0(path, obj->object_path) == 0 &&
+			g_strcmp0(interface, obj->interface) == 0) {
+			return obj;
+		}
+	}
+
+	/* K, that's cool.  We'll build it then. */
+	DbusTestDbusMockObject newobj;
+
+	newobj.object_path = g_strdup(path);
+	newobj.interface = g_strdup(interface);
+
+	g_array_append_val(mock->priv->objects, newobj);
+	return &g_array_index(mock->priv->objects, DbusTestDbusMockObject, mock->priv->objects->len - 1);
 }
 
 /* Objects are initialized in dbus_test_dbus_mock_get_object() and
