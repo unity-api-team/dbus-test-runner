@@ -281,6 +281,26 @@ dbus_test_process_new (const gchar * executable)
 	return proc;
 }
 
+/**
+ * dbus_test_process_get_pid:
+ * @process: The #DbusTestProcess to check
+ *
+ * Gets the process ID of the task if it is running
+ *
+ * Return value: The current PID or 0 if not running
+ */
+GPid
+dbus_test_process_get_pid (DbusTestProcess * process)
+{
+	g_return_if_fail(DBUS_TEST_IS_PROCESS(process));
+
+	if (get_state(DBUS_TEST_TASK(process)) == DBUS_TEST_TASK_STATE_RUNNING) {
+		return process->priv->pid;
+	}
+
+	return 0;
+}
+
 void
 dbus_test_process_append_param (DbusTestProcess * process, const gchar * parameter)
 {
