@@ -38,6 +38,13 @@ struct _DbusTestProcessPrivate {
 	gint status;
 };
 
+enum {
+	PROP_0,
+	PROP_EXECUTABLE,
+	PROP_PARAMETERS,
+	NUM_PROPS
+};
+
 #define DBUS_TEST_PROCESS_GET_PRIVATE(o) \
 (G_TYPE_INSTANCE_GET_PRIVATE ((o), DBUS_TEST_TYPE_PROCESS, DbusTestProcessPrivate))
 
@@ -48,6 +55,14 @@ static void dbus_test_process_finalize   (GObject *object);
 static void process_run                  (DbusTestTask * task);
 static DbusTestTaskState get_state       (DbusTestTask * task);
 static gboolean get_passed               (DbusTestTask * task);
+static void get_property                 (GObject * object,
+                                          guint property_id,
+                                          GValue * value,
+                                          GParamSpec * pspec);
+static void set_property                 (GObject * object,
+                                          guint property_id,
+                                          const GValue * value,
+                                          GParamSpec * pspec);
 
 G_DEFINE_TYPE (DbusTestProcess, dbus_test_process, DBUS_TEST_TYPE_TASK);
 
@@ -60,6 +75,21 @@ dbus_test_process_class_init (DbusTestProcessClass *klass)
 
 	object_class->dispose = dbus_test_process_dispose;
 	object_class->finalize = dbus_test_process_finalize;
+	object_class->get_property = get_property;
+	object_class->set_property = set_property;
+
+	g_object_class_install_property (object_class, PROP_EXECUTABLE,
+	                                 g_param_spec_string("executable",
+	                                                     "Executable Name",
+	                                                     "The executable being run by the process object",
+	                                                     "", /* default */
+	                                                     G_PARAM_STATIC_STRINGS | G_PARAM_READWRITE));
+	g_object_class_install_property (object_class, PROP_PARAMETERS,
+	                                 g_param_spec_gtype("parameters",
+	                                                    "Parameters",
+	                                                    "Parameters to pass to the executable",
+	                                                    G_TYPE_ARRAY,
+	                                                    G_PARAM_STATIC_STRINGS | G_PARAM_READWRITE));
 
 	DbusTestTaskClass * task_class = DBUS_TEST_TASK_CLASS(klass);
 
@@ -159,6 +189,38 @@ dbus_test_process_finalize (GObject *object)
 	process->priv->parameters = NULL;
 
 	G_OBJECT_CLASS (dbus_test_process_parent_class)->finalize (object);
+	return;
+}
+
+/* Get a property */
+static void
+get_property (GObject * object, guint property_id, G_GNUC_UNUSED GValue * value, GParamSpec * pspec)
+{
+	switch (property_id) {
+	case PROP_EXECUTABLE:
+		break;
+	case PROP_PARAMETERS:
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+	}
+
+	return;
+}
+
+/* Set a property */
+static void
+set_property (GObject * object, guint property_id, G_GNUC_UNUSED const GValue * value, GParamSpec * pspec)
+{
+	switch (property_id) {
+	case PROP_EXECUTABLE:
+		break;
+	case PROP_PARAMETERS:
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+	}
+
 	return;
 }
 
