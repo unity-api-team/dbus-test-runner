@@ -22,6 +22,7 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 #endif
 
 #include "dbus-mock.h"
+#include "dbus-mock-iface.h"
 
 typedef struct _MockObjectProperty MockObjectProperty;
 typedef struct _MockObjectMethod MockObjectMethod;
@@ -209,6 +210,81 @@ set_property (GObject * object, guint property_id, const GValue * value, GParamS
 	return;
 }
 
+/* Turns a property object into the variant to represent it */
+static GVariant *
+property_to_variant (MockObjectProperty * prop)
+{
+	GVariantBuilder builder;
+	g_variant_builder_init(&builder, G_VARIANT_TYPE_DICT_ENTRY);
+
+	g_variant_builder_add_value(&builder, g_variant_new_string(prop->name));
+	g_variant_builder_add_value(&builder, g_variant_new_variant(prop->value));
+
+	return g_variant_builder_end(&builder);
+}
+
+/* Turns a method into the variant to represent it */
+static GVariant *
+method_to_variant (MockObjectMethod * method)
+{
+	GVariantBuilder builder;
+	g_variant_builder_init(&builder, G_VARIANT_TYPE_TUPLE);
+
+	g_variant_builder_add_value(&builder, g_variant_new_string(method->name));
+	g_variant_builder_add_value(&builder, g_variant_new_take_string(g_variant_type_dup_string(method->in)));
+	g_variant_builder_add_value(&builder, g_variant_new_take_string(g_variant_type_dup_string(method->out)));
+	g_variant_builder_add_value(&builder, g_variant_new_string(method->code));
+
+	return g_variant_builder_end(&builder);
+}
+
+/* Add an object to the DBus Mock */
+static gboolean
+install_object (DbusTestDbusMock * mock, DbusTestDbusMockObject * object)
+{
+	GVariant * properties = NULL;
+	GVariant * methods = NULL;
+
+	if (object->properties->len > 0) {
+		GVariantBuilder property_builder;
+		guint i;
+
+		g_variant_builder_init(&property_builder, G_VARIANT_TYPE_ARRAY);
+
+		for (i = 0; i < object->properties->len; i++) {
+			MockObjectProperty * prop = &g_array_index(object->properties, MockObjectProperty, i);
+			g_variant_builder_add_value(&property_builder, property_to_variant(prop));
+		}
+
+		properties = g_variant_builder_end(&property_builder);
+	} else {
+		properties = g_variant_new_array(G_VARIANT_TYPE("{sv}"), NULL, 0);
+	}
+
+	if (object->methods->len > 0) {
+		GVariantBuilder method_builder;
+		guint i;
+
+		g_variant_builder_init(&method_builder, G_VARIANT_TYPE_ARRAY);
+
+		for (i = 0; i < object->methods->len; i++) {
+			MockObjectMethod * method = &g_array_index(object->methods, MockObjectMethod, i);
+			g_variant_builder_add_value(&method_builder, method_to_variant(method));
+		}
+
+		methods = g_variant_builder_end(&method_builder);
+	} else {
+		methods = g_variant_new_array(G_VARIANT_TYPE("(ssss)"), NULL, 0);
+	}
+
+	return dbus_mock_iface_org_freedesktop_dbus_mock_call_add_object_sync((gpointer)mock, /* TODO */
+		object->object_path,
+		object->interface,
+		properties,
+		methods,
+		NULL, /* cancellable */
+		NULL); /* error: TODO */
+}
 
 /* Run the mock */
 static void
@@ -218,6 +294,16 @@ run (DbusTestTask * task)
 	DBUS_TEST_TASK_CLASS (dbus_test_dbus_mock_parent_class)->run (task);
 
 	/* Initialize the DBus Mock instance */
+	DbusTestDbusMock * self = DBUS_TEST_DBUS_MOCK(task);
+
+	/* Setup the proxy */
+
+	/* Install Objects */
+	guint i;
+	for (i = 0; i < self->priv->objects->len; i++) {
+		DbusTestDbusMockObject * obj = &g_array_index(self->priv->objects, DbusTestDbusMockObject, i);
+		install_object(self, obj);
+	}
 
 	return;
 }
