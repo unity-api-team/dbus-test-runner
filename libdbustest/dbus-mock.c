@@ -29,6 +29,7 @@ typedef struct _MockObjectMethod MockObjectMethod;
 
 struct _DbusTestDbusMockPrivate {
 	gchar * name;
+	DbusMockIfaceOrgFreedesktopDBusMock * proxy;
 	/* Entries of DbusTestDbusMockObject */
 	GArray * objects;
 };
@@ -125,6 +126,24 @@ dbus_test_dbus_mock_init (DbusTestDbusMock *self)
 	return;
 }
 
+/* Respond to our proxy build */
+static void
+proxy_ready (G_GNUC_UNUSED GObject * object, GAsyncResult * res, gpointer user_data)
+{
+	DbusTestDbusMock * self = DBUS_TEST_DBUS_MOCK(user_data);
+	GError * error = NULL;
+
+	self->priv->proxy = dbus_mock_iface_org_freedesktop_dbus_mock_proxy_new_for_bus_finish(res, &error);
+
+	if (error != NULL) {
+		g_warning("Unable to get proxy setup for DBusMock: %s", error->message);
+		g_error_free(error);
+		return;
+	}
+
+	return;
+}
+
 /* Finish init with our properties set */
 static void
 constructed (GObject * object)
@@ -147,6 +166,16 @@ constructed (GObject * object)
 	g_object_set(object, "parameters", params, NULL);
 	g_array_unref(params);
 
+	/* Setup the proxy */
+	dbus_mock_iface_org_freedesktop_dbus_mock_proxy_new_for_bus(G_BUS_TYPE_SESSION,
+		G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES | G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START,
+		self->priv->name,
+		"/", /* path */
+		NULL, /* cancelable, TODO */
+		proxy_ready,
+		self
+	);
+
 	return;
 }
 
@@ -157,6 +186,7 @@ dbus_test_dbus_mock_dispose (GObject *object)
 	DbusTestDbusMock * self = DBUS_TEST_DBUS_MOCK(object);
 
 	g_array_set_size(self->priv->objects, 0);
+	g_clear_object(&self->priv->proxy);
 
 	G_OBJECT_CLASS (dbus_test_dbus_mock_parent_class)->dispose (object);
 	return;
@@ -277,7 +307,7 @@ install_object (DbusTestDbusMock * mock, DbusTestDbusMockObject * object)
 		methods = g_variant_new_array(G_VARIANT_TYPE("(ssss)"), NULL, 0);
 	}
 
-	return dbus_mock_iface_org_freedesktop_dbus_mock_call_add_object_sync((gpointer)mock, /* TODO */
+	return dbus_mock_iface_org_freedesktop_dbus_mock_call_add_object_sync(mock->priv->proxy,
 		object->object_path,
 		object->interface,
 		properties,
