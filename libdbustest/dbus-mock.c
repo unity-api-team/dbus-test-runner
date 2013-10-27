@@ -126,24 +126,6 @@ dbus_test_dbus_mock_init (DbusTestDbusMock *self)
 	return;
 }
 
-/* Respond to our proxy build */
-static void
-proxy_ready (G_GNUC_UNUSED GObject * object, GAsyncResult * res, gpointer user_data)
-{
-	DbusTestDbusMock * self = DBUS_TEST_DBUS_MOCK(user_data);
-	GError * error = NULL;
-
-	self->priv->proxy = dbus_mock_iface_org_freedesktop_dbus_mock_proxy_new_for_bus_finish(res, &error);
-
-	if (error != NULL) {
-		g_warning("Unable to get proxy setup for DBusMock: %s", error->message);
-		g_error_free(error);
-		return;
-	}
-
-	return;
-}
-
 /* Finish init with our properties set */
 static void
 constructed (GObject * object)
@@ -165,16 +147,6 @@ constructed (GObject * object)
 
 	g_object_set(object, "parameters", params, NULL);
 	g_array_unref(params);
-
-	/* Setup the proxy */
-	dbus_mock_iface_org_freedesktop_dbus_mock_proxy_new_for_bus(G_BUS_TYPE_SESSION,
-		G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES | G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START,
-		self->priv->name,
-		"/", /* path */
-		NULL, /* cancelable, TODO */
-		proxy_ready,
-		self
-	);
 
 	return;
 }
@@ -342,13 +314,28 @@ got_name_owner (GObject * obj, G_GNUC_UNUSED GParamSpec * pspec, gpointer ploop)
 static void
 run (DbusTestTask * task)
 {
+	GError * error = NULL;
 	DbusTestDbusMock * self = DBUS_TEST_DBUS_MOCK(task);
-	g_return_if_fail(self->priv->proxy != NULL);
 
 	/* Use the process code to get the process running */
 	DBUS_TEST_TASK_CLASS (dbus_test_dbus_mock_parent_class)->run (task);
 
 	/**** Initialize the DBus Mock instance ****/
+
+	/* Zero, Setup the proxy */
+	self->priv->proxy = dbus_mock_iface_org_freedesktop_dbus_mock_proxy_new_for_bus_sync(G_BUS_TYPE_SESSION,
+		G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES | G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START,
+		self->priv->name,
+		"/", /* path */
+		NULL, /* cancelable, TODO */
+		&error
+	);
+
+	if (error != NULL) {
+		g_critical("Unable to build proxy to DBusMock: %s", error->message);
+		g_error_free(error);
+		return;
+	}
 
 	/* First, Ensure we have a proxy */
 	gchar * owner = g_dbus_proxy_get_name_owner(G_DBUS_PROXY(self->priv->proxy));
