@@ -340,6 +340,7 @@ run (DbusTestTask * task)
 	/* First, Ensure we have a proxy */
 	gchar * owner = g_dbus_proxy_get_name_owner(G_DBUS_PROXY(self->priv->proxy));
 	if (owner == NULL) {
+		g_debug("Waiting on name from DBusMock");
 		GMainLoop * mainloop = g_main_loop_new(NULL, FALSE);
 
 		guint timeout_sig = g_timeout_add_seconds(3, mock_start_check, mainloop);
