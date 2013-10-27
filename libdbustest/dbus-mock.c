@@ -105,7 +105,7 @@ dbus_test_dbus_mock_class_init (DbusTestDbusMockClass *klass)
 	                                                     "DBus Name",
 	                                                     "The well known name for dbusmock on the session bus",
 	                                                     "com.canonical.DBusTestRunner.DBusMock", /* default */
-	                                                     G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT_ONLY));
+	                                                     G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE));
 
 	DbusTestTaskClass * tclass = DBUS_TEST_TASK_CLASS(klass);
 
