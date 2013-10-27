@@ -316,19 +316,63 @@ install_object (DbusTestDbusMock * mock, DbusTestDbusMockObject * object)
 		NULL); /* error: TODO */
 }
 
+/* Catch the mock taking too long to start */
+static gboolean
+mock_start_check (gpointer ploop)
+{
+	GMainLoop * loop = (GMainLoop *)ploop;
+	g_main_loop_quit(loop);
+	return G_SOURCE_REMOVE;
+}
+
+/* Called when the name owner changes, should be to get one */
+static void
+got_name_owner (GObject * obj, G_GNUC_UNUSED GParamSpec * pspec, gpointer ploop)
+{
+	gchar * owner = g_dbus_proxy_get_name_owner(G_DBUS_PROXY(obj));
+	if (owner != NULL) {
+		g_free(owner);
+		GMainLoop * loop = (GMainLoop *)ploop;
+		g_main_loop_quit(loop);
+	}
+	return;
+}
+
 /* Run the mock */
 static void
 run (DbusTestTask * task)
 {
+	DbusTestDbusMock * self = DBUS_TEST_DBUS_MOCK(task);
+	g_return_if_fail(self->priv->proxy != NULL);
+
 	/* Use the process code to get the process running */
 	DBUS_TEST_TASK_CLASS (dbus_test_dbus_mock_parent_class)->run (task);
 
-	/* Initialize the DBus Mock instance */
-	DbusTestDbusMock * self = DBUS_TEST_DBUS_MOCK(task);
+	/**** Initialize the DBus Mock instance ****/
 
-	/* Setup the proxy */
+	/* First, Ensure we have a proxy */
+	gchar * owner = g_dbus_proxy_get_name_owner(G_DBUS_PROXY(self->priv->proxy));
+	if (owner == NULL) {
+		GMainLoop * mainloop = g_main_loop_new(NULL, FALSE);
 
-	/* Install Objects */
+		guint timeout_sig = g_timeout_add_seconds(3, mock_start_check, mainloop);
+		gulong owner_sig = g_signal_connect(G_OBJECT(self->priv->proxy), "notify::g-name-owner", G_CALLBACK(got_name_owner), mainloop);
+
+		g_main_loop_run(mainloop);
+		g_main_loop_unref(mainloop);
+
+		g_signal_handler_disconnect(self->priv->proxy, owner_sig);
+		g_source_remove(timeout_sig);
+
+		owner = g_dbus_proxy_get_name_owner(G_DBUS_PROXY(self->priv->proxy));
+		if (owner == NULL) {
+			g_critical("Unable to get DBusMock started within 3 seconds");
+			return;
+		}
+	}
+	g_free(owner);
+
+	/* Second, Install Objects */
 	guint i;
 	for (i = 0; i < self->priv->objects->len; i++) {
 		DbusTestDbusMockObject * obj = &g_array_index(self->priv->objects, DbusTestDbusMockObject, i);
