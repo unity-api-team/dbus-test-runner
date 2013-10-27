@@ -502,7 +502,7 @@ get_obj_method (DbusTestDbusMockObject * obj, const gchar * name)
  * Return value: Whether it was registered successfully
  */
 gboolean
-dbus_test_dbus_mock_object_add_method (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * method, GVariantType * inparams, GVariantType * outparams, const gchar * python_code)
+dbus_test_dbus_mock_object_add_method (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * method, const GVariantType * inparams, const GVariantType * outparams, const gchar * python_code)
 {
 	g_return_val_if_fail(DBUS_TEST_IS_DBUS_MOCK(mock), FALSE);
 	g_return_val_if_fail(obj != NULL, FALSE);
@@ -640,7 +640,7 @@ get_obj_property (DbusTestDbusMockObject * obj, const gchar * name)
  * Return value: Whether it was added
  */
 gboolean
-dbus_test_dbus_mock_object_add_property (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * name, GVariantType * type, GVariant * value)
+dbus_test_dbus_mock_object_add_property (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * name, const GVariantType * type, GVariant * value)
 {
 	g_return_val_if_fail(DBUS_TEST_IS_DBUS_MOCK(mock), FALSE);
 	g_return_val_if_fail(obj != NULL, FALSE);
@@ -724,7 +724,7 @@ dbus_test_dbus_mock_object_update_property (DbusTestDbusMock * mock, DbusTestDbu
  *   to be emitted.
  */
 gboolean
-dbus_test_dbus_mock_object_emit_signal (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * name, GVariantType * params, G_GNUC_UNUSED GVariant * values)
+dbus_test_dbus_mock_object_emit_signal (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * name, const GVariantType * params, G_GNUC_UNUSED GVariant * values)
 {
 	g_return_val_if_fail(DBUS_TEST_IS_DBUS_MOCK(mock), FALSE);
 	g_return_val_if_fail(obj != NULL, FALSE);
