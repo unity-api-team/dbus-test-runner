@@ -532,7 +532,7 @@ dbus_test_dbus_mock_object_add_method (DbusTestDbusMock * mock, DbusTestDbusMock
 	g_array_append_val(obj->methods, newmethod);
 
 	/* If we're not running we can just leave it here */
-	if (dbus_test_task_get_state(DBUS_TEST_TASK(mock)) != DBUS_TEST_TASK_STATE_RUNNING) {
+	if (!is_running(mock)) {
 		return TRUE;
 	}
 
@@ -677,7 +677,7 @@ dbus_test_dbus_mock_object_add_property (DbusTestDbusMock * mock, DbusTestDbusMo
 	g_array_append_val(obj->properties, newprop);
 
 	/* If we're not running we can just leave it here */
-	if (dbus_test_task_get_state(DBUS_TEST_TASK(mock)) != DBUS_TEST_TASK_STATE_RUNNING) {
+	if (!is_running(mock)) {
 		return TRUE;
 	}
 
