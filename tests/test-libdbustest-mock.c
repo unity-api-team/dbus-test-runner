@@ -130,6 +130,68 @@ test_properties (void)
 	return;
 }
 
+void
+test_methods (void)
+{
+	DbusTestService * service = dbus_test_service_new(NULL);
+	g_assert(service != NULL);
+
+	dbus_test_service_set_conf_file(service, SESSION_CONF);
+
+	DbusTestDbusMock * mock = dbus_test_dbus_mock_new("foo.test");
+	g_assert(mock != NULL);
+
+	DbusTestDbusMockObject * obj = dbus_test_dbus_mock_get_object(mock, "/test", "foo.test.interface");
+	dbus_test_dbus_mock_object_add_method(mock, obj,
+		"method1",
+		G_VARIANT_TYPE("s"),
+		G_VARIANT_TYPE("s"),
+		"ret = 'test'");
+
+	dbus_test_service_add_task(service, DBUS_TEST_TASK(mock));
+	dbus_test_service_start_tasks(service);
+
+	g_assert(dbus_test_task_get_state(DBUS_TEST_TASK(mock)) == DBUS_TEST_TASK_STATE_RUNNING);
+
+	/* Check 'em */
+	GDBusConnection * bus = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, NULL);
+
+	GVariant * propret = NULL;
+	GVariant * testvar = NULL;
+	GError * error = NULL;
+
+	/* Check prop1 */
+	propret = g_dbus_connection_call_sync(bus,
+		"foo.test",
+		"/test",
+		"foo.test.interface",
+		"method1",
+		g_variant_new("(s)", "testin"),
+		G_VARIANT_TYPE("(s)"),
+		G_DBUS_CALL_FLAGS_NONE,
+		-1,
+		NULL,
+		&error);
+
+	if (error != NULL) {
+		g_error("Unable to call method1: %s", error->message);
+		g_error_free(error);
+	}
+
+	g_assert(propret != NULL);
+	testvar = g_variant_new_string("test");
+	g_assert(g_variant_equal(propret, g_variant_new_tuple(&testvar, 1)));
+
+	g_variant_unref(propret);
+
+
+	/* Clean up */
+	g_object_unref(mock);
+	g_object_unref(service);
+
+	return;
+}
+
 
 /* Build our test suite */
 void
@@ -137,6 +199,7 @@ test_libdbustest_mock_suite (void)
 {
 	g_test_add_func ("/libdbustest/mock/basic",        test_basic);
 	g_test_add_func ("/libdbustest/mock/properties",   test_properties);
+	g_test_add_func ("/libdbustest/mock/methods",      test_methods);
 
 	return;
 }
