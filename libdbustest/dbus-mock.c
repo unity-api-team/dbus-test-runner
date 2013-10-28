@@ -212,6 +212,13 @@ set_property (GObject * object, guint property_id, const GValue * value, GParamS
 	return;
 }
 
+/* Check to see if we're running */
+static inline gboolean
+is_running (DbusTestDbusMock * mock)
+{
+	return dbus_test_task_get_state(DBUS_TEST_TASK(mock)) == DBUS_TEST_TASK_STATE_RUNNING;
+}
+
 /* Turns a property object into the variant to represent it */
 static GVariant *
 property_to_variant (MockObjectProperty * prop)
@@ -588,7 +595,15 @@ dbus_test_dbus_mock_object_clear_method_calls (DbusTestDbusMock * mock, DbusTest
 	g_return_val_if_fail(obj != NULL, FALSE);
 	g_return_val_if_fail(method != NULL, FALSE);
 
-	return FALSE;
+	if (!is_running(mock)) {
+		return FALSE;
+	}
+
+	return dbus_mock_iface_org_freedesktop_dbus_mock_call_clear_calls_sync(
+		mock->priv->proxy,
+		NULL, /* TODO: cancel */
+		NULL /* TODO: error */
+	);
 }
 
 /**
