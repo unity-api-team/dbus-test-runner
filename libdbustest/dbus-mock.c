@@ -666,6 +666,12 @@ dbus_test_dbus_mock_object_get_method_calls (DbusTestDbusMock * mock, DbusTestDb
 	g_return_val_if_fail(obj != NULL, NULL);
 	g_return_val_if_fail(method != NULL, NULL);
 
+	if (!is_running(mock)) {
+		return NULL;
+	}
+
+	g_return_val_if_fail(obj->proxy != NULL, NULL);
+
 	/* Find our method */
 	MockObjectMethod * meth = get_obj_method(obj, method);
 	if (meth == NULL) {
@@ -673,8 +679,44 @@ dbus_test_dbus_mock_object_get_method_calls (DbusTestDbusMock * mock, DbusTestDb
 		return NULL;
 	}
 
-	/* TODO: Get the calls */
+	/* Clear the current list of calls */
+	g_array_set_size(meth->calls, 0);
 
+	GVariant * call_list_tuple = NULL;
+	dbus_mock_iface_org_freedesktop_dbus_mock_call_get_calls_sync(
+		obj->proxy,
+		&call_list_tuple,
+		NULL, /* TODO: cancelable */
+		NULL); /* TODO: error */
+
+	if (call_list_tuple == NULL) {
+		return NULL;
+	}
+
+	GVariant * call_list = g_variant_get_child_value(call_list_tuple, 0);
+	GVariantIter call_list_itr;
+	g_variant_iter_init(&call_list_itr, call_list);
+
+	guint64 timestamp = 0;
+	const gchar * name = NULL;
+	GVariant * params = NULL;
+
+	while (g_variant_iter_loop(&call_list_itr, "(t&s@av)", &timestamp, &name, &params)) {
+		if (g_strcmp0(method, name) != 0) {
+			continue;
+		}
+
+		DbusTestDbusMockCall callsig = {
+			.timestamp = timestamp,
+			.name = g_strdup(name),
+			.params = g_variant_ref(params)
+		};
+
+		g_array_append_val(meth->calls, callsig);
+	}
+
+	g_variant_unref(call_list);
+	g_variant_unref(call_list_tuple);
 
 	if (length != NULL) {
 		*length = meth->calls->len;
