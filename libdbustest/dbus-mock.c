@@ -859,7 +859,14 @@ dbus_test_dbus_mock_object_update_property (DbusTestDbusMock * mock, DbusTestDbu
 
 	MockObjectProperty * prop = get_obj_property(obj, name);
 	g_return_val_if_fail(prop != NULL, FALSE);
-	g_return_val_if_fail(g_variant_is_of_type(value, prop->type), FALSE);
+
+	/* Grab a ref, we'll have to start managing this */
+	g_variant_ref_sink(value);
+	if (!g_variant_is_of_type(value, prop->type)) {
+		g_critical("Property '%s' is not of same value in dbus_test_dbus_mock_object_update_property()", name);
+		g_variant_unref(value);
+		return FALSE;
+	}
 
 	/* Send the update to Dbusmock */
 	GError * error = NULL;
@@ -881,12 +888,13 @@ dbus_test_dbus_mock_object_update_property (DbusTestDbusMock * mock, DbusTestDbu
 	if (error != NULL) {
 		g_warning("Unable to update property: %s", error->message);
 		g_error_free(error);
+		g_variant_unref(value);
 		return FALSE;
 	}
 
 	/* It's updated, let's cache */
 	g_variant_unref(prop->value);
-	prop->value = g_variant_ref_sink(prop->value);
+	prop->value = value;
 
 	if (!signal) {
 		return TRUE;
