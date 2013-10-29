@@ -949,5 +949,17 @@ dbus_test_dbus_mock_object_emit_signal (DbusTestDbusMock * mock, DbusTestDbusMoc
 	g_return_val_if_fail(name != NULL, FALSE);
 	g_return_val_if_fail(params != NULL, FALSE);
 
-	return FALSE;
+	if (!is_running(mock)) {
+		return FALSE;
+	}
+
+	return dbus_mock_iface_org_freedesktop_dbus_mock_call_emit_signal_sync(
+		obj->proxy,
+		obj->interface,
+		name,
+		g_variant_type_peek_string(params),
+		values,
+		NULL, /* TODO: cancel */
+		NULL  /* TODO: error */
+	);
 }
