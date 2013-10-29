@@ -604,11 +604,12 @@ method_free (gpointer data)
 gboolean
 dbus_test_dbus_mock_object_check_method_call (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * method, G_GNUC_UNUSED GVariant * params)
 {
-	g_return_val_if_fail(DBUS_TEST_IS_DBUS_MOCK(mock), FALSE);
-	g_return_val_if_fail(obj != NULL, FALSE);
-	g_return_val_if_fail(method != NULL, FALSE);
+	guint length = 0;
+	dbus_test_dbus_mock_object_get_method_calls(mock, obj, method, &length);
 
-	return FALSE;
+	/* TODO: Check params */
+
+	return length > 0;
 }
 
 /**
