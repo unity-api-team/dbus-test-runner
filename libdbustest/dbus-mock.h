@@ -36,6 +36,7 @@ typedef struct _DbusTestDbusMock         DbusTestDbusMock;
 typedef struct _DbusTestDbusMockClass    DbusTestDbusMockClass;
 typedef struct _DbusTestDbusMockPrivate  DbusTestDbusMockPrivate;
 typedef struct _DbusTestDbusMockObject   DbusTestDbusMockObject;
+typedef struct _DbusTestDbusMockCall     DbusTestDbusMockCall;
 
 struct _DbusTestDbusMockClass {
 	DbusTestProcessClass parent_class;
@@ -44,6 +45,12 @@ struct _DbusTestDbusMockClass {
 struct _DbusTestDbusMock {
 	DbusTestProcess parent;
 	DbusTestDbusMockPrivate * priv;
+};
+
+struct _DbusTestDbusMockCall {
+	guint64 timestamp;
+	const gchar * name;
+	GVariant * params;
 };
 
 GType dbus_test_dbus_mock_get_type (void);
@@ -76,9 +83,10 @@ gboolean                    dbus_test_dbus_mock_object_clear_method_calls (DbusT
                                                                            DbusTestDbusMockObject *  obj,
                                                                            const gchar *             method);
 
-GList *                     dbus_test_dbus_mock_object_get_method_calls   (DbusTestDbusMock *        mock,
+const DbusTestDbusMockCall * dbus_test_dbus_mock_object_get_method_calls  (DbusTestDbusMock *        mock,
                                                                            DbusTestDbusMockObject *  obj,
-                                                                           const gchar *             method);
+                                                                           const gchar *             method,
+                                                                           guint *                   len);
 
 gboolean                    dbus_test_dbus_mock_object_add_property       (DbusTestDbusMock *        mock,
                                                                            DbusTestDbusMockObject *  obj,

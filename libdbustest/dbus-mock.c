@@ -611,18 +611,23 @@ dbus_test_dbus_mock_object_clear_method_calls (DbusTestDbusMock * mock, DbusTest
  * @mock: A #DbusTestDbusMock instance
  * @obj: A handle to an object on the mock interface
  * @method: Name of the method
+ * @length: (out) (allow-none): Name of the method
  *
  * Gets a list of all method calls for a function including the parmeters.
  *
- * Return value: (transfer full): TBD
+ * Return value: (transfer none): An array of calls with the last item
+ *   having a timestamp of 0.  Also length in the optional @len param.
  */
-GList *
-dbus_test_dbus_mock_object_get_method_calls (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * method)
+const DbusTestDbusMockCall *
+dbus_test_dbus_mock_object_get_method_calls (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * method, guint * length)
 {
 	g_return_val_if_fail(DBUS_TEST_IS_DBUS_MOCK(mock), FALSE);
 	g_return_val_if_fail(obj != NULL, FALSE);
 	g_return_val_if_fail(method != NULL, FALSE);
 
+	if (length != NULL) {
+		length = 0;
+	}
 
 	return NULL;
 }
