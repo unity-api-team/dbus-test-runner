@@ -632,8 +632,10 @@ dbus_test_dbus_mock_object_clear_method_calls (DbusTestDbusMock * mock, DbusTest
 		return FALSE;
 	}
 
+	g_return_val_if_fail(obj->proxy != NULL, FALSE);
+
 	return dbus_mock_iface_org_freedesktop_dbus_mock_call_clear_calls_sync(
-		mock->priv->proxy,
+		obj->proxy,
 		NULL, /* TODO: cancel */
 		NULL /* TODO: error */
 	);
