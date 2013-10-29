@@ -184,6 +184,8 @@ test_methods (void)
 
 	g_variant_unref(propret);
 
+	/* Ask DBusMock if it got called */
+	g_assert(dbus_test_dbus_mock_object_check_method_call(mock, obj, "method1", NULL));
 
 	/* Clean up */
 	g_object_unref(mock);
