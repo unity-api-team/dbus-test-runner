@@ -122,6 +122,34 @@ test_properties (void)
 
 	g_variant_unref(propret);
 
+	/* Update the properties */
+	g_assert(dbus_test_dbus_mock_object_update_property(mock, obj, "prop1", g_variant_new_string("test-update"), FALSE));
+
+	/* Check prop1 again */
+	propret = g_dbus_connection_call_sync(bus,
+		"foo.test",
+		"/test",
+		"org.freedesktop.DBus.Properties",
+		"Get",
+		g_variant_new("(ss)", "foo.test.interface", "prop1"),
+		G_VARIANT_TYPE("(v)"),
+		G_DBUS_CALL_FLAGS_NONE,
+		-1,
+		NULL,
+		&error);
+
+	if (error != NULL) {
+		g_error("Unable to get property: %s", error->message);
+		g_error_free(error);
+	}
+
+	g_assert(propret != NULL);
+	testvar = g_variant_new_variant(g_variant_new_string("test-update"));
+	g_assert(g_variant_equal(propret, g_variant_new_tuple(&testvar, 1)));
+
+	g_variant_unref(propret);
+
+
 	/* Clean up */
 	g_object_unref(bus);
 	g_object_unref(mock);
