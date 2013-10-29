@@ -635,15 +635,31 @@ dbus_test_dbus_mock_object_clear_method_calls (DbusTestDbusMock * mock, DbusTest
 const DbusTestDbusMockCall *
 dbus_test_dbus_mock_object_get_method_calls (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * method, guint * length)
 {
-	g_return_val_if_fail(DBUS_TEST_IS_DBUS_MOCK(mock), FALSE);
-	g_return_val_if_fail(obj != NULL, FALSE);
-	g_return_val_if_fail(method != NULL, FALSE);
-
+	/* Default state */
 	if (length != NULL) {
-		length = 0;
+		*length = 0;
 	}
 
-	return NULL;
+	/* Check our params */
+	g_return_val_if_fail(DBUS_TEST_IS_DBUS_MOCK(mock), NULL);
+	g_return_val_if_fail(obj != NULL, NULL);
+	g_return_val_if_fail(method != NULL, NULL);
+
+	/* Find our method */
+	MockObjectMethod * meth = get_obj_method(obj, method);
+	if (meth == NULL) {
+		g_debug("Method '%s' not found on object '%s'", method, obj->object_path);
+		return NULL;
+	}
+
+	/* TODO: Get the calls */
+
+
+	if (length != NULL) {
+		*length = meth->calls->len;
+	}
+
+	return (const DbusTestDbusMockCall *)meth->calls->data;
 }
 
 /* Quick helper to get an object property */
