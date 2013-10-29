@@ -857,7 +857,61 @@ dbus_test_dbus_mock_object_update_property (DbusTestDbusMock * mock, DbusTestDbu
 	g_return_val_if_fail(name != NULL, FALSE);
 	g_return_val_if_fail(value != NULL, FALSE);
 
-	return FALSE;
+	MockObjectProperty * prop = get_obj_property(obj, name);
+	g_return_val_if_fail(prop != NULL, FALSE);
+	g_return_val_if_fail(g_variant_is_of_type(value, prop->type), FALSE);
+
+	/* Send the update to Dbusmock */
+	GError * error = NULL;
+	g_dbus_connection_call_sync(g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, NULL),
+		mock->priv->name,
+		obj->object_path,
+		"org.freedesktop.DBus.Properties",
+		"Set",
+		g_variant_new("(ssv)",
+			obj->interface,
+			name,
+			value),
+		NULL, /* return */
+		G_DBUS_CALL_FLAGS_NO_AUTO_START,
+		-1, /* timeout */
+		NULL, /* TODO: cancel */
+		&error); /* TODO: error */
+
+	if (error != NULL) {
+		g_warning("Unable to update property: %s", error->message);
+		g_error_free(error);
+		return FALSE;
+	}
+
+	/* It's updated, let's cache */
+	g_variant_unref(prop->value);
+	prop->value = g_variant_ref_sink(prop->value);
+
+	if (!signal) {
+		return TRUE;
+	}
+	
+	GVariantBuilder builder;
+	g_variant_builder_init(&builder, G_VARIANT_TYPE_TUPLE);
+
+	g_variant_builder_add_value(&builder, g_variant_new_string(obj->interface));
+	g_variant_builder_open(&builder, G_VARIANT_TYPE_DICT_ENTRY);
+	g_variant_builder_add_value(&builder, g_variant_new_string(name));
+	g_variant_builder_add_value(&builder, g_variant_new_variant(value));
+	g_variant_builder_close(&builder);
+	g_variant_builder_add_value(&builder, g_variant_new_array(G_VARIANT_TYPE_STRING, NULL, 0));
+
+	/* Signal if we want to here */
+	return dbus_mock_iface_org_freedesktop_dbus_mock_call_emit_signal_sync(
+		obj->proxy,
+		"org.freedesktop.Properties",
+		"PropertiesChanged",
+		"sa{sv}as",
+		g_variant_builder_end(&builder),
+		NULL, /* TODO: Cancelable */
+		NULL /* TODO: Error */
+	);
 }
 
 /**
