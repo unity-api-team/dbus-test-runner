@@ -40,6 +40,7 @@ struct _DbusTestDbusMockObject {
 	gchar * interface;
 	GArray * properties;
 	GArray * methods;
+	DbusMockIfaceOrgFreedesktopDBusMock * proxy;
 };
 
 /* A property on an object */
@@ -255,6 +256,8 @@ install_object (DbusTestDbusMock * mock, DbusTestDbusMockObject * object)
 	GVariant * properties = NULL;
 	GVariant * methods = NULL;
 
+	g_return_val_if_fail(object->proxy != NULL, FALSE);
+
 	if (object->properties->len > 0) {
 		GVariantBuilder property_builder;
 		guint i;
@@ -287,13 +290,28 @@ install_object (DbusTestDbusMock * mock, DbusTestDbusMockObject * object)
 		methods = g_variant_new_array(G_VARIANT_TYPE("(ssss)"), NULL, 0);
 	}
 
-	return dbus_mock_iface_org_freedesktop_dbus_mock_call_add_object_sync(mock->priv->proxy,
+	gboolean add_object = dbus_mock_iface_org_freedesktop_dbus_mock_call_add_object_sync(
+		mock->priv->proxy,
 		object->object_path,
 		object->interface,
 		properties,
 		methods,
 		NULL, /* cancellable */
 		NULL); /* error: TODO */
+
+	if (!add_object) {
+		return add_object;
+	}
+
+	object->proxy = dbus_mock_iface_org_freedesktop_dbus_mock_proxy_new_for_bus_sync(G_BUS_TYPE_SESSION,
+		G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES | G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START,
+		mock->priv->name,
+		object->object_path, /* path */
+		NULL, /* cancelable, TODO */
+		NULL /* error: TODO */
+	);
+
+	return object->proxy != NULL;
 }
 
 /* Catch the mock taking too long to start */
@@ -456,6 +474,7 @@ object_free (gpointer data)
 	g_free(obj->object_path);
 	g_array_free(obj->properties, TRUE);
 	g_array_free(obj->methods, TRUE);
+	g_clear_object(&obj->proxy);
 
 	/* NOTE: No free'ing of data */
 	return;
