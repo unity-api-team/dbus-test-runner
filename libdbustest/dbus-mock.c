@@ -605,11 +605,27 @@ gboolean
 dbus_test_dbus_mock_object_check_method_call (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * method, G_GNUC_UNUSED GVariant * params)
 {
 	guint length = 0;
-	dbus_test_dbus_mock_object_get_method_calls(mock, obj, method, &length);
+	guint i;
+	const DbusTestDbusMockCall * calls;
 
-	/* TODO: Check params */
+	calls = dbus_test_dbus_mock_object_get_method_calls(mock, obj, method, &length);
 
-	return length > 0;
+	if (length == 0) {
+		return FALSE;
+	}
+
+	/* Don't check params */
+	if (params == NULL) {
+		return TRUE;
+	}
+
+	for (i = 0; i < length; i++) {
+		if (g_variant_equal(params, calls[i].params)) {
+			return TRUE;
+		}
+	}
+
+	return FALSE;
 }
 
 /**
@@ -640,6 +656,29 @@ dbus_test_dbus_mock_object_clear_method_calls (DbusTestDbusMock * mock, DbusTest
 		NULL, /* TODO: cancel */
 		NULL /* TODO: error */
 	);
+}
+
+/* We get back an av from DBusMock but everyone else uses
+   a tuple.  Let's use that */
+GVariant *
+variant_array_to_tuple (GVariant * array_in)
+{
+	if (g_variant_n_children(array_in) == 0) {
+		return g_variant_new_tuple(NULL, 0);
+	}
+
+	GVariantIter iter;
+	g_variant_iter_init(&iter, array_in);
+
+	GVariantBuilder builder;
+	g_variant_builder_init(&builder, G_VARIANT_TYPE_TUPLE);
+
+	GVariant * item = NULL;
+	while (g_variant_iter_loop(&iter, "v", &item)) {
+		g_variant_builder_add_value(&builder, item);
+	}
+
+	return g_variant_builder_end(&builder);
 }
 
 /**
@@ -709,7 +748,7 @@ dbus_test_dbus_mock_object_get_method_calls (DbusTestDbusMock * mock, DbusTestDb
 		DbusTestDbusMockCall callsig = {
 			.timestamp = timestamp,
 			.name = g_strdup(name),
-			.params = g_variant_ref(params)
+			.params = g_variant_ref_sink(variant_array_to_tuple(params))
 		};
 
 		g_array_append_val(meth->calls, callsig);
