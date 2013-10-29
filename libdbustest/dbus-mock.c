@@ -55,6 +55,7 @@ struct _MockObjectMethod {
 	GVariantType * in;
 	GVariantType * out;
 	gchar * code;
+	GArray * calls;
 };
 
 enum {
@@ -493,6 +494,16 @@ get_obj_method (DbusTestDbusMockObject * obj, const gchar * name)
 	return NULL;
 }
 
+/* Free the resources for the call */
+static void
+call_free (gpointer pcall)
+{
+	DbusTestDbusMockCall * call = (DbusTestDbusMockCall *)pcall;
+
+	g_free((gchar *)call->name);
+	g_variant_unref(call->params);
+}
+
 /**
  * dbus_test_dbus_mock_object_add_method:
  * @mock: A #DbusTestDbusMock instance
@@ -528,6 +539,8 @@ dbus_test_dbus_mock_object_add_method (DbusTestDbusMock * mock, DbusTestDbusMock
 	newmethod.in = g_variant_type_copy(inparams);
 	newmethod.out = g_variant_type_copy(outparams);
 	newmethod.code = g_strdup(python_code);
+	newmethod.calls = g_array_new(TRUE, TRUE, sizeof(DbusTestDbusMockCall));
+	g_array_set_clear_func(newmethod.calls, call_free);
 
 	g_array_append_val(obj->methods, newmethod);
 
@@ -550,6 +563,7 @@ method_free (gpointer data)
 	g_variant_type_free(method->in);
 	g_variant_type_free(method->out);
 	g_free(method->code);
+	g_array_free(method->calls, TRUE);
 
 	/* NOTE: No free of 'data' */
 	return;
