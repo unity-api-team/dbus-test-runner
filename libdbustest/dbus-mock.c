@@ -32,6 +32,7 @@ struct _DbusTestDbusMockPrivate {
 	DbusMockIfaceOrgFreedesktopDBusMock * proxy;
 	/* Entries of DbusTestDbusMockObject */
 	GArray * objects;
+	GDBusConnection * bus;
 };
 
 /* Represents every object on the bus that we're mocking */
@@ -161,6 +162,7 @@ dbus_test_dbus_mock_dispose (GObject *object)
 
 	g_array_set_size(self->priv->objects, 0);
 	g_clear_object(&self->priv->proxy);
+	g_clear_object(&self->priv->bus);
 
 	G_OBJECT_CLASS (dbus_test_dbus_mock_parent_class)->dispose (object);
 	return;
@@ -342,6 +344,9 @@ run (DbusTestTask * task)
 {
 	GError * error = NULL;
 	DbusTestDbusMock * self = DBUS_TEST_DBUS_MOCK(task);
+
+	/* Grab the new bus */
+	self->priv->bus = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, NULL);
 
 	/* Use the process code to get the process running */
 	DBUS_TEST_TASK_CLASS (dbus_test_dbus_mock_parent_class)->run (task);
@@ -870,7 +875,7 @@ dbus_test_dbus_mock_object_update_property (DbusTestDbusMock * mock, DbusTestDbu
 
 	/* Send the update to Dbusmock */
 	GError * error = NULL;
-	g_dbus_connection_call_sync(g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, NULL),
+	g_dbus_connection_call_sync(mock->priv->bus,
 		mock->priv->name,
 		obj->object_path,
 		"org.freedesktop.DBus.Properties",
