@@ -683,18 +683,17 @@ dbus_test_dbus_mock_object_get_method_calls (DbusTestDbusMock * mock, DbusTestDb
 	/* Clear the current list of calls */
 	g_array_set_size(meth->calls, 0);
 
-	GVariant * call_list_tuple = NULL;
+	GVariant * call_list = NULL;
 	dbus_mock_iface_org_freedesktop_dbus_mock_call_get_calls_sync(
 		obj->proxy,
-		&call_list_tuple,
+		&call_list,
 		NULL, /* TODO: cancelable */
 		NULL); /* TODO: error */
 
-	if (call_list_tuple == NULL) {
+	if (call_list == NULL) {
 		return NULL;
 	}
 
-	GVariant * call_list = g_variant_get_child_value(call_list_tuple, 0);
 	GVariantIter call_list_itr;
 	g_variant_iter_init(&call_list_itr, call_list);
 
@@ -717,7 +716,6 @@ dbus_test_dbus_mock_object_get_method_calls (DbusTestDbusMock * mock, DbusTestDb
 	}
 
 	g_variant_unref(call_list);
-	g_variant_unref(call_list_tuple);
 
 	if (length != NULL) {
 		*length = meth->calls->len;
