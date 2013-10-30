@@ -66,6 +66,11 @@ test_basic (void)
 	g_assert(g_strcmp0(dbusname, "foo.test") == 0);
 	g_free(dbusname);
 
+	gchar * exec = NULL;
+	g_object_get(mock, "executable", &exec, NULL);
+	g_assert(g_strcmp0(exec, "python3") == 0);
+	g_free(exec);
+
 	dbus_test_service_add_task(service, DBUS_TEST_TASK(mock));
 	dbus_test_service_start_tasks(service);
 
