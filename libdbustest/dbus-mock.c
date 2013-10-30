@@ -123,7 +123,7 @@ dbus_test_dbus_mock_init (DbusTestDbusMock *self)
 {
 	self->priv = DBUS_TEST_DBUS_MOCK_GET_PRIVATE(self);
 
-	self->priv->objects = g_array_new(FALSE, FALSE, sizeof(DbusTestDbusMockObject));
+	self->priv->objects = g_array_new(FALSE, TRUE, sizeof(DbusTestDbusMockObject));
 	g_array_set_clear_func(self->priv->objects, object_free);
 
 	return;
@@ -459,10 +459,11 @@ dbus_test_dbus_mock_get_object (DbusTestDbusMock * mock, const gchar * path, con
 
 	newobj.object_path = g_strdup(path);
 	newobj.interface = g_strdup(interface);
-	newobj.properties = g_array_new(FALSE, FALSE, sizeof(MockObjectProperty));
+	newobj.properties = g_array_new(FALSE, TRUE, sizeof(MockObjectProperty));
 	g_array_set_clear_func(newobj.properties, property_free);
-	newobj.methods = g_array_new(FALSE, FALSE, sizeof(MockObjectMethod));
+	newobj.methods = g_array_new(FALSE, TRUE, sizeof(MockObjectMethod));
 	g_array_set_clear_func(newobj.methods, method_free);
+	newobj.proxy = NULL;
 
 	g_array_append_val(mock->priv->objects, newobj);
 	return &g_array_index(mock->priv->objects, DbusTestDbusMockObject, mock->priv->objects->len - 1);
