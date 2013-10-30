@@ -61,6 +61,11 @@ test_basic (void)
 	DbusTestDbusMock * mock = dbus_test_dbus_mock_new("foo.test");
 	g_assert(mock != NULL);
 
+	gchar * dbusname = NULL;
+	g_object_get(mock, "dbus-name", &dbusname, NULL);
+	g_assert(g_strcmp0(dbusname, "foo.test") == 0);
+	g_free(dbusname);
+
 	dbus_test_service_add_task(service, DBUS_TEST_TASK(mock));
 	dbus_test_service_start_tasks(service);
 
