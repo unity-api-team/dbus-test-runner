@@ -607,7 +607,7 @@ method_free (gpointer data)
  * Return value: Whether the function was called
  */
 gboolean
-dbus_test_dbus_mock_object_check_method_call (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * method, G_GNUC_UNUSED GVariant * params)
+dbus_test_dbus_mock_object_check_method_call (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * method, GVariant * params)
 {
 	guint length = 0;
 	guint i;
@@ -855,7 +855,7 @@ property_free (gpointer data)
  * Return value: Whether it was changed
  */
 gboolean
-dbus_test_dbus_mock_object_update_property (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * name, GVariant * value, G_GNUC_UNUSED gboolean signal)
+dbus_test_dbus_mock_object_update_property (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * name, GVariant * value, gboolean signal)
 {
 	g_return_val_if_fail(DBUS_TEST_IS_DBUS_MOCK(mock), FALSE);
 	g_return_val_if_fail(obj != NULL, FALSE);
