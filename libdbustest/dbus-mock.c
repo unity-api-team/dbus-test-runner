@@ -486,24 +486,6 @@ object_free (gpointer data)
 	return;
 }
 
-/**
- * dbus_test_dbus_mock_object_notify:
- * @mock: A #DbusTestDbusMock instance
- * @obj: A handle to an object on the mock interface
- *
- * Signal that the object was created.
- *
- * Return value: Success on emitting the signal
- */
-gboolean
-dbus_test_dbus_mock_object_notify (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj)
-{
-	g_return_val_if_fail(DBUS_TEST_IS_DBUS_MOCK(mock), FALSE);
-	g_return_val_if_fail(obj != NULL, FALSE);
-
-	return FALSE;
-}
-
 /* Little helper to get a method */
 static inline MockObjectMethod *
 get_obj_method (DbusTestDbusMockObject * obj, const gchar * name)
