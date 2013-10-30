@@ -43,6 +43,12 @@ wait_for_connection_close (GDBusConnection *connection)
 	g_assert(wait_count != SESSION_MAX_WAIT);
 }
 
+static void
+signal_emitted (GDBusConnection * connection, const gchar * sender, const gchar * path, const gchar * interface, const gchar * signal, GVariant * params, gpointer user_data)
+{
+	guint * count = (guint *)user_data;
+	(*count)++;
+}
 
 void
 test_basic (void)
@@ -64,6 +70,18 @@ test_basic (void)
 	g_object_unref(service);
 
 	return;
+}
+
+void
+connection_closed (GDBusConnection * con, gboolean remote, GError * error, gpointer user_data)
+{
+	g_warning("Connection Closed");
+	if (remote) {
+		g_warning("Remote host closed connection");
+	}
+	if (error != NULL) {
+		g_warning("Error: %s", error->message);
+	}
 }
 
 void
@@ -92,6 +110,8 @@ test_properties (void)
 
 	/* check setup */
 	GDBusConnection * bus = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, NULL);
+	g_signal_connect(bus, "closed", G_CALLBACK(connection_closed), NULL);
+	g_dbus_connection_set_exit_on_close(bus, FALSE);
 
 	GVariant * propret = NULL;
 	GVariant * testvar = NULL;
@@ -189,6 +209,30 @@ test_properties (void)
 
 	g_variant_unref(propret);
 
+/* This test is broken */
+#if 0
+	/* Try signaling */
+	guint signal_count = 0;
+	g_dbus_connection_signal_subscribe(bus,
+		NULL, /* sender */
+		"org.freedesktop.DBus.Properties",
+		"PropertiesChanged",
+		"/test",
+		NULL, /* arg0 */
+		G_DBUS_SIGNAL_FLAGS_NONE,
+		signal_emitted,
+		&signal_count,
+		NULL); /* user data cleanup */
+
+	g_assert(!g_dbus_connection_is_closed(bus));
+	dbus_test_dbus_mock_object_update_property(mock, obj, "prop1", g_variant_new_string("test-update"), TRUE);
+
+	g_usleep(100000);
+	while (g_main_pending())
+		g_main_iteration(TRUE);
+
+	g_assert(signal_count == 1);
+#endif
 
 	/* Clean up */
 	g_object_unref(mock);
@@ -267,13 +311,6 @@ test_methods (void)
 	wait_for_connection_close(bus);
 
 	return;
-}
-
-static void
-signal_emitted (GDBusConnection * connection, const gchar * sender, const gchar * path, const gchar * interface, const gchar * signal, GVariant * params, gpointer user_data)
-{
-	guint * count = (guint *)user_data;
-	(*count)++;
 }
 
 void
