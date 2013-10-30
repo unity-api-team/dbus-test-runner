@@ -3,6 +3,46 @@
 #include <gio/gio.h>
 #include <libdbustest/dbus-test.h>
 
+/* Timeout on our loop */
+gboolean
+timeout_quit_func (gpointer user_data)
+{
+	GMainLoop * loop = (GMainLoop *)user_data;
+	g_main_loop_quit(loop);
+	return FALSE;
+}
+
+
+void
+process_mainloop (const guint delay)
+{
+	GMainLoop * temploop = g_main_loop_new (NULL, FALSE);
+	g_timeout_add (delay, timeout_quit_func, temploop);
+	g_main_loop_run (temploop);
+	g_main_loop_unref (temploop);
+}
+
+#define SESSION_MAX_WAIT 10
+
+/*
+* Waiting until the session bus shuts down
+*/
+void
+wait_for_connection_close (GDBusConnection *connection)
+{
+	g_object_add_weak_pointer(G_OBJECT(connection), (gpointer) &connection);
+
+	g_object_unref (connection);
+
+	int wait_count;
+	for (wait_count = 0; connection != NULL && wait_count < SESSION_MAX_WAIT; wait_count++)
+	{
+		process_mainloop(200);
+	}
+
+	g_assert(wait_count != SESSION_MAX_WAIT);
+}
+
 
 void
 test_basic (void)
@@ -151,9 +191,10 @@ test_properties (void)
 
 
 	/* Clean up */
-	g_object_unref(bus);
 	g_object_unref(mock);
 	g_object_unref(service);
+
+	wait_for_connection_close(bus);
 
 	return;
 }
@@ -220,6 +261,64 @@ test_methods (void)
 	g_object_unref(mock);
 	g_object_unref(service);
 
+	wait_for_connection_close(bus);
+
+	return;
+}
+
+static void
+signal_emitted (GDBusConnection * connection, const gchar * sender, const gchar * path, const gchar * interface, const gchar * signal, GVariant * params, gpointer user_data)
+{
+	guint * count = (guint *)user_data;
+	(*count)++;
+}
+
+void
+test_signals (void)
+{
+	DbusTestService * service = dbus_test_service_new(NULL);
+	g_assert(service != NULL);
+
+	dbus_test_service_set_conf_file(service, SESSION_CONF);
+
+	DbusTestDbusMock * mock = dbus_test_dbus_mock_new("foo.test");
+	g_assert(mock != NULL);
+
+	DbusTestDbusMockObject * obj = dbus_test_dbus_mock_get_object(mock, "/test", "foo.test.interface");
+
+	dbus_test_service_add_task(service, DBUS_TEST_TASK(mock));
+	dbus_test_service_start_tasks(service);
+
+	g_assert(dbus_test_task_get_state(DBUS_TEST_TASK(mock)) == DBUS_TEST_TASK_STATE_RUNNING);
+
+	GDBusConnection * bus = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, NULL);
+
+	guint signal_count = 0;
+	g_dbus_connection_signal_subscribe(bus,
+		NULL, /* sender */
+		"foo.test.interface",
+		"testsig",
+		"/test",
+		NULL, /* arg0 */
+		G_DBUS_SIGNAL_FLAGS_NONE,
+		signal_emitted,
+		&signal_count,
+		NULL); /* user data cleanup */
+
+	g_assert(dbus_test_dbus_mock_object_emit_signal(mock, obj, "testsig", NULL, NULL));
+
+	g_usleep(100000);
+	while (g_main_pending())
+		g_main_iteration(TRUE);
+
+	g_assert(signal_count == 1);
+
+	/* Clean up */
+	g_object_unref(mock);
+	g_object_unref(service);
+
+	wait_for_connection_close(bus);
+
 	return;
 }
 
@@ -231,6 +330,7 @@ test_libdbustest_mock_suite (void)
 	g_test_add_func ("/libdbustest/mock/basic",        test_basic);
 	g_test_add_func ("/libdbustest/mock/properties",   test_properties);
 	g_test_add_func ("/libdbustest/mock/methods",      test_methods);
+	g_test_add_func ("/libdbustest/mock/signals",      test_signals);
 
 	return;
 }
