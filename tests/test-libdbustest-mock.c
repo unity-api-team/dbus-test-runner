@@ -66,6 +66,13 @@ test_basic (void)
 
 	g_assert(dbus_test_task_get_state(DBUS_TEST_TASK(mock)) == DBUS_TEST_TASK_STATE_RUNNING);
 
+	/* Ensure we can get an object */
+	DbusTestDbusMockObject * obj = dbus_test_dbus_mock_get_object(mock, "/test", "foo.test.interface");
+	g_assert(obj != NULL);
+
+	DbusTestDbusMockObject * newobj = dbus_test_dbus_mock_get_object(mock, "/test", "foo.test.interface");
+	g_assert(obj == newobj);
+
 	g_object_unref(mock);
 	g_object_unref(service);
 
