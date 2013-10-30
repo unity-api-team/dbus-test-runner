@@ -942,23 +942,34 @@ dbus_test_dbus_mock_object_update_property (DbusTestDbusMock * mock, DbusTestDbu
  *   to be emitted.
  */
 gboolean
-dbus_test_dbus_mock_object_emit_signal (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * name, const GVariantType * params, G_GNUC_UNUSED GVariant * values)
+dbus_test_dbus_mock_object_emit_signal (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * name, const GVariantType * params, GVariant * values)
 {
 	g_return_val_if_fail(DBUS_TEST_IS_DBUS_MOCK(mock), FALSE);
 	g_return_val_if_fail(obj != NULL, FALSE);
 	g_return_val_if_fail(name != NULL, FALSE);
-	g_return_val_if_fail(params != NULL, FALSE);
+	if (params == NULL) {
+		g_return_val_if_fail(values == NULL, FALSE);
+	} else {
+		g_return_val_if_fail(values != NULL, FALSE);
+	}
 
 	if (!is_running(mock)) {
 		return FALSE;
+	}
+
+	GVariant * sig_params = NULL;
+	if (params == NULL) {
+		sig_params = g_variant_new_array(G_VARIANT_TYPE_VARIANT, NULL, 0);
+	} else {
+		sig_params = values;
 	}
 
 	return dbus_mock_iface_org_freedesktop_dbus_mock_call_emit_signal_sync(
 		obj->proxy,
 		obj->interface,
 		name,
-		g_variant_type_peek_string(params),
-		values,
+		params != NULL ? g_variant_type_peek_string(params) : "",
+		sig_params,
 		NULL, /* TODO: cancel */
 		NULL  /* TODO: error */
 	);
