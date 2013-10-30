@@ -114,11 +114,11 @@ test_properties (void)
 
 	DbusTestDbusMockObject * obj = dbus_test_dbus_mock_get_object(mock, "/test", "foo.test.interface");
 	/* String property */
-	g_assert(dbus_test_dbus_mock_object_add_property(mock, obj, "prop1", G_VARIANT_TYPE_STRING, g_variant_new_string("test")));
+	g_assert(dbus_test_dbus_mock_object_add_property(mock, obj, "prop1", G_VARIANT_TYPE_STRING, g_variant_new_string("test"), NULL));
 	/* Invalid type */
-	g_assert(!dbus_test_dbus_mock_object_add_property(mock, obj, "prop2", G_VARIANT_TYPE_STRING, g_variant_new_uint32(5)));
+	g_assert(!dbus_test_dbus_mock_object_add_property(mock, obj, "prop2", G_VARIANT_TYPE_STRING, g_variant_new_uint32(5), NULL));
 	/* Complex type */
-	g_assert(dbus_test_dbus_mock_object_add_property(mock, obj, "prop3", G_VARIANT_TYPE("(sssss)"), g_variant_new("(sssss)", "a", "b", "c", "d", "e")));
+	g_assert(dbus_test_dbus_mock_object_add_property(mock, obj, "prop3", G_VARIANT_TYPE("(sssss)"), g_variant_new("(sssss)", "a", "b", "c", "d", "e"), NULL));
 
 	dbus_test_service_add_task(service, DBUS_TEST_TASK(mock));
 	dbus_test_service_start_tasks(service);
@@ -200,7 +200,7 @@ test_properties (void)
 	g_variant_unref(propret);
 
 	/* Update the properties */
-	g_assert(dbus_test_dbus_mock_object_update_property(mock, obj, "prop1", g_variant_new_string("test-update")));
+	g_assert(dbus_test_dbus_mock_object_update_property(mock, obj, "prop1", g_variant_new_string("test-update"), NULL));
 
 	/* Check prop1 again */
 	propret = g_dbus_connection_call_sync(bus,
@@ -227,7 +227,7 @@ test_properties (void)
 	g_variant_unref(propret);
 
 	/* Update the property wrong */
-	g_assert(!dbus_test_dbus_mock_object_update_property(mock, obj, "prop1", g_variant_new_uint32(5)));
+	g_assert(!dbus_test_dbus_mock_object_update_property(mock, obj, "prop1", g_variant_new_uint32(5), NULL));
 
 	/* Check prop1 again */
 	propret = g_dbus_connection_call_sync(bus,
@@ -278,7 +278,8 @@ test_methods (void)
 		"method1",
 		G_VARIANT_TYPE("s"),
 		G_VARIANT_TYPE("s"),
-		"ret = 'test'");
+		"ret = 'test'",
+		NULL);
 
 	dbus_test_service_add_task(service, DBUS_TEST_TASK(mock));
 	dbus_test_service_start_tasks(service);
@@ -317,11 +318,11 @@ test_methods (void)
 	g_variant_unref(propret);
 
 	/* Ask DBusMock if it got called */
-	g_assert(dbus_test_dbus_mock_object_check_method_call(mock, obj, "method1", NULL));
-	g_assert(dbus_test_dbus_mock_object_check_method_call(mock, obj, "method1", g_variant_new("(s)", "testin")));
+	g_assert(dbus_test_dbus_mock_object_check_method_call(mock, obj, "method1", NULL, NULL));
+	g_assert(dbus_test_dbus_mock_object_check_method_call(mock, obj, "method1", g_variant_new("(s)", "testin"), NULL));
 
-	g_assert(dbus_test_dbus_mock_object_clear_method_calls(mock, obj, "method1"));
-	g_assert(!dbus_test_dbus_mock_object_check_method_call(mock, obj, "method1", NULL));
+	g_assert(dbus_test_dbus_mock_object_clear_method_calls(mock, obj, "method1", NULL));
+	g_assert(!dbus_test_dbus_mock_object_check_method_call(mock, obj, "method1", NULL, NULL));
 
 	/* Clean up */
 	g_object_unref(mock);
@@ -364,7 +365,7 @@ test_signals (void)
 		&signal_count,
 		NULL); /* user data cleanup */
 
-	g_assert(dbus_test_dbus_mock_object_emit_signal(mock, obj, "testsig", NULL, NULL));
+	g_assert(dbus_test_dbus_mock_object_emit_signal(mock, obj, "testsig", NULL, NULL, NULL));
 
 	g_usleep(100000);
 	while (g_main_pending())
