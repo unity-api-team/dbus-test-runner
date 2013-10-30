@@ -97,8 +97,7 @@ gboolean                    dbus_test_dbus_mock_object_add_property       (DbusT
 gboolean                    dbus_test_dbus_mock_object_update_property    (DbusTestDbusMock *        mock,
                                                                            DbusTestDbusMockObject *  obj,
                                                                            const gchar *             name,
-                                                                           GVariant *                value,
-                                                                           gboolean                  signal);
+                                                                           GVariant *                value);
 
 gboolean                    dbus_test_dbus_mock_object_emit_signal        (DbusTestDbusMock *        mock,
                                                                            DbusTestDbusMockObject *  obj,

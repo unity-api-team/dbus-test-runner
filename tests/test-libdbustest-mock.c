@@ -183,7 +183,7 @@ test_properties (void)
 	g_variant_unref(propret);
 
 	/* Update the properties */
-	g_assert(dbus_test_dbus_mock_object_update_property(mock, obj, "prop1", g_variant_new_string("test-update"), FALSE));
+	g_assert(dbus_test_dbus_mock_object_update_property(mock, obj, "prop1", g_variant_new_string("test-update")));
 
 	/* Check prop1 again */
 	propret = g_dbus_connection_call_sync(bus,
@@ -208,31 +208,6 @@ test_properties (void)
 	g_assert(g_variant_equal(propret, g_variant_new_tuple(&testvar, 1)));
 
 	g_variant_unref(propret);
-
-/* This test is broken */
-#if 0
-	/* Try signaling */
-	guint signal_count = 0;
-	g_dbus_connection_signal_subscribe(bus,
-		NULL, /* sender */
-		"org.freedesktop.DBus.Properties",
-		"PropertiesChanged",
-		"/test",
-		NULL, /* arg0 */
-		G_DBUS_SIGNAL_FLAGS_NONE,
-		signal_emitted,
-		&signal_count,
-		NULL); /* user data cleanup */
-
-	g_assert(!g_dbus_connection_is_closed(bus));
-	dbus_test_dbus_mock_object_update_property(mock, obj, "prop1", g_variant_new_string("test-update"), TRUE);
-
-	g_usleep(100000);
-	while (g_main_pending())
-		g_main_iteration(TRUE);
-
-	g_assert(signal_count == 1);
-#endif
 
 	/* Clean up */
 	g_object_unref(mock);

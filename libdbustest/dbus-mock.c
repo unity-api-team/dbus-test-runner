@@ -847,7 +847,6 @@ property_free (gpointer data)
  * @obj: A handle to an object on the mock interface
  * @name: Name of the property
  * @value: Initial value of the property
- * @signal: Whether to signal that the property value changed
  *
  * Changes the value of a property and will send a signal that it changed
  * depending on the value of @signal.
@@ -855,7 +854,7 @@ property_free (gpointer data)
  * Return value: Whether it was changed
  */
 gboolean
-dbus_test_dbus_mock_object_update_property (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * name, GVariant * value, gboolean signal)
+dbus_test_dbus_mock_object_update_property (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * name, GVariant * value)
 {
 	g_return_val_if_fail(DBUS_TEST_IS_DBUS_MOCK(mock), FALSE);
 	g_return_val_if_fail(obj != NULL, FALSE);
@@ -903,47 +902,7 @@ dbus_test_dbus_mock_object_update_property (DbusTestDbusMock * mock, DbusTestDbu
 	g_variant_unref(prop->value);
 	prop->value = value;
 
-	if (!signal) {
-		return TRUE;
-	}
-
-	if (!is_running(mock)) {
-		g_debug("Not running, don't update");
-		return FALSE;
-	}
-
-	g_return_val_if_fail(obj->proxy != NULL, FALSE);
-	
-	GVariantBuilder builder;
-	g_variant_builder_init(&builder, G_VARIANT_TYPE_ARRAY);
-
-	g_variant_builder_add_value(&builder, g_variant_new_variant(g_variant_new_string(obj->interface)));
-	g_variant_builder_open(&builder, G_VARIANT_TYPE_VARIANT);
-	g_variant_builder_open(&builder, G_VARIANT_TYPE_DICT_ENTRY);
-	g_variant_builder_add_value(&builder, g_variant_new_string(name));
-	g_variant_builder_add_value(&builder, g_variant_new_variant(value));
-	g_variant_builder_close(&builder);
-	g_variant_builder_close(&builder);
-	g_variant_builder_add_value(&builder, g_variant_new_variant(g_variant_new_array(G_VARIANT_TYPE_STRING, NULL, 0)));
-
-	/* Signal if we want to here */
-	GError * error = NULL;
-	gboolean emit_status = dbus_mock_iface_org_freedesktop_dbus_mock_call_emit_signal_sync(
-		obj->proxy,
-		"org.freedesktop.Properties",
-		"PropertiesChanged",
-		"sa{sv}as",
-		g_variant_builder_end(&builder),
-		NULL, /* TODO: Cancelable */
-		&error /* TODO: Error */
-	);
-
-	if (error != NULL) {
-		g_warning("Unable to emit changed signal: %s", error->message);
-		g_error_free(error);
-	}
-
-	return emit_status;
+	return TRUE;
 }
 
 /**
