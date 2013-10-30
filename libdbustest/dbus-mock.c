@@ -66,6 +66,11 @@ enum {
 	NUM_PROPS
 };
 
+enum {
+	ERROR_METHOD_NOT_FOUND,
+	NUM_ERRORS
+};
+
 #define DBUS_TEST_DBUS_MOCK_GET_PRIVATE(o) \
 (G_TYPE_INSTANCE_GET_PRIVATE ((o), DBUS_TEST_TYPE_DBUS_MOCK, DbusTestDbusMockPrivate))
 
@@ -88,6 +93,7 @@ static void method_free                    (gpointer data);
 static void property_free                  (gpointer data);
 
 G_DEFINE_TYPE (DbusTestDbusMock, dbus_test_dbus_mock, DBUS_TEST_TYPE_PROCESS);
+G_DEFINE_QUARK("dbus-test-dbus-mock", dbus_mock);
 
 /* Initialize Class */
 static void
@@ -519,6 +525,7 @@ call_free (gpointer pcall)
  * @inparams: Parameters going into the method as a tuple
  * @outparams: Parameters gonig out of the method as a tuple
  * @python_code: Python code to execute when the method is called
+ * @error: Possible error to return
  *
  * Sets up a method on the object specified.  When the method is activated this is
  * both tracked by DBusMock and the code in @python_code is executed.  This then
@@ -527,7 +534,7 @@ call_free (gpointer pcall)
  * Return value: Whether it was registered successfully
  */
 gboolean
-dbus_test_dbus_mock_object_add_method (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * method, const GVariantType * inparams, const GVariantType * outparams, const gchar * python_code)
+dbus_test_dbus_mock_object_add_method (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * method, const GVariantType * inparams, const GVariantType * outparams, const gchar * python_code, G_GNUC_UNUSED GError ** error)
 {
 	g_return_val_if_fail(DBUS_TEST_IS_DBUS_MOCK(mock), FALSE);
 	g_return_val_if_fail(obj != NULL, FALSE);
@@ -582,6 +589,7 @@ method_free (gpointer data)
  * @obj: A handle to an object on the mock interface
  * @method: Name of the method
  * @params: (allow none): Parameters to check
+ * @error: A possible error
  *
  * Quick function to check to see if a method was called.  If the @params value is set
  * then the parameters of the call will also be checked.  If the method was called more
@@ -590,13 +598,13 @@ method_free (gpointer data)
  * Return value: Whether the function was called
  */
 gboolean
-dbus_test_dbus_mock_object_check_method_call (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * method, GVariant * params)
+dbus_test_dbus_mock_object_check_method_call (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * method, GVariant * params, GError ** error)
 {
 	guint length = 0;
 	guint i;
 	const DbusTestDbusMockCall * calls;
 
-	calls = dbus_test_dbus_mock_object_get_method_calls(mock, obj, method, &length);
+	calls = dbus_test_dbus_mock_object_get_method_calls(mock, obj, method, &length, error);
 
 	if (length == 0) {
 		return FALSE;
@@ -621,13 +629,14 @@ dbus_test_dbus_mock_object_check_method_call (DbusTestDbusMock * mock, DbusTestD
  * @mock: A #DbusTestDbusMock instance
  * @obj: A handle to an object on the mock interface
  * @method: Name of the method
+ * @error: A possible error
  *
  * Clears the queued set of method calls for the method.
  *
  * Return value: Whether we were able to clear it
  */
 gboolean
-dbus_test_dbus_mock_object_clear_method_calls (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * method)
+dbus_test_dbus_mock_object_clear_method_calls (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * method, GError ** error)
 {
 	g_return_val_if_fail(DBUS_TEST_IS_DBUS_MOCK(mock), FALSE);
 	g_return_val_if_fail(obj != NULL, FALSE);
@@ -642,7 +651,7 @@ dbus_test_dbus_mock_object_clear_method_calls (DbusTestDbusMock * mock, DbusTest
 	return dbus_mock_iface_org_freedesktop_dbus_mock_call_clear_calls_sync(
 		obj->proxy,
 		NULL, /* TODO: cancel */
-		NULL /* TODO: error */
+		error
 	);
 }
 
@@ -675,6 +684,7 @@ variant_array_to_tuple (GVariant * array_in)
  * @obj: A handle to an object on the mock interface
  * @method: Name of the method
  * @length: (out) (allow-none): Name of the method
+ * @error: A possible error 
  *
  * Gets a list of all method calls for a function including the parmeters.
  *
@@ -682,7 +692,7 @@ variant_array_to_tuple (GVariant * array_in)
  *   having a timestamp of 0.  Also length in the optional @len param.
  */
 const DbusTestDbusMockCall *
-dbus_test_dbus_mock_object_get_method_calls (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * method, guint * length)
+dbus_test_dbus_mock_object_get_method_calls (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * method, guint * length, GError ** error)
 {
 	/* Default state */
 	if (length != NULL) {
@@ -703,7 +713,7 @@ dbus_test_dbus_mock_object_get_method_calls (DbusTestDbusMock * mock, DbusTestDb
 	/* Find our method */
 	MockObjectMethod * meth = get_obj_method(obj, method);
 	if (meth == NULL) {
-		g_debug("Method '%s' not found on object '%s'", method, obj->object_path);
+		g_set_error(error, dbus_mock_quark(), ERROR_METHOD_NOT_FOUND, "Method '%s' not found on object '%s'", method, obj->object_path);
 		return NULL;
 	}
 
@@ -715,7 +725,7 @@ dbus_test_dbus_mock_object_get_method_calls (DbusTestDbusMock * mock, DbusTestDb
 		obj->proxy,
 		&call_list,
 		NULL, /* TODO: cancelable */
-		NULL); /* TODO: error */
+		error);
 
 	if (call_list == NULL) {
 		return NULL;
@@ -773,13 +783,14 @@ get_obj_property (DbusTestDbusMockObject * obj, const gchar * name)
  * @name: Name of the property
  * @type: Type of the property
  * @value: Initial value of the property
+ * @error: A possible error
  *
  * Adds a property to the object and sets its initial value.
  *
  * Return value: Whether it was added
  */
 gboolean
-dbus_test_dbus_mock_object_add_property (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * name, const GVariantType * type, GVariant * value)
+dbus_test_dbus_mock_object_add_property (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * name, const GVariantType * type, GVariant * value, G_GNUC_UNUSED GError ** error)
 {
 	g_return_val_if_fail(DBUS_TEST_IS_DBUS_MOCK(mock), FALSE);
 	g_return_val_if_fail(obj != NULL, FALSE);
@@ -830,6 +841,7 @@ property_free (gpointer data)
  * @obj: A handle to an object on the mock interface
  * @name: Name of the property
  * @value: Initial value of the property
+ * @error: A possible error
  *
  * Changes the value of a property and will send a signal that it changed
  * depending on the value of @signal.
@@ -837,7 +849,7 @@ property_free (gpointer data)
  * Return value: Whether it was changed
  */
 gboolean
-dbus_test_dbus_mock_object_update_property (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * name, GVariant * value)
+dbus_test_dbus_mock_object_update_property (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * name, GVariant * value, GError ** error)
 {
 	g_return_val_if_fail(DBUS_TEST_IS_DBUS_MOCK(mock), FALSE);
 	g_return_val_if_fail(obj != NULL, FALSE);
@@ -857,7 +869,7 @@ dbus_test_dbus_mock_object_update_property (DbusTestDbusMock * mock, DbusTestDbu
 
 	/* Send the update to Dbusmock */
 	if (is_running(mock)) {
-		GError * error = NULL;
+		GError * local_error = NULL;
 		g_dbus_connection_call_sync(mock->priv->bus,
 			mock->priv->name,
 			obj->object_path,
@@ -871,11 +883,15 @@ dbus_test_dbus_mock_object_update_property (DbusTestDbusMock * mock, DbusTestDbu
 			G_DBUS_CALL_FLAGS_NO_AUTO_START,
 			-1, /* timeout */
 			NULL, /* TODO: cancel */
-			&error); /* TODO: error */
+			&local_error);
 
-		if (error != NULL) {
-			g_warning("Unable to update property: %s", error->message);
-			g_error_free(error);
+		if (local_error != NULL) {
+			g_warning("Unable to update property: %s", local_error->message);
+			if (error != NULL) {
+				*error = local_error;
+			} else {
+				g_error_free(local_error);
+			}
 			g_variant_unref(value);
 			return FALSE;
 		}
@@ -895,6 +911,7 @@ dbus_test_dbus_mock_object_update_property (DbusTestDbusMock * mock, DbusTestDbu
  * @name: Name of the signal
  * @params: The parameters of the signal as a tuple
  * @values: Values to emit with the signal
+ * @error: A possible error
  *
  * Causes the object on the dbus mock to emit a signal with the @params
  * provided.
@@ -903,7 +920,7 @@ dbus_test_dbus_mock_object_update_property (DbusTestDbusMock * mock, DbusTestDbu
  *   to be emitted.
  */
 gboolean
-dbus_test_dbus_mock_object_emit_signal (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * name, const GVariantType * params, GVariant * values)
+dbus_test_dbus_mock_object_emit_signal (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * name, const GVariantType * params, GVariant * values, GError ** error)
 {
 	g_return_val_if_fail(DBUS_TEST_IS_DBUS_MOCK(mock), FALSE);
 	g_return_val_if_fail(obj != NULL, FALSE);
@@ -932,6 +949,6 @@ dbus_test_dbus_mock_object_emit_signal (DbusTestDbusMock * mock, DbusTestDbusMoc
 		params != NULL ? g_variant_type_peek_string(params) : "",
 		sig_params,
 		NULL, /* TODO: cancel */
-		NULL  /* TODO: error */
+		error
 	);
 }

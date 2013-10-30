@@ -69,38 +69,45 @@ gboolean                    dbus_test_dbus_mock_object_add_method         (DbusT
                                                                            const gchar *             method,
                                                                            const GVariantType *      inparams,
                                                                            const GVariantType *      outparams,
-                                                                           const gchar *             python_code);
+                                                                           const gchar *             python_code,
+                                                                           GError **                 error);
 
 gboolean                    dbus_test_dbus_mock_object_check_method_call  (DbusTestDbusMock *        mock,
                                                                            DbusTestDbusMockObject *  obj,
                                                                            const gchar *             method,
-                                                                           GVariant *                params);
+                                                                           GVariant *                params,
+                                                                           GError **                 error);
 
 gboolean                    dbus_test_dbus_mock_object_clear_method_calls (DbusTestDbusMock *        mock,
                                                                            DbusTestDbusMockObject *  obj,
-                                                                           const gchar *             method);
+                                                                           const gchar *             method,
+                                                                           GError **                 error);
 
 const DbusTestDbusMockCall * dbus_test_dbus_mock_object_get_method_calls  (DbusTestDbusMock *        mock,
                                                                            DbusTestDbusMockObject *  obj,
                                                                            const gchar *             method,
-                                                                           guint *                   len);
+                                                                           guint *                   len,
+                                                                           GError **                 error);
 
 gboolean                    dbus_test_dbus_mock_object_add_property       (DbusTestDbusMock *        mock,
                                                                            DbusTestDbusMockObject *  obj,
                                                                            const gchar *             name,
                                                                            const GVariantType *      type,
-                                                                           GVariant *                value);
+                                                                           GVariant *                value,
+                                                                           GError **                 error);
 
 gboolean                    dbus_test_dbus_mock_object_update_property    (DbusTestDbusMock *        mock,
                                                                            DbusTestDbusMockObject *  obj,
                                                                            const gchar *             name,
-                                                                           GVariant *                value);
+                                                                           GVariant *                value,
+                                                                           GError **                 error);
 
 gboolean                    dbus_test_dbus_mock_object_emit_signal        (DbusTestDbusMock *        mock,
                                                                            DbusTestDbusMockObject *  obj,
                                                                            const gchar *             name,
                                                                            const GVariantType *      params,
-                                                                           GVariant *                values);
+                                                                           GVariant *                values,
+                                                                           GError **                 error);
 
 G_END_DECLS
 
