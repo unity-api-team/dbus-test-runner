@@ -393,6 +393,40 @@ test_running (void)
 	DbusTestDbusMockObject * obj = dbus_test_dbus_mock_get_object(mock, "/test", "foo.test.interface", NULL);
 	g_assert(obj != NULL);
 
+	g_assert(dbus_test_dbus_mock_object_add_method(mock, obj,
+		"method1",
+		G_VARIANT_TYPE("s"),
+		G_VARIANT_TYPE("s"),
+		"ret = 'test'",
+		NULL));
+
+	GVariant * propret = NULL;
+	GVariant * testvar = NULL;
+	GError * error = NULL;
+
+	/* Check method */
+	propret = g_dbus_connection_call_sync(bus,
+		"foo.test",
+		"/test",
+		"foo.test.interface",
+		"method1",
+		g_variant_new("(s)", "testin"),
+		G_VARIANT_TYPE("(s)"),
+		G_DBUS_CALL_FLAGS_NONE,
+		-1,
+		NULL,
+		&error);
+
+	if (error != NULL) {
+		g_error("Unable to call method1: %s", error->message);
+		g_error_free(error);
+	}
+
+	g_assert(propret != NULL);
+	testvar = g_variant_new_string("test");
+	g_assert(g_variant_equal(propret, g_variant_new_tuple(&testvar, 1)));
+
+	g_variant_unref(propret);
 
 	/* Clean up */
 	g_object_unref(mock);
