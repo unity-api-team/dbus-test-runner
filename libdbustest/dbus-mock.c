@@ -485,7 +485,15 @@ dbus_test_dbus_mock_get_object (DbusTestDbusMock * mock, const gchar * path, con
 	newobj.proxy = NULL;
 
 	g_array_append_val(mock->priv->objects, newobj);
-	return &g_array_index(mock->priv->objects, DbusTestDbusMockObject, mock->priv->objects->len - 1);
+	DbusTestDbusMockObject * obj = &g_array_index(mock->priv->objects, DbusTestDbusMockObject, mock->priv->objects->len - 1);
+
+	if (!is_running(mock)) {
+		return obj;
+	}
+
+	/* TODO: Error */
+	install_object(mock, obj, NULL);
+	return obj;
 }
 
 /* Objects are initialized in dbus_test_dbus_mock_get_object() and
