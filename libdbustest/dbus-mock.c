@@ -584,8 +584,16 @@ dbus_test_dbus_mock_object_add_method (DbusTestDbusMock * mock, DbusTestDbusMock
 		return TRUE;
 	}
 
-	/* TODO: Add to running instance */
-	return FALSE;
+	return dbus_mock_iface_org_freedesktop_dbus_mock_call_add_method_sync(
+		obj->proxy,
+		obj->interface,
+		method,
+		g_variant_type_peek_string(inparams),
+		g_variant_type_peek_string(outparams),
+		python_code,
+		mock->priv->cancel,
+		error
+	);
 }
 
 /* Free the data allocated in dbus_test_dbus_mock_object_add_method() */
