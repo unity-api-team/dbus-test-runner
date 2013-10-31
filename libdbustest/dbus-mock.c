@@ -845,8 +845,22 @@ dbus_test_dbus_mock_object_add_property (DbusTestDbusMock * mock, DbusTestDbusMo
 		return TRUE;
 	}
 
-	/* TODO: Add to running instance */
-	return FALSE;
+	GVariantBuilder builder;
+	g_variant_builder_init(&builder, G_VARIANT_TYPE_ARRAY);
+	g_variant_builder_open(&builder, G_VARIANT_TYPE_DICT_ENTRY);
+	g_variant_builder_add_value(&builder, g_variant_new_string(name));
+	g_variant_builder_open(&builder, G_VARIANT_TYPE_VARIANT);
+	g_variant_builder_add_value(&builder, value);
+	g_variant_builder_close(&builder); /* variant */
+	g_variant_builder_close(&builder); /* dict_entry */
+
+	return dbus_mock_iface_org_freedesktop_dbus_mock_call_add_properties_sync(
+		obj->proxy,
+		obj->interface,
+		g_variant_builder_end(&builder),
+		mock->priv->cancel,
+		error
+	);
 }
 
 /* Free the data allocated in dbus_test_dbus_mock_object_add_property() */
