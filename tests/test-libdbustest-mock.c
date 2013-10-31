@@ -90,18 +90,6 @@ test_basic (void)
 }
 
 void
-connection_closed (GDBusConnection * con, gboolean remote, GError * error, gpointer user_data)
-{
-	g_warning("Connection Closed");
-	if (remote) {
-		g_warning("Remote host closed connection");
-	}
-	if (error != NULL) {
-		g_warning("Error: %s", error->message);
-	}
-}
-
-void
 test_properties (void)
 {
 	DbusTestService * service = dbus_test_service_new(NULL);
@@ -127,7 +115,6 @@ test_properties (void)
 
 	/* check setup */
 	GDBusConnection * bus = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, NULL);
-	g_signal_connect(bus, "closed", G_CALLBACK(connection_closed), NULL);
 	g_dbus_connection_set_exit_on_close(bus, FALSE);
 
 	GVariant * propret = NULL;
@@ -288,6 +275,7 @@ test_methods (void)
 
 	/* Check 'em */
 	GDBusConnection * bus = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, NULL);
+	g_dbus_connection_set_exit_on_close(bus, FALSE);
 
 	GVariant * propret = NULL;
 	GVariant * testvar = NULL;
@@ -352,6 +340,7 @@ test_signals (void)
 	g_assert(dbus_test_task_get_state(DBUS_TEST_TASK(mock)) == DBUS_TEST_TASK_STATE_RUNNING);
 
 	GDBusConnection * bus = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, NULL);
+	g_dbus_connection_set_exit_on_close(bus, FALSE);
 
 	guint signal_count = 0;
 	g_dbus_connection_signal_subscribe(bus,
