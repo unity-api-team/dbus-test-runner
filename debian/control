@@ -12,8 +12,6 @@ Build-Depends: debhelper (>= 9),
 Standards-Version: 3.9.3
 Homepage: https://launchpad.net/dbus-test-runner
 XS-Testsuite: autopkgtest
-Vcs-Bzr: https://code.launchpad.net/dbus-test-runner
-Vcs-Browser: https://bazaar.launchpad.net/~indicator-applet-developers/dbus-test-runner/trunk.14.04
 
 Package: dbus-test-runner
 Architecture: any

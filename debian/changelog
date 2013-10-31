@@ -1,3 +1,10 @@
+dbus-test-runner (12.10.2+13.10.20130724-0ubuntu2) trusty; urgency=low
+
+  * Mark dbus-test-runner Multi-Arch: foreign, and mark libdbustest1*
+    Multi-Arch: same.
+
+ -- Steve Langasek <steve.langasek@ubuntu.com>  Tue, 29 Oct 2013 13:47:43 -0700
+
 dbus-test-runner (12.10.2+13.10.20130724-0ubuntu1) saucy; urgency=low
 
   [ Michal Hruby ]
