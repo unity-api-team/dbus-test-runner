@@ -371,6 +371,37 @@ test_signals (void)
 	return;
 }
 
+void
+test_running (void)
+{
+	DbusTestService * service = dbus_test_service_new(NULL);
+	g_assert(service != NULL);
+
+	dbus_test_service_set_conf_file(service, SESSION_CONF);
+
+	DbusTestDbusMock * mock = dbus_test_dbus_mock_new("foo.test");
+	g_assert(mock != NULL);
+
+	/* Startup the mock */
+	dbus_test_service_add_task(service, DBUS_TEST_TASK(mock));
+	dbus_test_service_start_tasks(service);
+
+	GDBusConnection * bus = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, NULL);
+	g_dbus_connection_set_exit_on_close(bus, FALSE);
+
+	/* Add the object */
+	DbusTestDbusMockObject * obj = dbus_test_dbus_mock_get_object(mock, "/test", "foo.test.interface");
+	g_assert(obj != NULL);
+
+
+	/* Clean up */
+	g_object_unref(mock);
+	g_object_unref(service);
+
+	wait_for_connection_close(bus);
+
+	return;
+}
 
 /* Build our test suite */
 void
@@ -380,6 +411,7 @@ test_libdbustest_mock_suite (void)
 	g_test_add_func ("/libdbustest/mock/properties",   test_properties);
 	g_test_add_func ("/libdbustest/mock/methods",      test_methods);
 	g_test_add_func ("/libdbustest/mock/signals",      test_signals);
+	g_test_add_func ("/libdbustest/mock/running",      test_running);
 
 	return;
 }
