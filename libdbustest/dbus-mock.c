@@ -265,7 +265,7 @@ method_to_variant (MockObjectMethod * method)
 
 /* Add an object to the DBus Mock */
 static gboolean
-install_object (DbusTestDbusMock * mock, DbusTestDbusMockObject * object)
+install_object (DbusTestDbusMock * mock, DbusTestDbusMockObject * object, GError ** error)
 {
 	GVariant * properties = NULL;
 	GVariant * methods = NULL;
@@ -311,7 +311,7 @@ install_object (DbusTestDbusMock * mock, DbusTestDbusMockObject * object)
 		properties,
 		methods,
 		mock->priv->cancel,
-		NULL); /* error: TODO */
+		error);
 
 	if (!add_object) {
 		return add_object;
@@ -322,7 +322,7 @@ install_object (DbusTestDbusMock * mock, DbusTestDbusMockObject * object)
 		mock->priv->name,
 		object->object_path, /* path */
 		mock->priv->cancel,
-		NULL /* error: TODO */
+		error
 	);
 
 	return object->proxy != NULL;
@@ -406,8 +406,15 @@ run (DbusTestTask * task)
 	/* Second, Install Objects */
 	guint i;
 	for (i = 0; i < self->priv->objects->len; i++) {
+		GError * error = NULL;
+
 		DbusTestDbusMockObject * obj = &g_array_index(self->priv->objects, DbusTestDbusMockObject, i);
-		install_object(self, obj);
+		install_object(self, obj, &error);
+
+		if (error != NULL) {
+			g_warning("Unable to install object '%s': %s", obj->object_path, error->message);
+			g_error_free(error);
+		}
 	}
 
 	return;
