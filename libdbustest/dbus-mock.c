@@ -33,6 +33,7 @@ struct _DbusTestDbusMockPrivate {
 	/* Entries of DbusTestDbusMockObject */
 	GArray * objects;
 	GDBusConnection * bus;
+	GCancellable * cancel;
 };
 
 /* Represents every object on the bus that we're mocking */
@@ -132,6 +133,8 @@ dbus_test_dbus_mock_init (DbusTestDbusMock *self)
 	self->priv->objects = g_array_new(FALSE, TRUE, sizeof(DbusTestDbusMockObject));
 	g_array_set_clear_func(self->priv->objects, object_free);
 
+	self->priv->cancel = g_cancellable_new();
+
 	return;
 }
 
@@ -165,6 +168,9 @@ static void
 dbus_test_dbus_mock_dispose (GObject *object)
 {
 	DbusTestDbusMock * self = DBUS_TEST_DBUS_MOCK(object);
+
+	g_cancellable_cancel(self->priv->cancel);
+	g_clear_object(&self->priv->cancel);
 
 	g_array_set_size(self->priv->objects, 0);
 	g_clear_object(&self->priv->proxy);
@@ -304,7 +310,7 @@ install_object (DbusTestDbusMock * mock, DbusTestDbusMockObject * object)
 		object->interface,
 		properties,
 		methods,
-		NULL, /* cancellable */
+		mock->priv->cancel,
 		NULL); /* error: TODO */
 
 	if (!add_object) {
@@ -315,7 +321,7 @@ install_object (DbusTestDbusMock * mock, DbusTestDbusMockObject * object)
 		G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES | G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START,
 		mock->priv->name,
 		object->object_path, /* path */
-		NULL, /* cancelable, TODO */
+		mock->priv->cancel,
 		NULL /* error: TODO */
 	);
 
@@ -364,7 +370,7 @@ run (DbusTestTask * task)
 		G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES | G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START,
 		self->priv->name,
 		"/", /* path */
-		NULL, /* cancelable, TODO */
+		self->priv->cancel,
 		&error
 	);
 
@@ -650,7 +656,7 @@ dbus_test_dbus_mock_object_clear_method_calls (DbusTestDbusMock * mock, DbusTest
 
 	return dbus_mock_iface_org_freedesktop_dbus_mock_call_clear_calls_sync(
 		obj->proxy,
-		NULL, /* TODO: cancel */
+		mock->priv->cancel,
 		error
 	);
 }
@@ -724,7 +730,7 @@ dbus_test_dbus_mock_object_get_method_calls (DbusTestDbusMock * mock, DbusTestDb
 	dbus_mock_iface_org_freedesktop_dbus_mock_call_get_calls_sync(
 		obj->proxy,
 		&call_list,
-		NULL, /* TODO: cancelable */
+		mock->priv->cancel,
 		error);
 
 	if (call_list == NULL) {
@@ -882,7 +888,7 @@ dbus_test_dbus_mock_object_update_property (DbusTestDbusMock * mock, DbusTestDbu
 			NULL, /* return */
 			G_DBUS_CALL_FLAGS_NO_AUTO_START,
 			-1, /* timeout */
-			NULL, /* TODO: cancel */
+			mock->priv->cancel,
 			&local_error);
 
 		if (local_error != NULL) {
@@ -948,7 +954,7 @@ dbus_test_dbus_mock_object_emit_signal (DbusTestDbusMock * mock, DbusTestDbusMoc
 		name,
 		params != NULL ? g_variant_type_peek_string(params) : "",
 		sig_params,
-		NULL, /* TODO: cancel */
+		mock->priv->cancel,
 		error
 	);
 }
