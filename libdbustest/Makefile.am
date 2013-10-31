@@ -34,6 +34,7 @@ libdbustest_la_CFLAGS = \
 	$(DBUS_TEST_RUNNER_CFLAGS) \
 	$(COVERAGE_CFLAGS) \
 	-I$(top_srcdir) \
+	-I$(builddir) \
 	-DDEFAULT_SESSION_CONF="\"$(datadir)/dbus-test-runner/session.conf\"" \
 	-DBUSTLE_DUAL_MONITOR="\"$(pkgdatadir)/dbus-test-bustle-handler\"" \
 	-DWATCHDOG="\"$(pkglibexecdir)/dbus-test-watchdog\"" \
@@ -55,6 +56,7 @@ noinst_LTLIBRARIES = libdbustest-generated.la
 
 libdbustest_generated_la_CFLAGS = \
 	$(DBUS_TEST_RUNNER_CFLAGS) \
+	-I$(builddir) \
 	-DG_LOG_DOMAIN=\"libdbustest\" \
 	-Wall -Werror
 
@@ -69,6 +71,7 @@ dbus-mock-iface.c: dbus-mock-iface.xml
 		--c-namespace DbusMockIface \
 		$^
 dbus-mock-iface.h: dbus-mock-iface.c
+dbus-mock.c: dbus-mock-iface.h
 
 pkgdata_SCRIPTS = \
 	dbus-test-bustle-handler
