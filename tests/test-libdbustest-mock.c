@@ -77,10 +77,10 @@ test_basic (void)
 	g_assert(dbus_test_task_get_state(DBUS_TEST_TASK(mock)) == DBUS_TEST_TASK_STATE_RUNNING);
 
 	/* Ensure we can get an object */
-	DbusTestDbusMockObject * obj = dbus_test_dbus_mock_get_object(mock, "/test", "foo.test.interface");
+	DbusTestDbusMockObject * obj = dbus_test_dbus_mock_get_object(mock, "/test", "foo.test.interface", NULL);
 	g_assert(obj != NULL);
 
-	DbusTestDbusMockObject * newobj = dbus_test_dbus_mock_get_object(mock, "/test", "foo.test.interface");
+	DbusTestDbusMockObject * newobj = dbus_test_dbus_mock_get_object(mock, "/test", "foo.test.interface", NULL);
 	g_assert(obj == newobj);
 
 	g_object_unref(mock);
@@ -100,7 +100,7 @@ test_properties (void)
 	DbusTestDbusMock * mock = dbus_test_dbus_mock_new("foo.test");
 	g_assert(mock != NULL);
 
-	DbusTestDbusMockObject * obj = dbus_test_dbus_mock_get_object(mock, "/test", "foo.test.interface");
+	DbusTestDbusMockObject * obj = dbus_test_dbus_mock_get_object(mock, "/test", "foo.test.interface", NULL);
 	/* String property */
 	g_assert(dbus_test_dbus_mock_object_add_property(mock, obj, "prop1", G_VARIANT_TYPE_STRING, g_variant_new_string("test"), NULL));
 	/* Invalid type */
@@ -260,7 +260,7 @@ test_methods (void)
 	DbusTestDbusMock * mock = dbus_test_dbus_mock_new("foo.test");
 	g_assert(mock != NULL);
 
-	DbusTestDbusMockObject * obj = dbus_test_dbus_mock_get_object(mock, "/test", "foo.test.interface");
+	DbusTestDbusMockObject * obj = dbus_test_dbus_mock_get_object(mock, "/test", "foo.test.interface", NULL);
 	dbus_test_dbus_mock_object_add_method(mock, obj,
 		"method1",
 		G_VARIANT_TYPE("s"),
@@ -332,7 +332,7 @@ test_signals (void)
 	DbusTestDbusMock * mock = dbus_test_dbus_mock_new("foo.test");
 	g_assert(mock != NULL);
 
-	DbusTestDbusMockObject * obj = dbus_test_dbus_mock_get_object(mock, "/test", "foo.test.interface");
+	DbusTestDbusMockObject * obj = dbus_test_dbus_mock_get_object(mock, "/test", "foo.test.interface", NULL);
 
 	dbus_test_service_add_task(service, DBUS_TEST_TASK(mock));
 	dbus_test_service_start_tasks(service);
@@ -390,7 +390,7 @@ test_running (void)
 	g_dbus_connection_set_exit_on_close(bus, FALSE);
 
 	/* Add the object */
-	DbusTestDbusMockObject * obj = dbus_test_dbus_mock_get_object(mock, "/test", "foo.test.interface");
+	DbusTestDbusMockObject * obj = dbus_test_dbus_mock_get_object(mock, "/test", "foo.test.interface", NULL);
 	g_assert(obj != NULL);
 
 
