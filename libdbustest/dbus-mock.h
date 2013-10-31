@@ -62,7 +62,8 @@ DbusTestDbusMock *          dbus_test_dbus_mock_new                       (const
 
 DbusTestDbusMockObject *    dbus_test_dbus_mock_get_object                (DbusTestDbusMock *        mock,
                                                                            const gchar *             path,
-                                                                           const gchar *             interface);
+                                                                           const gchar *             interface,
+                                                                           GError **                 error);
 
 gboolean                    dbus_test_dbus_mock_object_add_method         (DbusTestDbusMock *        mock,
                                                                            DbusTestDbusMockObject *  obj,

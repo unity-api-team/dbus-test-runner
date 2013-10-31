@@ -447,6 +447,7 @@ dbus_test_dbus_mock_new (const gchar * bus_name)
  * @mock: A #DbusTestDbusMock instance
  * @path: DBus path of the object
  * @interface: Interface on that object
+ * @error: A possible error
  *
  * Gets a pointer to a handle for an object on the dbus mock instance.  If it
  * didn't exist previous to calling this function, it is created.  If it did,
@@ -456,7 +457,7 @@ dbus_test_dbus_mock_new (const gchar * bus_name)
  * Return Value: (transfer none): Handle to refer to an object on the DBus Mock
  */
 DbusTestDbusMockObject *
-dbus_test_dbus_mock_get_object (DbusTestDbusMock * mock, const gchar * path, const gchar * interface)
+dbus_test_dbus_mock_get_object (DbusTestDbusMock * mock, const gchar * path, const gchar * interface, GError ** error)
 {
 	g_return_val_if_fail(DBUS_TEST_IS_DBUS_MOCK(mock), NULL);
 	g_return_val_if_fail(path != NULL, NULL);
@@ -491,8 +492,7 @@ dbus_test_dbus_mock_get_object (DbusTestDbusMock * mock, const gchar * path, con
 		return obj;
 	}
 
-	/* TODO: Error */
-	install_object(mock, obj, NULL);
+	install_object(mock, obj, error);
 	return obj;
 }
 
