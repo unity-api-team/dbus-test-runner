@@ -94,7 +94,7 @@ static void method_free                    (gpointer data);
 static void property_free                  (gpointer data);
 
 G_DEFINE_TYPE (DbusTestDbusMock, dbus_test_dbus_mock, DBUS_TEST_TYPE_PROCESS);
-G_DEFINE_QUARK("dbus-test-dbus-mock", dbus_mock);
+G_DEFINE_QUARK("dbus-test-dbus-mock", _dbus_mock);
 
 /* Initialize Class */
 static void
@@ -742,7 +742,7 @@ dbus_test_dbus_mock_object_get_method_calls (DbusTestDbusMock * mock, DbusTestDb
 	/* Find our method */
 	MockObjectMethod * meth = get_obj_method(obj, method);
 	if (meth == NULL) {
-		g_set_error(error, dbus_mock_quark(), ERROR_METHOD_NOT_FOUND, "Method '%s' not found on object '%s'", method, obj->object_path);
+		g_set_error(error, _dbus_mock_quark(), ERROR_METHOD_NOT_FOUND, "Method '%s' not found on object '%s'", method, obj->object_path);
 		return NULL;
 	}
 
