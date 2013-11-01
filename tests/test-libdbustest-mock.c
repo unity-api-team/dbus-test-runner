@@ -309,7 +309,7 @@ test_methods (void)
 	g_assert(dbus_test_dbus_mock_object_check_method_call(mock, obj, "method1", NULL, NULL));
 	g_assert(dbus_test_dbus_mock_object_check_method_call(mock, obj, "method1", g_variant_new("(s)", "testin"), NULL));
 
-	g_assert(dbus_test_dbus_mock_object_clear_method_calls(mock, obj, "method1", NULL));
+	g_assert(dbus_test_dbus_mock_object_clear_method_calls(mock, obj, NULL));
 	g_assert(!dbus_test_dbus_mock_object_check_method_call(mock, obj, "method1", NULL, NULL));
 
 	/* Clean up */
