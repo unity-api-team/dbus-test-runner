@@ -81,7 +81,6 @@ gboolean                    dbus_test_dbus_mock_object_check_method_call  (DbusT
 
 gboolean                    dbus_test_dbus_mock_object_clear_method_calls (DbusTestDbusMock *        mock,
                                                                            DbusTestDbusMockObject *  obj,
-                                                                           const gchar *             method,
                                                                            GError **                 error);
 
 const DbusTestDbusMockCall * dbus_test_dbus_mock_object_get_method_calls  (DbusTestDbusMock *        mock,

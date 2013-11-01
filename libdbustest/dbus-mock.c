@@ -657,7 +657,6 @@ dbus_test_dbus_mock_object_check_method_call (DbusTestDbusMock * mock, DbusTestD
  * dbus_test_dbus_mock_object_clear_method_calls:
  * @mock: A #DbusTestDbusMock instance
  * @obj: A handle to an object on the mock interface
- * @method: Name of the method
  * @error: A possible error
  *
  * Clears the queued set of method calls for the method.
@@ -665,11 +664,10 @@ dbus_test_dbus_mock_object_check_method_call (DbusTestDbusMock * mock, DbusTestD
  * Return value: Whether we were able to clear it
  */
 gboolean
-dbus_test_dbus_mock_object_clear_method_calls (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * method, GError ** error)
+dbus_test_dbus_mock_object_clear_method_calls (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, GError ** error)
 {
 	g_return_val_if_fail(DBUS_TEST_IS_DBUS_MOCK(mock), FALSE);
 	g_return_val_if_fail(obj != NULL, FALSE);
-	g_return_val_if_fail(method != NULL, FALSE);
 
 	if (!is_running(mock)) {
 		return FALSE;
