@@ -686,7 +686,7 @@ dbus_test_dbus_mock_object_clear_method_calls (DbusTestDbusMock * mock, DbusTest
 
 /* We get back an av from DBusMock but everyone else uses
    a tuple.  Let's use that */
-GVariant *
+static GVariant *
 variant_array_to_tuple (GVariant * array_in)
 {
 	if (g_variant_n_children(array_in) == 0) {
