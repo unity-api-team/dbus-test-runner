@@ -21,7 +21,7 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "config.h"
 #endif
 
-#include "dbus-mock.h"
+#include "dbus-test.h"
 #include "dbus-mock-iface.h"
 
 typedef struct _MockObjectProperty MockObjectProperty;

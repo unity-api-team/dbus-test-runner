@@ -20,6 +20,10 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef __DBUS_TEST_DBUS_MOCK_H__
 #define __DBUS_TEST_DBUS_MOCK_H__
 
+#ifndef __DBUS_TEST_TOP_LEVEL__
+#error "Please include #include <libdbustest/dbus-test.h> only"
+#endif
+
 #include <glib-object.h>
 #include "process.h"
 
