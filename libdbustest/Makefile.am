@@ -68,7 +68,7 @@ dbus-mock-iface.c: dbus-mock-iface.xml
 	$(AM_V_GEN) gdbus-codegen \
 		--interface-prefix org.freedesktop.DBus.Mock. \
 		--generate-c-code dbus-mock-iface \
-		--c-namespace DbusMockIface \
+		--c-namespace _DbusMockIface \
 		$^
 dbus-mock-iface.h: dbus-mock-iface.c
 dbus-mock.c: dbus-mock-iface.h
