@@ -23,6 +23,7 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "dbus-test.h"
 #include "dbus-mock-iface.h"
+#include "string.h" /* strlen */
 
 typedef struct _MockObjectProperty MockObjectProperty;
 typedef struct _MockObjectMethod MockObjectMethod;
@@ -248,6 +249,27 @@ property_to_variant (MockObjectProperty * prop)
 	return g_variant_builder_end(&builder);
 }
 
+/* We need some special handling for DBusMock.  It doens't use tuples
+   like the rest of DBus.  So we need special strings. */
+static GVariant *
+method_params_to_variant (const GVariantType * params)
+{
+	if (params == NULL) {
+		return g_variant_new_string("");
+	}
+
+	const gchar * peek = g_variant_type_peek_string(params);
+	guint len = strlen(peek);
+
+	if (peek[0] == '(' && peek[len - 1] == ')') {
+		/* remove exterior tuple */
+		gchar * modified = g_strndup(peek + 1, len - 2);
+		return g_variant_new_take_string(modified);
+	} else {
+		return g_variant_new_string(peek);
+	}
+}
+
 /* Turns a method into the variant to represent it */
 static GVariant *
 method_to_variant (MockObjectMethod * method)
@@ -256,8 +278,8 @@ method_to_variant (MockObjectMethod * method)
 	g_variant_builder_init(&builder, G_VARIANT_TYPE_TUPLE);
 
 	g_variant_builder_add_value(&builder, g_variant_new_string(method->name));
-	g_variant_builder_add_value(&builder, g_variant_new_take_string(g_variant_type_dup_string(method->in)));
-	g_variant_builder_add_value(&builder, g_variant_new_take_string(g_variant_type_dup_string(method->out)));
+	g_variant_builder_add_value(&builder, method_params_to_variant(method->in));
+	g_variant_builder_add_value(&builder, method_params_to_variant(method->out));
 	g_variant_builder_add_value(&builder, g_variant_new_string(method->code));
 
 	return g_variant_builder_end(&builder);
@@ -543,8 +565,8 @@ call_free (gpointer pcall)
  * @mock: A #DbusTestDbusMock instance
  * @obj: A handle to an object on the mock interface
  * @method: Name of the method
- * @inparams: Parameters going into the method as a tuple
- * @outparams: Parameters gonig out of the method as a tuple
+ * @inparams: (allow-none): Parameters going into the method as a tuple
+ * @outparams: (allow-none): Parameters gonig out of the method as a tuple
  * @python_code: Python code to execute when the method is called
  * @error: Possible error to return
  *
@@ -560,8 +582,6 @@ dbus_test_dbus_mock_object_add_method (DbusTestDbusMock * mock, DbusTestDbusMock
 	g_return_val_if_fail(DBUS_TEST_IS_DBUS_MOCK(mock), FALSE);
 	g_return_val_if_fail(obj != NULL, FALSE);
 	g_return_val_if_fail(method != NULL, FALSE);
-	g_return_val_if_fail(inparams != NULL, FALSE);
-	g_return_val_if_fail(outparams != NULL, FALSE);
 	g_return_val_if_fail(python_code != NULL, FALSE);
 
 	/* Check to make sure it doesn't already exist */
@@ -571,8 +591,8 @@ dbus_test_dbus_mock_object_add_method (DbusTestDbusMock * mock, DbusTestDbusMock
 	/* Build a new one */
 	MockObjectMethod newmethod;
 	newmethod.name = g_strdup(method);
-	newmethod.in = g_variant_type_copy(inparams);
-	newmethod.out = g_variant_type_copy(outparams);
+	newmethod.in = inparams ? g_variant_type_copy(inparams) : NULL;
+	newmethod.out = outparams ? g_variant_type_copy(outparams) : NULL;
 	newmethod.code = g_strdup(python_code);
 	newmethod.calls = g_array_new(TRUE, TRUE, sizeof(DbusTestDbusMockCall));
 	g_array_set_clear_func(newmethod.calls, call_free);
@@ -584,16 +604,27 @@ dbus_test_dbus_mock_object_add_method (DbusTestDbusMock * mock, DbusTestDbusMock
 		return TRUE;
 	}
 
-	return _dbus_mock_iface_org_freedesktop_dbus_mock_call_add_method_sync(
+	GVariant * in = method_params_to_variant(inparams);
+	GVariant * out = method_params_to_variant(outparams);
+
+	g_variant_ref_sink(in);
+	g_variant_ref_sink(out);
+
+	gboolean ret = _dbus_mock_iface_org_freedesktop_dbus_mock_call_add_method_sync(
 		obj->proxy,
 		obj->interface,
 		method,
-		g_variant_type_peek_string(inparams),
-		g_variant_type_peek_string(outparams),
+		g_variant_get_string(in, NULL),
+		g_variant_get_string(out, NULL),
 		python_code,
 		mock->priv->cancel,
 		error
 	);
+
+	g_variant_unref(in);
+	g_variant_unref(out);
+
+	return ret;
 }
 
 /* Free the data allocated in dbus_test_dbus_mock_object_add_method() */
