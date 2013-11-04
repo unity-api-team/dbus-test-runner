@@ -263,7 +263,7 @@ test_methods (void)
 	DbusTestDbusMockObject * obj = dbus_test_dbus_mock_get_object(mock, "/test", "foo.test.interface", NULL);
 	dbus_test_dbus_mock_object_add_method(mock, obj,
 		"method1",
-		G_VARIANT_TYPE("s"),
+		G_VARIANT_TYPE("(ss)"),
 		G_VARIANT_TYPE("s"),
 		"ret = 'test'",
 		NULL);
@@ -287,7 +287,7 @@ test_methods (void)
 		"/test",
 		"foo.test.interface",
 		"method1",
-		g_variant_new("(s)", "testin"),
+		g_variant_new("(ss)", "testin", "moretest"),
 		G_VARIANT_TYPE("(s)"),
 		G_DBUS_CALL_FLAGS_NONE,
 		-1,
@@ -307,7 +307,7 @@ test_methods (void)
 
 	/* Ask DBusMock if it got called */
 	g_assert(dbus_test_dbus_mock_object_check_method_call(mock, obj, "method1", NULL, NULL));
-	g_assert(dbus_test_dbus_mock_object_check_method_call(mock, obj, "method1", g_variant_new("(s)", "testin"), NULL));
+	g_assert(dbus_test_dbus_mock_object_check_method_call(mock, obj, "method1", g_variant_new("(ss)", "testin", "moretest"), NULL));
 
 	g_assert(dbus_test_dbus_mock_object_clear_method_calls(mock, obj, NULL));
 	g_assert(!dbus_test_dbus_mock_object_check_method_call(mock, obj, "method1", NULL, NULL));
