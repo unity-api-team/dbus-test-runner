@@ -73,6 +73,8 @@ enum {
 	NUM_ERRORS
 };
 
+static guint mock_cnt = 0;
+
 #define DBUS_TEST_DBUS_MOCK_GET_PRIVATE(o) \
 (G_TYPE_INSTANCE_GET_PRIVATE ((o), DBUS_TEST_TYPE_DBUS_MOCK, DbusTestDbusMockPrivate))
 
@@ -145,6 +147,15 @@ constructed (GObject * object)
 {
 	DbusTestDbusMock * self = DBUS_TEST_DBUS_MOCK(object);
 	const gchar * paramval = NULL;
+
+	if (mock_cnt == 0) {
+		dbus_test_task_set_name(DBUS_TEST_TASK(object), "DBusMock");
+	} else {
+		gchar * name = g_strdup_printf("DBusMock-%d", mock_cnt);
+		dbus_test_task_set_name(DBUS_TEST_TASK(object), name);
+		g_free(name);
+	}
+	mock_cnt++;
 
 	/* Execute: python3 -m dbusmock $name / com.canonical.DbusTest.DbusMock */
 	g_object_set(object, "executable", "python3", NULL);
