@@ -5,7 +5,7 @@ AC_COPYRIGHT([Copyright 2009-2013 Canonical])
 AC_PREREQ(2.53)
 
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(dbus-test-runner, 12.10.1)
+AM_INIT_AUTOMAKE(dbus-test-runner, 14.04.0)
 
 AM_MAINTAINER_MODE
 
