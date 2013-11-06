@@ -976,6 +976,43 @@ dbus_test_dbus_mock_object_update_property (DbusTestDbusMock * mock, DbusTestDbu
 	return TRUE;
 }
 
+/* DBus Mock has an odd way of doing things.  Converting. */
+static GVariant *
+tuple_to_array (GVariant * tuple)
+{
+	GVariantIter iter;
+	GVariantBuilder builder;
+
+	if (tuple == NULL) {
+		return g_variant_new_array(G_VARIANT_TYPE_VARIANT, NULL, 0);
+	}
+
+	g_variant_ref_sink(tuple);
+	
+	if (g_variant_n_children(tuple) == 0) {
+		/* Make sure to swallow the variant if it is there */
+		g_variant_unref(tuple);
+		return g_variant_new_array(G_VARIANT_TYPE_VARIANT, NULL, 0);
+	}
+
+	g_variant_iter_init(&iter, tuple);
+	g_variant_builder_init(&builder, G_VARIANT_TYPE_ARRAY);
+
+	guint i;
+	for (i = 0; i < g_variant_n_children(tuple); i++) {
+		g_variant_builder_open(&builder, G_VARIANT_TYPE_VARIANT);
+
+		GVariant * entry = g_variant_get_child_value(tuple, i);
+		g_variant_builder_add_value(&builder, entry);
+		g_variant_unref(entry);
+
+		g_variant_builder_close(&builder);
+	}
+
+	g_variant_unref(tuple); /* Don't use iter after this */
+	return g_variant_builder_end(&builder);
+}
+
 /**
  * dbus_test_dbus_mock_object_emit_signal:
  * @mock: A #DbusTestDbusMock instance
@@ -1007,24 +1044,23 @@ dbus_test_dbus_mock_object_emit_signal (DbusTestDbusMock * mock, DbusTestDbusMoc
 		return FALSE;
 	}
 
-	GVariant * sig_params = NULL;
-	if (params == NULL) {
-		sig_params = g_variant_new_array(G_VARIANT_TYPE_VARIANT, NULL, 0);
-	} else {
-		sig_params = values;
-	}
-	g_variant_ref_sink(sig_params);
+	/* floating ref swallowed by call_emit_signal() */
+	GVariant * sig_params = tuple_to_array(values);
+
+	GVariant * sig_types = method_params_to_variant(params);
+	g_variant_ref_sink(sig_types);
 
 	gboolean retval = _dbus_mock_iface_org_freedesktop_dbus_mock_call_emit_signal_sync(
 		obj->proxy,
 		obj->interface,
 		name,
-		params != NULL ? g_variant_type_peek_string(params) : "",
+		g_variant_get_string(sig_types, NULL),
 		sig_params,
 		mock->priv->cancel,
 		error
 	);
 
-	g_variant_unref(sig_params);
+	g_variant_unref(sig_types);
+
 	return retval;
 }
