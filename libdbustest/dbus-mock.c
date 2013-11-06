@@ -1013,8 +1013,9 @@ dbus_test_dbus_mock_object_emit_signal (DbusTestDbusMock * mock, DbusTestDbusMoc
 	} else {
 		sig_params = values;
 	}
+	g_variant_ref_sink(sig_params);
 
-	return _dbus_mock_iface_org_freedesktop_dbus_mock_call_emit_signal_sync(
+	gboolean retval = _dbus_mock_iface_org_freedesktop_dbus_mock_call_emit_signal_sync(
 		obj->proxy,
 		obj->interface,
 		name,
@@ -1023,4 +1024,7 @@ dbus_test_dbus_mock_object_emit_signal (DbusTestDbusMock * mock, DbusTestDbusMoc
 		mock->priv->cancel,
 		error
 	);
+
+	g_variant_unref(sig_params);
+	return retval;
 }
