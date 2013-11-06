@@ -321,6 +321,15 @@ test_methods (void)
 	return;
 }
 
+static void
+signal_abc_emitted (GDBusConnection * connection, const gchar * sender, const gchar * path, const gchar * interface, const gchar * signal, GVariant * params, gpointer user_data)
+{
+	if (g_variant_equal(params, g_variant_new_parsed("('a', 'b', 'c')"))) {
+		guint * count = (guint *)user_data;
+		(*count)++;
+	}
+}
+
 void
 test_signals (void)
 {
@@ -361,6 +370,27 @@ test_signals (void)
 		g_main_iteration(TRUE);
 
 	g_assert(signal_count == 1);
+
+	/* Signal with params */
+	guint signal_abc_count = 0;
+	g_dbus_connection_signal_subscribe(bus,
+		NULL, /* sender */
+		"foo.test.interface",
+		"testsig_abc",
+		"/test",
+		NULL, /* arg0 */
+		G_DBUS_SIGNAL_FLAGS_NONE,
+		signal_abc_emitted,
+		&signal_abc_count,
+		NULL); /* user data cleanup */
+
+	g_assert(dbus_test_dbus_mock_object_emit_signal(mock, obj, "testsig_abc", G_VARIANT_TYPE("(sss)"), g_variant_new_parsed("('a', 'b', 'c')"), NULL));
+
+	g_usleep(100000);
+	while (g_main_pending())
+		g_main_iteration(TRUE);
+
+	g_assert(signal_abc_count == 1);
 
 	/* Clean up */
 	g_object_unref(mock);
