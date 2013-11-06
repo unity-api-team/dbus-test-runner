@@ -1,6 +1,6 @@
 
-AC_INIT(dbus-test-runner, 12.10.1, ted@canonical.com)
-AC_COPYRIGHT([Copyright 2009 Canonical])
+AC_INIT(dbus-test-runner, 14.04.0, ted@canonical.com)
+AC_COPYRIGHT([Copyright 2009-2013 Canonical])
 
 AC_PREREQ(2.53)
 
