@@ -181,7 +181,8 @@ dbus_test_dbus_mock_dispose (GObject *object)
 {
 	DbusTestDbusMock * self = DBUS_TEST_DBUS_MOCK(object);
 
-	g_cancellable_cancel(self->priv->cancel);
+	if (self->priv->cancel != NULL)
+		g_cancellable_cancel(self->priv->cancel);
 	g_clear_object(&self->priv->cancel);
 
 	g_array_set_size(self->priv->objects, 0);
