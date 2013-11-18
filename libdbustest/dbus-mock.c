@@ -261,8 +261,11 @@ property_to_variant (MockObjectProperty * prop)
 	return g_variant_builder_end(&builder);
 }
 
-/* We need some special handling for DBusMock.  It doens't use tuples
-   like the rest of DBus.  So we need special strings. */
+/* DBus Mock is expecting a list of the types of the parameters as a
+   string, but without the tuple wrapper.  So in the traditional variant
+   type for parameters we could think of a function taking "(ss)" to get
+   two strings.  DBus Mock wants to recieve the string "ss".  If there
+   are no params, it should recieve the NULL string. */
 static GVariant *
 method_params_to_variant (const GVariantType * params)
 {
