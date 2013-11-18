@@ -382,7 +382,7 @@ dbus_test_process_new (const gchar * executable)
 GPid
 dbus_test_process_get_pid (DbusTestProcess * process)
 {
-	g_return_if_fail(DBUS_TEST_IS_PROCESS(process));
+	g_return_val_if_fail(DBUS_TEST_IS_PROCESS(process), 0);
 
 	if (get_state(DBUS_TEST_TASK(process)) == DBUS_TEST_TASK_STATE_RUNNING) {
 		return process->priv->pid;
