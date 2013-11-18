@@ -274,8 +274,15 @@ method_params_to_variant (const GVariantType * params)
 	}
 
 	const gchar * peek = g_variant_type_peek_string(params);
-	guint len = strlen(peek);
+	if (peek == NULL)
+		return g_variant_new_string("");
 
+	guint len = strlen(peek);
+	if (len == 0)
+		return g_variant_new_string("");
+
+	/* The only way if it's non-zero for it to be a single GVariantType
+	   is to have a tuple or array.  In the tuple case, unwrap. */
 	if (peek[0] == '(' && peek[len - 1] == ')') {
 		/* remove exterior tuple */
 		gchar * modified = g_strndup(peek + 1, len - 2);
