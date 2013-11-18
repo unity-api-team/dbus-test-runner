@@ -4,7 +4,7 @@
 #include <libdbustest/dbus-test.h>
 
 /* Timeout on our loop */
-gboolean
+static gboolean
 timeout_quit_func (gpointer user_data)
 {
 	GMainLoop * loop = (GMainLoop *)user_data;
@@ -13,7 +13,7 @@ timeout_quit_func (gpointer user_data)
 }
 
 
-void
+static void
 process_mainloop (const guint delay)
 {
 	GMainLoop * temploop = g_main_loop_new (NULL, FALSE);
@@ -27,7 +27,7 @@ process_mainloop (const guint delay)
 /*
 * Waiting until the session bus shuts down
 */
-void
+static void
 wait_for_connection_close (GDBusConnection *connection)
 {
 	g_object_add_weak_pointer(G_OBJECT(connection), (gpointer) &connection);
