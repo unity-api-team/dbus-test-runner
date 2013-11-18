@@ -9,6 +9,7 @@ Build-Depends: debhelper (>= 9),
                libdbus-glib-1-dev,
                gvfs-backends,
                dbus,
+               python3-dbusmock,
 Standards-Version: 3.9.3
 Homepage: https://launchpad.net/dbus-test-runner
 XS-Testsuite: autopkgtest
@@ -31,6 +32,7 @@ Architecture: any
 Multi-Arch: same
 Depends: ${shlibs:Depends},
          ${misc:Depends},
+Recommends: python3-dbusmock,
 Description: Runs tests under a new DBus session
  A simple little executable for running a couple of programs under a 
  new DBus session.

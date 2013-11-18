@@ -30,6 +30,7 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <libdbustest/service.h>
 #include <libdbustest/process.h>
 #include <libdbustest/bustle.h>
+#include <libdbustest/dbus-mock.h>
 
 
 #endif /* __DBUS_TEST_H__ */

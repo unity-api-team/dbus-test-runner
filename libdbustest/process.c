@@ -27,7 +27,7 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 struct _DbusTestProcessPrivate {
 	gchar * executable;
-	GList * parameters;
+	GArray * parameters;
 
 	GPid pid;
 	guint io_watch;
@@ -36,6 +36,13 @@ struct _DbusTestProcessPrivate {
 
 	gboolean complete;
 	gint status;
+};
+
+enum {
+	PROP_0,
+	PROP_EXECUTABLE,
+	PROP_PARAMETERS,
+	NUM_PROPS
 };
 
 #define DBUS_TEST_PROCESS_GET_PRIVATE(o) \
@@ -48,6 +55,14 @@ static void dbus_test_process_finalize   (GObject *object);
 static void process_run                  (DbusTestTask * task);
 static DbusTestTaskState get_state       (DbusTestTask * task);
 static gboolean get_passed               (DbusTestTask * task);
+static void get_property                 (GObject * object,
+                                          guint property_id,
+                                          GValue * value,
+                                          GParamSpec * pspec);
+static void set_property                 (GObject * object,
+                                          guint property_id,
+                                          const GValue * value,
+                                          GParamSpec * pspec);
 
 G_DEFINE_TYPE (DbusTestProcess, dbus_test_process, DBUS_TEST_TYPE_TASK);
 
@@ -60,6 +75,21 @@ dbus_test_process_class_init (DbusTestProcessClass *klass)
 
 	object_class->dispose = dbus_test_process_dispose;
 	object_class->finalize = dbus_test_process_finalize;
+	object_class->get_property = get_property;
+	object_class->set_property = set_property;
+
+	g_object_class_install_property (object_class, PROP_EXECUTABLE,
+	                                 g_param_spec_string("executable",
+	                                                     "Executable Name",
+	                                                     "The executable being run by the process object",
+	                                                     "", /* default */
+	                                                     G_PARAM_STATIC_STRINGS | G_PARAM_READWRITE));
+	g_object_class_install_property (object_class, PROP_PARAMETERS,
+	                                 g_param_spec_boxed("parameters",
+	                                                    "Parameters",
+	                                                    "Parameters to pass to the executable",
+	                                                    G_TYPE_ARRAY,
+	                                                    G_PARAM_STATIC_STRINGS | G_PARAM_READWRITE));
 
 	DbusTestTaskClass * task_class = DBUS_TEST_TASK_CLASS(klass);
 
@@ -70,13 +100,27 @@ dbus_test_process_class_init (DbusTestProcessClass *klass)
 	return;
 }
 
+/* Small helper to free the result of the pointer */
+static void
+array_free_helper (gpointer data)
+{
+	gchar ** typed_data = (gchar **)data;
+	g_free(*typed_data);
+	return;
+}
+
 static void
 dbus_test_process_init (DbusTestProcess *self)
 {
 	self->priv = DBUS_TEST_PROCESS_GET_PRIVATE(self);
 
 	self->priv->executable = NULL;
-	self->priv->parameters = NULL;
+
+	self->priv->parameters = g_array_new(TRUE /* zero terminated */,
+	                                     TRUE /* clear */,
+	                                     sizeof(gchar *));
+	g_array_set_clear_func(self->priv->parameters, array_free_helper);
+
 	self->priv->io_chan = NULL;
 
 	return;
@@ -141,10 +185,57 @@ dbus_test_process_finalize (GObject *object)
 	g_free(process->priv->executable);
 	process->priv->executable = NULL;
 
-	g_list_free_full(process->priv->parameters, g_free);
+	g_array_free(process->priv->parameters, TRUE /* free segment */);
 	process->priv->parameters = NULL;
 
 	G_OBJECT_CLASS (dbus_test_process_parent_class)->finalize (object);
+	return;
+}
+
+/* Get a property */
+static void
+get_property (GObject * object, guint property_id, G_GNUC_UNUSED GValue * value, GParamSpec * pspec)
+{
+	DbusTestProcess * self = DBUS_TEST_PROCESS(object);
+
+	switch (property_id) {
+	case PROP_EXECUTABLE:
+		g_value_set_string(value, self->priv->executable);
+		break;
+	case PROP_PARAMETERS:
+		g_value_set_boxed(value, self->priv->parameters);
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+	}
+
+	return;
+}
+
+/* Set a property */
+static void
+set_property (GObject * object, guint property_id, G_GNUC_UNUSED const GValue * value, GParamSpec * pspec)
+{
+	if (get_state(DBUS_TEST_TASK(object)) == DBUS_TEST_TASK_STATE_RUNNING) {
+		g_warning("Can't set properties on a running process");
+		return;
+	}
+
+	DbusTestProcess * self = DBUS_TEST_PROCESS(object);
+
+	switch (property_id) {
+	case PROP_EXECUTABLE:
+		g_free(self->priv->executable);
+		self->priv->executable = g_value_dup_string(value);
+		break;
+	case PROP_PARAMETERS:
+		g_array_free(self->priv->parameters, TRUE);
+		self->priv->parameters = g_value_dup_boxed(value);
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+	}
+
 	return;
 }
 
@@ -217,12 +308,12 @@ process_run (DbusTestTask * task)
 	DbusTestProcess * process = DBUS_TEST_PROCESS(task);
 
 	gchar ** argv;
-	argv = g_new0(gchar *, g_list_length(process->priv->parameters) + 2);
+	argv = g_new0(gchar *, process->priv->parameters->len + 2);
 
 	argv[0] = process->priv->executable;
 	guint i;
-	for (i = 0; i < g_list_length(process->priv->parameters); i++) {
-		argv[i + 1] = (gchar *)g_list_nth(process->priv->parameters, i)->data;
+	for (i = 0; i < process->priv->parameters->len; i++) {
+		argv[i + 1] = g_array_index(process->priv->parameters, gchar *, i);
 	}
 
 	GError * error = NULL;
@@ -274,11 +365,30 @@ dbus_test_process_new (const gchar * executable)
 	g_return_val_if_fail(executable != NULL, NULL);
 
 	DbusTestProcess * proc = g_object_new(DBUS_TEST_TYPE_PROCESS,
+	                                      "executable", executable,
 	                                      NULL);
 
-	proc->priv->executable = g_strdup(executable);
-
 	return proc;
+}
+
+/**
+ * dbus_test_process_get_pid:
+ * @process: The #DbusTestProcess to check
+ *
+ * Gets the process ID of the task if it is running
+ *
+ * Return value: The current PID or 0 if not running
+ */
+GPid
+dbus_test_process_get_pid (DbusTestProcess * process)
+{
+	g_return_val_if_fail(DBUS_TEST_IS_PROCESS(process), 0);
+
+	if (get_state(DBUS_TEST_TASK(process)) == DBUS_TEST_TASK_STATE_RUNNING) {
+		return process->priv->pid;
+	}
+
+	return 0;
 }
 
 void
@@ -287,7 +397,8 @@ dbus_test_process_append_param (DbusTestProcess * process, const gchar * paramet
 	g_return_if_fail(DBUS_TEST_IS_PROCESS(process));
 	g_return_if_fail(parameter != NULL);
 
-	process->priv->parameters = g_list_append(process->priv->parameters, g_strdup(parameter));
+	gchar * newstr = g_strdup(parameter);
+	g_array_append_val(process->priv->parameters, newstr);
 
 	return;
 }

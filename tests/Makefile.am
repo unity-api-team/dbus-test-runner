@@ -334,6 +334,40 @@ test-libdbustest-test: test-libdbustest test-libdbustest-getname
 
 DISTCLEANFILES += $(LIBDBUSTEST_XML_REPORT)
 
+###########################
+# libdbustest-mock
+###########################
+
+check_PROGRAMS += \
+	test-libdbustest-mock
+TESTS += test-libdbustest-mock-test
+
+test_libdbustest_mock_SOURCES = \
+	test-libdbustest-mock.c
+test_libdbustest_mock_CFLAGS = \
+	$(DBUS_TEST_RUNNER_CFLAGS) \
+	-I$(top_srcdir) \
+	-DSESSION_CONF="\"$(top_srcdir)/data/session.conf\"" \
+	-DGETNAME_PATH="\"$(abs_builddir)/test-libdbustest-getname\"" \
+	-Wall -Werror
+test_libdbustest_mock_LDADD = \
+	$(DBUS_TEST_RUNNER_LIBS) \
+	$(top_builddir)/libdbustest/libdbustest.la
+
+LIBDBUSTEST_MOCK_XML_REPORT = $(builddir)/libdbustest-mock-results.xml
+
+test-libdbustest-mock-test: test-libdbustest-mock
+	@echo "#!/bin/bash" > $@
+	@echo $(XVFB_RUN) >> $@
+	@echo gtester -k --verbose -o=$(LIBDBUSTEST_MOCK_XML_REPORT) $(builddir)/test-libdbustest-mock >> $@
+	@chmod +x $@
+
+DISTCLEANFILES += $(LIBDBUSTEST_MOCK_XML_REPORT)
+
+###########################
+# END
+###########################
+
 EXTRA_DIST = \
 	test-wait-outputer \
 	test-wait-output.reference \

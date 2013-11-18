@@ -50,6 +50,7 @@ GType dbus_test_process_get_type (void);
 
 DbusTestProcess * dbus_test_process_new (const gchar * executable);
 void dbus_test_process_append_param (DbusTestProcess * process, const gchar * parameter);
+GPid dbus_test_process_get_pid (DbusTestProcess * process);
 
 G_END_DECLS
 
