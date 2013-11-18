@@ -970,11 +970,7 @@ dbus_test_dbus_mock_object_update_property (DbusTestDbusMock * mock, DbusTestDbu
 
 		if (local_error != NULL) {
 			g_warning("Unable to update property: %s", local_error->message);
-			if (error != NULL) {
-				*error = local_error;
-			} else {
-				g_error_free(local_error);
-			}
+			g_propagate_error(error, local_error);
 			g_variant_unref(value);
 			return FALSE;
 		}
