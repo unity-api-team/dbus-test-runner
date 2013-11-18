@@ -398,7 +398,7 @@ dbus_test_process_append_param (DbusTestProcess * process, const gchar * paramet
 	g_return_if_fail(parameter != NULL);
 
 	gchar * newstr = g_strdup(parameter);
-	process->priv->parameters = g_array_append_val(process->priv->parameters, newstr);
+	g_array_append_val(process->priv->parameters, newstr);
 
 	return;
 }
