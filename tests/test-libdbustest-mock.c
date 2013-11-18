@@ -141,7 +141,10 @@ test_properties (void)
 
 	g_assert(propret != NULL);
 	testvar = g_variant_new_variant(g_variant_new_string("test"));
-	g_assert(g_variant_equal(propret, g_variant_new_tuple(&testvar, 1)));
+	testvar = g_variant_new_tuple(&testvar, 1);
+	g_variant_ref_sink(testvar);
+	g_assert(g_variant_equal(propret, testvar));
+	g_variant_unref(testvar);
 
 	g_variant_unref(propret);
 
@@ -182,7 +185,10 @@ test_properties (void)
 
 	g_assert(propret != NULL);
 	testvar = g_variant_new_variant(g_variant_new("(sssss)", "a", "b", "c", "d", "e"));
-	g_assert(g_variant_equal(propret, g_variant_new_tuple(&testvar, 1)));
+	testvar = g_variant_new_tuple(&testvar, 1);
+	g_variant_ref_sink(testvar);
+	g_assert(g_variant_equal(propret, testvar));
+	g_variant_unref(testvar);
 
 	g_variant_unref(propret);
 
@@ -209,7 +215,10 @@ test_properties (void)
 
 	g_assert(propret != NULL);
 	testvar = g_variant_new_variant(g_variant_new_string("test-update"));
-	g_assert(g_variant_equal(propret, g_variant_new_tuple(&testvar, 1)));
+	testvar = g_variant_new_tuple(&testvar, 1);
+	g_variant_ref_sink(testvar);
+	g_assert(g_variant_equal(propret, testvar));
+	g_variant_unref(testvar);
 
 	g_variant_unref(propret);
 
@@ -236,7 +245,10 @@ test_properties (void)
 
 	g_assert(propret != NULL);
 	testvar = g_variant_new_variant(g_variant_new_string("test-update"));
-	g_assert(g_variant_equal(propret, g_variant_new_tuple(&testvar, 1)));
+	testvar = g_variant_new_tuple(&testvar, 1);
+	g_variant_ref_sink(testvar);
+	g_assert(g_variant_equal(propret, testvar));
+	g_variant_unref(testvar);
 
 	g_variant_unref(propret);
 
@@ -301,7 +313,10 @@ test_methods (void)
 
 	g_assert(propret != NULL);
 	testvar = g_variant_new_string("test");
-	g_assert(g_variant_equal(propret, g_variant_new_tuple(&testvar, 1)));
+	testvar = g_variant_new_tuple(&testvar, 1);
+	g_variant_ref_sink(testvar);
+	g_assert(g_variant_equal(propret, testvar));
+	g_variant_unref(testvar);
 
 	g_variant_unref(propret);
 
@@ -454,7 +469,10 @@ test_running (void)
 
 	g_assert(propret != NULL);
 	testvar = g_variant_new_string("test");
-	g_assert(g_variant_equal(propret, g_variant_new_tuple(&testvar, 1)));
+	testvar = g_variant_new_tuple(&testvar, 1);
+	g_variant_ref_sink(testvar);
+	g_assert(g_variant_equal(propret, testvar));
+	g_variant_unref(testvar);
 
 	g_variant_unref(propret);
 
@@ -481,7 +499,10 @@ test_running (void)
 
 	g_assert(propret != NULL);
 	testvar = g_variant_new_variant(g_variant_new_string("test"));
-	g_assert(g_variant_equal(propret, g_variant_new_tuple(&testvar, 1)));
+	testvar = g_variant_new_tuple(&testvar, 1);
+	g_variant_ref_sink(testvar);
+	g_assert(g_variant_equal(propret, testvar));
+	g_variant_unref(testvar);
 
 	g_variant_unref(propret);
 
