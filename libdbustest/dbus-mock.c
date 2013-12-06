@@ -55,6 +55,7 @@ struct _MockObjectProperty {
 
 /* A method on an object */
 struct _MockObjectMethod {
+	gchar * interface;
 	gchar * name;
 	GVariantType * in;
 	GVariantType * out;
@@ -307,6 +308,31 @@ method_to_variant (MockObjectMethod * method)
 	return g_variant_builder_end(&builder);
 }
 
+static gboolean
+add_method (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const MockObjectMethod * method, GError ** error)
+{
+	GVariant * in = method_params_to_variant(method->in);
+	GVariant * out = method_params_to_variant(method->out);
+
+	g_variant_ref_sink(in);
+	g_variant_ref_sink(out);
+
+	gboolean ret = _dbus_mock_iface_org_freedesktop_dbus_mock_call_add_method_sync(
+		obj->proxy,
+		method->interface,
+		method->name,
+		g_variant_get_string(in, NULL),
+		g_variant_get_string(out, NULL),
+		method->code,
+		mock->priv->cancel,
+		error);
+
+	g_variant_unref(in);
+	g_variant_unref(out);
+
+	return ret;
+}
+
 /* Add an object to the DBus Mock */
 static gboolean
 install_object (DbusTestDbusMock * mock, DbusTestDbusMockObject * object, GError ** error)
@@ -340,7 +366,8 @@ install_object (DbusTestDbusMock * mock, DbusTestDbusMockObject * object, GError
 
 		for (i = 0; i < object->methods->len; i++) {
 			MockObjectMethod * method = &g_array_index(object->methods, MockObjectMethod, i);
-			g_variant_builder_add_value(&method_builder, method_to_variant(method));
+			if (!g_strcmp0 (method->interface, object->interface))
+				g_variant_builder_add_value(&method_builder, method_to_variant(method));
 		}
 
 		methods = g_variant_builder_end(&method_builder);
@@ -368,6 +395,13 @@ install_object (DbusTestDbusMock * mock, DbusTestDbusMockObject * object, GError
 		mock->priv->cancel,
 		error
 	);
+
+	guint i;
+	for (i = 0; i < object->methods->len; i++) {
+		MockObjectMethod * method = &g_array_index(object->methods, MockObjectMethod, i);
+		if (g_strcmp0 (method->interface, object->interface))
+			add_method (mock, object, method, error);
+	}
 
 	return object->proxy != NULL;
 }
@@ -402,6 +436,7 @@ run (DbusTestTask * task)
 	DbusTestDbusMock * self = DBUS_TEST_DBUS_MOCK(task);
 
 	/* Grab the new bus */
+	g_assert (self->priv->bus == NULL);
 	self->priv->bus = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, NULL);
 
 	/* Use the process code to get the process running */
@@ -586,6 +621,9 @@ call_free (gpointer pcall)
  * dbus_test_dbus_mock_object_add_method:
  * @mock: A #DbusTestDbusMock instance
  * @obj: A handle to an object on the mock interface
+ * @interface: D-Bus interface to add this to. For convenience you can specify
+ *             NULL here to add the method in the object's main interface
+ *             (as specified on construction).
  * @method: Name of the method
  * @inparams: (allow-none): Parameters going into the method as a tuple
  * @outparams: (allow-none): Parameters gonig out of the method as a tuple
@@ -599,12 +637,15 @@ call_free (gpointer pcall)
  * Return value: Whether it was registered successfully
  */
 gboolean
-dbus_test_dbus_mock_object_add_method (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * method, const GVariantType * inparams, const GVariantType * outparams, const gchar * python_code, G_GNUC_UNUSED GError ** error)
+dbus_test_dbus_mock_object_add_method (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * interface, const gchar * method, const GVariantType * inparams, const GVariantType * outparams, const gchar * python_code, G_GNUC_UNUSED GError ** error)
 {
 	g_return_val_if_fail(DBUS_TEST_IS_DBUS_MOCK(mock), FALSE);
 	g_return_val_if_fail(obj != NULL, FALSE);
 	g_return_val_if_fail(method != NULL, FALSE);
 	g_return_val_if_fail(python_code != NULL, FALSE);
+
+	if (!interface)
+		interface = obj->interface;
 
 	/* Check to make sure it doesn't already exist */
 	MockObjectMethod * meth = get_obj_method(obj, method);
@@ -612,6 +653,7 @@ dbus_test_dbus_mock_object_add_method (DbusTestDbusMock * mock, DbusTestDbusMock
 
 	/* Build a new one */
 	MockObjectMethod newmethod;
+	newmethod.interface = g_strdup(interface);
 	newmethod.name = g_strdup(method);
 	newmethod.in = inparams ? g_variant_type_copy(inparams) : NULL;
 	newmethod.out = outparams ? g_variant_type_copy(outparams) : NULL;
@@ -626,27 +668,7 @@ dbus_test_dbus_mock_object_add_method (DbusTestDbusMock * mock, DbusTestDbusMock
 		return TRUE;
 	}
 
-	GVariant * in = method_params_to_variant(inparams);
-	GVariant * out = method_params_to_variant(outparams);
-
-	g_variant_ref_sink(in);
-	g_variant_ref_sink(out);
-
-	gboolean ret = _dbus_mock_iface_org_freedesktop_dbus_mock_call_add_method_sync(
-		obj->proxy,
-		obj->interface,
-		method,
-		g_variant_get_string(in, NULL),
-		g_variant_get_string(out, NULL),
-		python_code,
-		mock->priv->cancel,
-		error
-	);
-
-	g_variant_unref(in);
-	g_variant_unref(out);
-
-	return ret;
+	return add_method (mock, obj, &newmethod, error);
 }
 
 /* Free the data allocated in dbus_test_dbus_mock_object_add_method() */
@@ -655,6 +677,7 @@ method_free (gpointer data)
 {
 	MockObjectMethod * method = (MockObjectMethod *)data;
 
+	g_free(method->interface);
 	g_free(method->name);
 	g_variant_type_free(method->in);
 	g_variant_type_free(method->out);
@@ -860,6 +883,9 @@ get_obj_property (DbusTestDbusMockObject * obj, const gchar * name)
  * dbus_test_dbus_mock_object_add_property:
  * @mock: A #DbusTestDbusMock instance
  * @obj: A handle to an object on the mock interface
+ * @interface: D-Bus interface to add this to. For convenience you can specify
+ *             NULL here to add the method in the object's main interface
+ *             (as specified on construction).
  * @name: Name of the property
  * @type: Type of the property
  * @value: Initial value of the property
@@ -870,7 +896,7 @@ get_obj_property (DbusTestDbusMockObject * obj, const gchar * name)
  * Return value: Whether it was added
  */
 gboolean
-dbus_test_dbus_mock_object_add_property (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * name, const GVariantType * type, GVariant * value, G_GNUC_UNUSED GError ** error)
+dbus_test_dbus_mock_object_add_property (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * interface, const gchar * name, const GVariantType * type, GVariant * value, G_GNUC_UNUSED GError ** error)
 {
 	g_return_val_if_fail(DBUS_TEST_IS_DBUS_MOCK(mock), FALSE);
 	g_return_val_if_fail(obj != NULL, FALSE);
@@ -907,7 +933,7 @@ dbus_test_dbus_mock_object_add_property (DbusTestDbusMock * mock, DbusTestDbusMo
 
 	return _dbus_mock_iface_org_freedesktop_dbus_mock_call_add_properties_sync(
 		obj->proxy,
-		obj->interface,
+		interface ? interface : obj->interface,
 		g_variant_builder_end(&builder),
 		mock->priv->cancel,
 		error
@@ -933,6 +959,9 @@ property_free (gpointer data)
  * dbus_test_dbus_mock_object_update_property:
  * @mock: A #DbusTestDbusMock instance
  * @obj: A handle to an object on the mock interface
+ * @interface: D-Bus interface to add this to. For convenience you can specify
+ *             NULL here to add the method in the object's main interface
+ *             (as specified on construction).
  * @name: Name of the property
  * @value: Initial value of the property
  * @error: A possible error
@@ -943,7 +972,7 @@ property_free (gpointer data)
  * Return value: Whether it was changed
  */
 gboolean
-dbus_test_dbus_mock_object_update_property (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * name, GVariant * value, GError ** error)
+dbus_test_dbus_mock_object_update_property (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * interface, const gchar * name, GVariant * value, GError ** error)
 {
 	g_return_val_if_fail(DBUS_TEST_IS_DBUS_MOCK(mock), FALSE);
 	g_return_val_if_fail(obj != NULL, FALSE);
@@ -970,7 +999,7 @@ dbus_test_dbus_mock_object_update_property (DbusTestDbusMock * mock, DbusTestDbu
 			"org.freedesktop.DBus.Properties",
 			"Set",
 			g_variant_new("(ssv)",
-				obj->interface,
+				interface ? interface : obj->interface,
 				name,
 				value),
 			NULL, /* return */
@@ -1035,6 +1064,9 @@ tuple_to_array (GVariant * tuple)
  * dbus_test_dbus_mock_object_emit_signal:
  * @mock: A #DbusTestDbusMock instance
  * @obj: A handle to an object on the mock interface
+ * @interface: D-Bus interface to add this to. For convenience you can specify
+ *             NULL here to add the method in the object's main interface
+ *             (as specified on construction).
  * @name: Name of the signal
  * @params: The parameters of the signal as a tuple
  * @values: Values to emit with the signal
@@ -1047,7 +1079,7 @@ tuple_to_array (GVariant * tuple)
  *   to be emitted.
  */
 gboolean
-dbus_test_dbus_mock_object_emit_signal (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * name, const GVariantType * params, GVariant * values, GError ** error)
+dbus_test_dbus_mock_object_emit_signal (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * interface, const gchar * name, const GVariantType * params, GVariant * values, GError ** error)
 {
 	g_return_val_if_fail(DBUS_TEST_IS_DBUS_MOCK(mock), FALSE);
 	g_return_val_if_fail(obj != NULL, FALSE);
@@ -1070,7 +1102,7 @@ dbus_test_dbus_mock_object_emit_signal (DbusTestDbusMock * mock, DbusTestDbusMoc
 
 	gboolean retval = _dbus_mock_iface_org_freedesktop_dbus_mock_call_emit_signal_sync(
 		obj->proxy,
-		obj->interface,
+		interface ? interface : obj->interface,
 		name,
 		g_variant_get_string(sig_types, NULL),
 		sig_params,
