@@ -75,9 +75,11 @@ dbus_test_bustle_class_init (DbusTestBustleClass *klass)
 static void
 dbus_test_bustle_init (DbusTestBustle *self)
 {
+	gchar * current_dir = g_get_current_dir();
+
 	self->priv = DBUS_TEST_BUSTLE_GET_PRIVATE(self);
 
-	self->priv->filename = g_strconcat(g_get_current_dir(), G_DIR_SEPARATOR_S, "bustle.log", NULL);
+	self->priv->filename = g_strconcat(current_dir, G_DIR_SEPARATOR_S, "bustle.log", NULL);
 	self->priv->executable = g_strdup(BUSTLE_DUAL_MONITOR);
 
 	self->priv->watch = 0;
@@ -87,6 +89,7 @@ dbus_test_bustle_init (DbusTestBustle *self)
 
 	self->priv->crashed = FALSE;
 
+	g_free (current_dir);
 	return;
 }
 
@@ -234,12 +237,14 @@ process_run (DbusTestTask * task)
 	}
 
 	gint bustle_stderr_num;
+
+	gchar * current_dir = g_get_current_dir();
 	
 	gchar ** bustle_monitor = g_new0(gchar *, 3);
 	bustle_monitor[0] = (gchar *)bustler->priv->executable;
 	bustle_monitor[1] = (gchar *)bustler->priv->filename;
 
-	g_spawn_async_with_pipes(g_get_current_dir(),
+	g_spawn_async_with_pipes(current_dir,
 	                         bustle_monitor, /* argv */
 	                         NULL, /* envp */
 	                         /* G_SPAWN_SEARCH_PATH | G_SPAWN_STDERR_TO_DEV_NULL, */ /* flags */
@@ -251,6 +256,9 @@ process_run (DbusTestTask * task)
 	                         NULL, /* stdout */
 	                         &bustle_stderr_num, /* stderr */
 	                         &error); /* error */
+
+	g_free(current_dir);
+	g_free(bustle_monitor);
 
 	if (error != NULL) {
 		g_critical("Unable to start bustling data: %s", error->message);

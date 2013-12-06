@@ -415,8 +415,9 @@ start_daemon (DbusTestService * service)
 	gint dbus_stdout = 0;
 	GError * error = NULL;
 	gchar * blank[1] = {NULL};
+	gchar * current_dir = g_get_current_dir();
 	gchar * dbus_startup[] = {service->priv->dbus_daemon, "--config-file", service->priv->dbus_configfile, "--print-address", NULL};
-	g_spawn_async_with_pipes(g_get_current_dir(),
+	g_spawn_async_with_pipes(current_dir,
 	                         dbus_startup, /* argv */
 	                         service->priv->keep_env ? NULL : blank, /* envp */
 	                         G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD, /* flags */
@@ -427,6 +428,8 @@ start_daemon (DbusTestService * service)
 	                         &dbus_stdout, /* stdout */
 	                         NULL, /* stderr */
 	                         &error); /* error */
+
+	g_free (current_dir);
 
 	if (error != NULL) {
 		g_critical("Unable to start dbus daemon: %s", error->message);

@@ -307,6 +307,8 @@ process_run (DbusTestTask * task)
 	g_return_if_fail(DBUS_TEST_IS_PROCESS(task));
 	DbusTestProcess * process = DBUS_TEST_PROCESS(task);
 
+	gchar * current_dir = g_get_current_dir();
+
 	gchar ** argv;
 	argv = g_new0(gchar *, process->priv->parameters->len + 2);
 
@@ -318,7 +320,7 @@ process_run (DbusTestTask * task)
 
 	GError * error = NULL;
 	gint proc_stdout;
-	g_spawn_async_with_pipes(g_get_current_dir(),
+	g_spawn_async_with_pipes(current_dir,
 	                         argv, /* argv */
 	                         NULL, /* envp */
 	                         G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD, /* flags */
@@ -329,6 +331,7 @@ process_run (DbusTestTask * task)
 	                         &proc_stdout, /* stdout */
 	                         NULL, /* stderr */
 	                         &error); /* error */
+	g_free(current_dir);
 	g_free(argv);
 
 	if (error != NULL) {
