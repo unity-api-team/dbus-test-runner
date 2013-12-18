@@ -253,6 +253,7 @@ proc_watcher (GPid pid, gint status, gpointer data)
 
 	process->priv->complete = TRUE;
 	process->priv->status = status;
+	process->priv->watcher = 0;
 
 	if (status) {
 		message = g_strdup_printf("Exited with status %d", status);
