@@ -531,7 +531,7 @@ test_interfaces (void)
 	g_assert(obj1 != NULL);
 
 	g_assert(dbus_test_dbus_mock_object_add_method(mock, obj1,
-		"method",
+		"testmethod",
 		G_VARIANT_TYPE("s"),
 		G_VARIANT_TYPE("s"),
 		"ret = 'test'",
@@ -542,7 +542,7 @@ test_interfaces (void)
 	g_assert(obj2 != NULL);
 
 	g_assert(dbus_test_dbus_mock_object_add_method(mock, obj2,
-		"method",
+		"testothermethod",
 		G_VARIANT_TYPE("s"),
 		G_VARIANT_TYPE("s"),
 		"ret = 'test'",
@@ -566,7 +566,7 @@ test_interfaces (void)
 		"foo.test",
 		"/test",
 		"foo.test.interface",
-		"method",
+		"testmethod",
 		g_variant_new("(s)", "testin"),
 		G_VARIANT_TYPE("(s)"),
 		G_DBUS_CALL_FLAGS_NONE,
@@ -575,14 +575,14 @@ test_interfaces (void)
 		&error);
 
 	if (error != NULL) {
-		g_error("Unable to call method: %s", error->message);
+		g_error("Unable to call testmethod: %s", error->message);
 		g_error_free(error);
 	}
 
 	g_assert(propret != NULL);
 	g_variant_unref(propret);
 
-	g_assert(dbus_test_dbus_mock_object_get_method_calls(mock, obj1, "method1", &len, NULL) != NULL);
+	g_assert(dbus_test_dbus_mock_object_get_method_calls(mock, obj1, "testmethod", &len, NULL) != NULL);
 	g_assert(len == 1);
 
 
@@ -592,7 +592,7 @@ test_interfaces (void)
 		"foo.test",
 		"/test",
 		"foo.test.otherinterface",
-		"method",
+		"testothermethod",
 		g_variant_new("(s)", "testin"),
 		G_VARIANT_TYPE("(s)"),
 		G_DBUS_CALL_FLAGS_NONE,
@@ -601,14 +601,14 @@ test_interfaces (void)
 		&error);
 
 	if (error != NULL) {
-		g_error("Unable to call method: %s", error->message);
+		g_error("Unable to call testothermethod: %s", error->message);
 		g_error_free(error);
 	}
 
 	g_assert(propret != NULL);
 	g_variant_unref(propret);
 
-	g_assert(dbus_test_dbus_mock_object_get_method_calls(mock, obj2, "method1", &len, NULL) != NULL);
+	g_assert(dbus_test_dbus_mock_object_get_method_calls(mock, obj2, "testothermethod", &len, NULL) != NULL);
 	g_assert(len == 1);
 
 
