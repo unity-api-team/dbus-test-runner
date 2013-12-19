@@ -515,6 +515,113 @@ test_running (void)
 	return;
 }
 
+void
+test_interfaces (void)
+{
+	DbusTestService * service = dbus_test_service_new(NULL);
+	g_assert(service != NULL);
+
+	dbus_test_service_set_conf_file(service, SESSION_CONF);
+
+	DbusTestDbusMock * mock = dbus_test_dbus_mock_new("foo.test");
+	g_assert(mock != NULL);
+
+	/* Add the first object */
+	DbusTestDbusMockObject * obj1 = dbus_test_dbus_mock_get_object(mock, "/test", "foo.test.interface", NULL);
+	g_assert(obj1 != NULL);
+
+	g_assert(dbus_test_dbus_mock_object_add_method(mock, obj1,
+		"method",
+		G_VARIANT_TYPE("s"),
+		G_VARIANT_TYPE("s"),
+		"ret = 'test'",
+		NULL));
+
+	/* Add the second object */
+	DbusTestDbusMockObject * obj2 = dbus_test_dbus_mock_get_object(mock, "/test", "foo.test.otherinterface", NULL);
+	g_assert(obj2 != NULL);
+
+	g_assert(dbus_test_dbus_mock_object_add_method(mock, obj2,
+		"method",
+		G_VARIANT_TYPE("s"),
+		G_VARIANT_TYPE("s"),
+		"ret = 'test'",
+		NULL));
+
+	/* Startup the mock */
+	dbus_test_service_add_task(service, DBUS_TEST_TASK(mock));
+	dbus_test_service_start_tasks(service);
+
+	GDBusConnection * bus = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, NULL);
+	g_dbus_connection_set_exit_on_close(bus, FALSE);
+
+	/* Vars */
+	GVariant * propret = NULL;
+	GError * error = NULL;
+	guint len = 0;
+
+
+	/* Check method */
+	propret = g_dbus_connection_call_sync(bus,
+		"foo.test",
+		"/test",
+		"foo.test.interface",
+		"method",
+		g_variant_new("(s)", "testin"),
+		G_VARIANT_TYPE("(s)"),
+		G_DBUS_CALL_FLAGS_NONE,
+		-1,
+		NULL,
+		&error);
+
+	if (error != NULL) {
+		g_error("Unable to call method: %s", error->message);
+		g_error_free(error);
+	}
+
+	g_assert(propret != NULL);
+	g_variant_unref(propret);
+
+	g_assert(dbus_test_dbus_mock_object_get_method_calls(mock, obj1, "method1", &len, NULL) != NULL);
+	g_assert(len == 1);
+
+
+	/* Check method */
+	len = 0;
+	propret = g_dbus_connection_call_sync(bus,
+		"foo.test",
+		"/test",
+		"foo.test.otherinterface",
+		"method",
+		g_variant_new("(s)", "testin"),
+		G_VARIANT_TYPE("(s)"),
+		G_DBUS_CALL_FLAGS_NONE,
+		-1,
+		NULL,
+		&error);
+
+	if (error != NULL) {
+		g_error("Unable to call method: %s", error->message);
+		g_error_free(error);
+	}
+
+	g_assert(propret != NULL);
+	g_variant_unref(propret);
+
+	g_assert(dbus_test_dbus_mock_object_get_method_calls(mock, obj2, "method1", &len, NULL) != NULL);
+	g_assert(len == 1);
+
+
+	/* Clean up */
+	g_object_unref(mock);
+	g_object_unref(service);
+
+	wait_for_connection_close(bus);
+
+	return;
+}
+
+
 /* Build our test suite */
 void
 test_libdbustest_mock_suite (void)
@@ -524,6 +631,7 @@ test_libdbustest_mock_suite (void)
 	g_test_add_func ("/libdbustest/mock/methods",      test_methods);
 	g_test_add_func ("/libdbustest/mock/signals",      test_signals);
 	g_test_add_func ("/libdbustest/mock/running",      test_running);
+	g_test_add_func ("/libdbustest/mock/interfaces",   test_interfaces);
 
 	return;
 }
