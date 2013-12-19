@@ -33,6 +33,7 @@ struct _DbusTestDbusMockPrivate {
 	_DbusMockIfaceOrgFreedesktopDBusMock * proxy;
 	/* Entries of DbusTestDbusMockObject */
 	GArray * objects;
+	GHashTable * object_proxies;
 	GDBusConnection * bus;
 	GCancellable * cancel;
 };
@@ -136,6 +137,8 @@ dbus_test_dbus_mock_init (DbusTestDbusMock *self)
 	self->priv->objects = g_array_new(FALSE, TRUE, sizeof(DbusTestDbusMockObject));
 	g_array_set_clear_func(self->priv->objects, object_free);
 
+	self->priv->object_proxies = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_object_unref);
+
 	self->priv->cancel = g_cancellable_new();
 
 	return;
@@ -185,6 +188,7 @@ dbus_test_dbus_mock_dispose (GObject *object)
 		g_cancellable_cancel(self->priv->cancel);
 	g_clear_object(&self->priv->cancel);
 
+	g_hash_table_remove_all(self->priv->object_proxies);
 	g_array_set_size(self->priv->objects, 0);
 	g_clear_object(&self->priv->proxy);
 	g_clear_object(&self->priv->bus);
@@ -201,6 +205,7 @@ dbus_test_dbus_mock_finalize (GObject *object)
 
 	g_free(self->priv->name);
 	g_array_free(self->priv->objects, TRUE);
+	g_hash_table_destroy(self->priv->object_proxies);
 
 	G_OBJECT_CLASS (dbus_test_dbus_mock_parent_class)->finalize (object);
 	return;
