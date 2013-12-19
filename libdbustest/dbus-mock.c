@@ -32,7 +32,7 @@ struct _DbusTestDbusMockPrivate {
 	gchar * name;
 	_DbusMockIfaceOrgFreedesktopDBusMock * proxy;
 	/* Entries of DbusTestDbusMockObject */
-	GArray * objects;
+	GList * objects;
 	GHashTable * object_proxies;
 	GDBusConnection * bus;
 	GCancellable * cancel;
@@ -133,9 +133,7 @@ dbus_test_dbus_mock_init (DbusTestDbusMock *self)
 {
 	self->priv = DBUS_TEST_DBUS_MOCK_GET_PRIVATE(self);
 
-	self->priv->objects = g_array_new(FALSE, TRUE, sizeof(DbusTestDbusMockObject));
-	g_array_set_clear_func(self->priv->objects, object_free);
-
+	self->priv->objects = NULL;
 	self->priv->object_proxies = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_object_unref);
 
 	self->priv->cancel = g_cancellable_new();
@@ -188,7 +186,10 @@ dbus_test_dbus_mock_dispose (GObject *object)
 	g_clear_object(&self->priv->cancel);
 
 	g_hash_table_remove_all(self->priv->object_proxies);
-	g_array_set_size(self->priv->objects, 0);
+
+	g_list_free_full(self->priv->objects, object_free);
+	self->priv->objects = NULL;
+
 	g_clear_object(&self->priv->proxy);
 	g_clear_object(&self->priv->bus);
 
@@ -203,7 +204,6 @@ dbus_test_dbus_mock_finalize (GObject *object)
 	DbusTestDbusMock * self = DBUS_TEST_DBUS_MOCK(object);
 
 	g_free(self->priv->name);
-	g_array_free(self->priv->objects, TRUE);
 	g_hash_table_destroy(self->priv->object_proxies);
 
 	G_OBJECT_CLASS (dbus_test_dbus_mock_parent_class)->finalize (object);
@@ -494,11 +494,11 @@ run (DbusTestTask * task)
 	g_free(owner);
 
 	/* Second, Install Objects */
-	guint i;
-	for (i = 0; i < self->priv->objects->len; i++) {
+	GList * lobj = self->priv->objects;
+	for (lobj = self->priv->objects; lobj != NULL; lobj = g_list_next(lobj)) {
 		GError * error = NULL;
 
-		DbusTestDbusMockObject * obj = &g_array_index(self->priv->objects, DbusTestDbusMockObject, i);
+		DbusTestDbusMockObject * obj = (DbusTestDbusMockObject *)lobj->data;
 		install_object(self, obj, &error);
 
 		if (error != NULL) {
@@ -554,9 +554,9 @@ dbus_test_dbus_mock_get_object (DbusTestDbusMock * mock, const gchar * path, con
 	g_return_val_if_fail(interface != NULL, NULL);
 
 	/* Check to see if we have that one */
-	guint i;
-	for (i = 0; i < mock->priv->objects->len; i++) {
-		DbusTestDbusMockObject * obj = &g_array_index(mock->priv->objects, DbusTestDbusMockObject, i);
+	GList * lobj = mock->priv->objects;
+	for (lobj = mock->priv->objects; lobj != NULL; lobj = g_list_next(lobj)) {
+		DbusTestDbusMockObject * obj = (DbusTestDbusMockObject *)lobj->data;
 
 		if (g_strcmp0(path, obj->object_path) == 0 &&
 			g_strcmp0(interface, obj->interface) == 0) {
@@ -565,26 +565,25 @@ dbus_test_dbus_mock_get_object (DbusTestDbusMock * mock, const gchar * path, con
 	}
 
 	/* K, that's cool.  We'll build it then. */
-	DbusTestDbusMockObject newobj;
+	DbusTestDbusMockObject * newobj = g_new0(DbusTestDbusMockObject, 1);
 
-	newobj.object_path = g_strdup(path);
-	newobj.interface = g_strdup(interface);
-	newobj.properties = g_array_new(FALSE, TRUE, sizeof(MockObjectProperty));
-	g_array_set_clear_func(newobj.properties, property_free);
-	newobj.methods = g_array_new(FALSE, TRUE, sizeof(MockObjectMethod));
-	g_array_set_clear_func(newobj.methods, method_free);
+	newobj->object_path = g_strdup(path);
+	newobj->interface = g_strdup(interface);
+	newobj->properties = g_array_new(FALSE, TRUE, sizeof(MockObjectProperty));
+	g_array_set_clear_func(newobj->properties, property_free);
+	newobj->methods = g_array_new(FALSE, TRUE, sizeof(MockObjectMethod));
+	g_array_set_clear_func(newobj->methods, method_free);
 
-	g_array_append_val(mock->priv->objects, newobj);
-	DbusTestDbusMockObject * obj = &g_array_index(mock->priv->objects, DbusTestDbusMockObject, mock->priv->objects->len - 1);
+	mock->priv->objects = g_list_prepend(mock->priv->objects, newobj);
 
-	g_debug("Creating object: %s (%s)", obj->object_path, obj->interface);
+	g_debug("Creating object: %s (%s)", newobj->object_path, newobj->interface);
 
 	if (!is_running(mock)) {
-		return obj;
+		return newobj;
 	}
 
-	install_object(mock, obj, error);
-	return obj;
+	install_object(mock, newobj, error);
+	return newobj;
 }
 
 /* Objects are initialized in dbus_test_dbus_mock_get_object() and
@@ -600,7 +599,7 @@ object_free (gpointer data)
 	g_array_free(obj->properties, TRUE);
 	g_array_free(obj->methods, TRUE);
 
-	/* NOTE: No free'ing of data */
+	g_free(data);
 	return;
 }
 
