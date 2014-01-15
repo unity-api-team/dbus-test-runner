@@ -32,7 +32,8 @@ struct _DbusTestDbusMockPrivate {
 	gchar * name;
 	_DbusMockIfaceOrgFreedesktopDBusMock * proxy;
 	/* Entries of DbusTestDbusMockObject */
-	GArray * objects;
+	GList * objects;
+	GHashTable * object_proxies;
 	GDBusConnection * bus;
 	GCancellable * cancel;
 };
@@ -43,7 +44,6 @@ struct _DbusTestDbusMockObject {
 	gchar * interface;
 	GArray * properties;
 	GArray * methods;
-	_DbusMockIfaceOrgFreedesktopDBusMock * proxy;
 };
 
 /* A property on an object */
@@ -133,8 +133,8 @@ dbus_test_dbus_mock_init (DbusTestDbusMock *self)
 {
 	self->priv = DBUS_TEST_DBUS_MOCK_GET_PRIVATE(self);
 
-	self->priv->objects = g_array_new(FALSE, TRUE, sizeof(DbusTestDbusMockObject));
-	g_array_set_clear_func(self->priv->objects, object_free);
+	self->priv->objects = NULL;
+	self->priv->object_proxies = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_object_unref);
 
 	self->priv->cancel = g_cancellable_new();
 
@@ -185,7 +185,11 @@ dbus_test_dbus_mock_dispose (GObject *object)
 		g_cancellable_cancel(self->priv->cancel);
 	g_clear_object(&self->priv->cancel);
 
-	g_array_set_size(self->priv->objects, 0);
+	g_hash_table_remove_all(self->priv->object_proxies);
+
+	g_list_free_full(self->priv->objects, object_free);
+	self->priv->objects = NULL;
+
 	g_clear_object(&self->priv->proxy);
 	g_clear_object(&self->priv->bus);
 
@@ -200,7 +204,7 @@ dbus_test_dbus_mock_finalize (GObject *object)
 	DbusTestDbusMock * self = DBUS_TEST_DBUS_MOCK(object);
 
 	g_free(self->priv->name);
-	g_array_free(self->priv->objects, TRUE);
+	g_hash_table_destroy(self->priv->object_proxies);
 
 	G_OBJECT_CLASS (dbus_test_dbus_mock_parent_class)->finalize (object);
 	return;
@@ -348,28 +352,70 @@ install_object (DbusTestDbusMock * mock, DbusTestDbusMockObject * object, GError
 		methods = g_variant_new_array(G_VARIANT_TYPE("(ssss)"), NULL, 0);
 	}
 
-	gboolean add_object = _dbus_mock_iface_org_freedesktop_dbus_mock_call_add_object_sync(
-		mock->priv->proxy,
-		object->object_path,
-		object->interface,
-		properties,
-		methods,
-		mock->priv->cancel,
-		error);
 
-	if (!add_object) {
-		return add_object;
+	_DbusMockIfaceOrgFreedesktopDBusMock * proxy = g_hash_table_lookup(mock->priv->object_proxies, object->object_path);
+
+	if (proxy == NULL) {
+		g_debug("Add object");
+		gboolean add_object = _dbus_mock_iface_org_freedesktop_dbus_mock_call_add_object_sync(
+			mock->priv->proxy,
+			object->object_path,
+			object->interface,
+			properties,
+			methods,
+			mock->priv->cancel,
+			error);
+
+		if (add_object) {
+			proxy = _dbus_mock_iface_org_freedesktop_dbus_mock_proxy_new_sync(mock->priv->bus,
+				G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES | G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START,
+				mock->priv->name,
+				object->object_path, /* path */
+				mock->priv->cancel,
+				error
+			);
+
+			g_hash_table_insert(mock->priv->object_proxies, g_strdup(object->object_path), proxy);
+		}
+	} else {
+		gboolean methods_sent = FALSE;
+		gboolean props_sent = FALSE;
+
+		if (object->properties->len > 0) {
+			g_debug("Add props");
+			props_sent = _dbus_mock_iface_org_freedesktop_dbus_mock_call_add_properties_sync(
+				proxy,
+				object->interface,
+				properties,
+				NULL, /* cancel */
+				error);
+		} else {
+			props_sent = TRUE;
+			g_variant_ref_sink(properties);
+			g_variant_unref(properties);
+		}
+
+		if (object->methods->len > 0) {
+			g_debug("Add methods");
+			methods_sent = _dbus_mock_iface_org_freedesktop_dbus_mock_call_add_methods_sync(
+				proxy,
+				object->interface,
+				methods,
+				NULL, /* cancel */
+				error);
+		} else {
+			methods_sent = TRUE;
+			g_variant_ref_sink(methods);
+			g_variant_unref(methods);
+		}
+
+		if (!methods_sent || !props_sent) {
+			g_warning("Unable to send methods and properties");
+			proxy = NULL;
+		}
 	}
 
-	object->proxy = _dbus_mock_iface_org_freedesktop_dbus_mock_proxy_new_sync(mock->priv->bus,
-		G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES | G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START,
-		mock->priv->name,
-		object->object_path, /* path */
-		mock->priv->cancel,
-		error
-	);
-
-	return object->proxy != NULL;
+	return proxy != NULL;
 }
 
 /* Catch the mock taking too long to start */
@@ -448,11 +494,11 @@ run (DbusTestTask * task)
 	g_free(owner);
 
 	/* Second, Install Objects */
-	guint i;
-	for (i = 0; i < self->priv->objects->len; i++) {
+	GList * lobj = self->priv->objects;
+	for (lobj = self->priv->objects; lobj != NULL; lobj = g_list_next(lobj)) {
 		GError * error = NULL;
 
-		DbusTestDbusMockObject * obj = &g_array_index(self->priv->objects, DbusTestDbusMockObject, i);
+		DbusTestDbusMockObject * obj = (DbusTestDbusMockObject *)lobj->data;
 		install_object(self, obj, &error);
 
 		if (error != NULL) {
@@ -508,9 +554,9 @@ dbus_test_dbus_mock_get_object (DbusTestDbusMock * mock, const gchar * path, con
 	g_return_val_if_fail(interface != NULL, NULL);
 
 	/* Check to see if we have that one */
-	guint i;
-	for (i = 0; i < mock->priv->objects->len; i++) {
-		DbusTestDbusMockObject * obj = &g_array_index(mock->priv->objects, DbusTestDbusMockObject, i);
+	GList * lobj = mock->priv->objects;
+	for (lobj = mock->priv->objects; lobj != NULL; lobj = g_list_next(lobj)) {
+		DbusTestDbusMockObject * obj = (DbusTestDbusMockObject *)lobj->data;
 
 		if (g_strcmp0(path, obj->object_path) == 0 &&
 			g_strcmp0(interface, obj->interface) == 0) {
@@ -519,25 +565,25 @@ dbus_test_dbus_mock_get_object (DbusTestDbusMock * mock, const gchar * path, con
 	}
 
 	/* K, that's cool.  We'll build it then. */
-	DbusTestDbusMockObject newobj;
+	DbusTestDbusMockObject * newobj = g_new0(DbusTestDbusMockObject, 1);
 
-	newobj.object_path = g_strdup(path);
-	newobj.interface = g_strdup(interface);
-	newobj.properties = g_array_new(FALSE, TRUE, sizeof(MockObjectProperty));
-	g_array_set_clear_func(newobj.properties, property_free);
-	newobj.methods = g_array_new(FALSE, TRUE, sizeof(MockObjectMethod));
-	g_array_set_clear_func(newobj.methods, method_free);
-	newobj.proxy = NULL;
+	newobj->object_path = g_strdup(path);
+	newobj->interface = g_strdup(interface);
+	newobj->properties = g_array_new(FALSE, TRUE, sizeof(MockObjectProperty));
+	g_array_set_clear_func(newobj->properties, property_free);
+	newobj->methods = g_array_new(FALSE, TRUE, sizeof(MockObjectMethod));
+	g_array_set_clear_func(newobj->methods, method_free);
 
-	g_array_append_val(mock->priv->objects, newobj);
-	DbusTestDbusMockObject * obj = &g_array_index(mock->priv->objects, DbusTestDbusMockObject, mock->priv->objects->len - 1);
+	mock->priv->objects = g_list_prepend(mock->priv->objects, newobj);
+
+	g_debug("Creating object: %s (%s)", newobj->object_path, newobj->interface);
 
 	if (!is_running(mock)) {
-		return obj;
+		return newobj;
 	}
 
-	install_object(mock, obj, error);
-	return obj;
+	install_object(mock, newobj, error);
+	return newobj;
 }
 
 /* Objects are initialized in dbus_test_dbus_mock_get_object() and
@@ -546,14 +592,14 @@ static void
 object_free (gpointer data)
 {
 	DbusTestDbusMockObject * obj = (DbusTestDbusMockObject *)data;
+	g_debug("Freeing object: %s (%s)", obj->object_path, obj->interface);
 
 	g_free(obj->interface);
 	g_free(obj->object_path);
 	g_array_free(obj->properties, TRUE);
 	g_array_free(obj->methods, TRUE);
-	g_clear_object(&obj->proxy);
 
-	/* NOTE: No free'ing of data */
+	g_free(data);
 	return;
 }
 
@@ -632,8 +678,11 @@ dbus_test_dbus_mock_object_add_method (DbusTestDbusMock * mock, DbusTestDbusMock
 	g_variant_ref_sink(in);
 	g_variant_ref_sink(out);
 
+	_DbusMockIfaceOrgFreedesktopDBusMock * proxy = g_hash_table_lookup(mock->priv->object_proxies, obj->object_path);
+	g_return_val_if_fail(proxy != NULL, FALSE); /* Should never happen */
+
 	gboolean ret = _dbus_mock_iface_org_freedesktop_dbus_mock_call_add_method_sync(
-		obj->proxy,
+		proxy,
 		obj->interface,
 		method,
 		g_variant_get_string(in, NULL),
@@ -726,10 +775,11 @@ dbus_test_dbus_mock_object_clear_method_calls (DbusTestDbusMock * mock, DbusTest
 		return FALSE;
 	}
 
-	g_return_val_if_fail(obj->proxy != NULL, FALSE);
+	_DbusMockIfaceOrgFreedesktopDBusMock * proxy = g_hash_table_lookup(mock->priv->object_proxies, obj->object_path);
+	g_return_val_if_fail(proxy != NULL, FALSE); /* Should never happen */
 
 	return _dbus_mock_iface_org_freedesktop_dbus_mock_call_clear_calls_sync(
-		obj->proxy,
+		proxy,
 		mock->priv->cancel,
 		error
 	);
@@ -788,7 +838,8 @@ dbus_test_dbus_mock_object_get_method_calls (DbusTestDbusMock * mock, DbusTestDb
 		return NULL;
 	}
 
-	g_return_val_if_fail(obj->proxy != NULL, NULL);
+	_DbusMockIfaceOrgFreedesktopDBusMock * proxy = g_hash_table_lookup(mock->priv->object_proxies, obj->object_path);
+	g_return_val_if_fail(proxy != NULL, FALSE); /* Should never happen */
 
 	/* Find our method */
 	MockObjectMethod * meth = get_obj_method(obj, method);
@@ -802,7 +853,7 @@ dbus_test_dbus_mock_object_get_method_calls (DbusTestDbusMock * mock, DbusTestDb
 
 	GVariant * call_list = NULL;
 	_dbus_mock_iface_org_freedesktop_dbus_mock_call_get_calls_sync(
-		obj->proxy,
+		proxy,
 		&call_list,
 		mock->priv->cancel,
 		error);
@@ -896,6 +947,9 @@ dbus_test_dbus_mock_object_add_property (DbusTestDbusMock * mock, DbusTestDbusMo
 		return TRUE;
 	}
 
+	_DbusMockIfaceOrgFreedesktopDBusMock * proxy = g_hash_table_lookup(mock->priv->object_proxies, obj->object_path);
+	g_return_val_if_fail(proxy != NULL, FALSE); /* Should never happen */
+
 	GVariantBuilder builder;
 	g_variant_builder_init(&builder, G_VARIANT_TYPE_ARRAY);
 	g_variant_builder_open(&builder, G_VARIANT_TYPE_DICT_ENTRY);
@@ -906,7 +960,7 @@ dbus_test_dbus_mock_object_add_property (DbusTestDbusMock * mock, DbusTestDbusMo
 	g_variant_builder_close(&builder); /* dict_entry */
 
 	return _dbus_mock_iface_org_freedesktop_dbus_mock_call_add_properties_sync(
-		obj->proxy,
+		proxy,
 		obj->interface,
 		g_variant_builder_end(&builder),
 		mock->priv->cancel,
@@ -1062,6 +1116,9 @@ dbus_test_dbus_mock_object_emit_signal (DbusTestDbusMock * mock, DbusTestDbusMoc
 		return FALSE;
 	}
 
+	_DbusMockIfaceOrgFreedesktopDBusMock * proxy = g_hash_table_lookup(mock->priv->object_proxies, obj->object_path);
+	g_return_val_if_fail(proxy != NULL, FALSE); /* Should never happen */
+
 	/* floating ref swallowed by call_emit_signal() */
 	GVariant * sig_params = tuple_to_array(values);
 
@@ -1069,7 +1126,7 @@ dbus_test_dbus_mock_object_emit_signal (DbusTestDbusMock * mock, DbusTestDbusMoc
 	g_variant_ref_sink(sig_types);
 
 	gboolean retval = _dbus_mock_iface_org_freedesktop_dbus_mock_call_emit_signal_sync(
-		obj->proxy,
+		proxy,
 		obj->interface,
 		name,
 		g_variant_get_string(sig_types, NULL),
