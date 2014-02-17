@@ -1,3 +1,16 @@
+dbus-test-runner (14.04.0+14.04.20140217.1-0ubuntu1) trusty; urgency=low
+
+  [ Charles Kerr ]
+  * fix leaks by always g_free()ing the return value of
+    g_get_current_dir().
+
+  [ Ted Gould ]
+  * Make sure to not clear the watcher if it fired. (LP: #1260779)
+  * Support having objects with different interfaces on the same path.
+  * Flushing trunk with a release
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 17 Feb 2014 18:01:09 +0000
+
 dbus-test-runner (14.04.0+14.04.20131126-0ubuntu2) trusty; urgency=medium
 
   * Fix test issues in trusty. Patch taken from LP: #1260779.
