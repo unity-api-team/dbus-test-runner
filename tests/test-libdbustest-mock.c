@@ -76,6 +76,10 @@ test_basic (void)
 
 	g_assert(dbus_test_task_get_state(DBUS_TEST_TASK(mock)) == DBUS_TEST_TASK_STATE_RUNNING);
 
+	/* check setup */
+	GDBusConnection * bus = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, NULL);
+	g_dbus_connection_set_exit_on_close(bus, FALSE);
+
 	/* Ensure we can get an object */
 	DbusTestDbusMockObject * obj = dbus_test_dbus_mock_get_object(mock, "/test", "foo.test.interface", NULL);
 	g_assert(obj != NULL);
@@ -85,6 +89,8 @@ test_basic (void)
 
 	g_object_unref(mock);
 	g_object_unref(service);
+
+	wait_for_connection_close(bus);
 
 	return;
 }
