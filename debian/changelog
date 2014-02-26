@@ -1,3 +1,11 @@
+dbus-test-runner (14.04.0+14.04.20140226-0ubuntu1) trusty; urgency=low
+
+  [ Ted Gould ]
+  * Grab the bus so we can ensure it closes before starting the next
+    test
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 26 Feb 2014 19:50:28 +0000
+
 dbus-test-runner (14.04.0+14.04.20140217.1-0ubuntu1) trusty; urgency=low
 
   [ Charles Kerr ]
