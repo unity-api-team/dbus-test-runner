@@ -356,7 +356,7 @@ install_object (DbusTestDbusMock * mock, DbusTestDbusMockObject * object, GError
 	_DbusMockIfaceOrgFreedesktopDBusMock * proxy = g_hash_table_lookup(mock->priv->object_proxies, object->object_path);
 
 	if (proxy == NULL) {
-		g_debug("Add object");
+		g_debug("Add object (%s) on '%s'", object->interface, object->object_path);
 		gboolean add_object = _dbus_mock_iface_org_freedesktop_dbus_mock_call_add_object_sync(
 			mock->priv->proxy,
 			object->object_path,
