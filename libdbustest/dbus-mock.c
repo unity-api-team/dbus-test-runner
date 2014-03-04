@@ -1039,6 +1039,44 @@ dbus_test_dbus_mock_object_update_property (DbusTestDbusMock * mock, DbusTestDbu
 			g_variant_unref(value);
 			return FALSE;
 		}
+
+		_DbusMockIfaceOrgFreedesktopDBusMock * proxy = g_hash_table_lookup(mock->priv->object_proxies, obj->object_path);
+		if (proxy != NULL) {
+			GVariantBuilder changed_builder;
+			g_variant_builder_init(&changed_builder, G_VARIANT_TYPE_ARRAY);
+			/* s */
+			g_variant_builder_open(&changed_builder, G_VARIANT_TYPE_VARIANT);
+			g_variant_builder_add_value(&changed_builder, g_variant_new_string(obj->interface));
+			g_variant_builder_close(&changed_builder);
+			/* a{sv} */
+			g_variant_builder_open(&changed_builder, G_VARIANT_TYPE_VARIANT);
+			g_variant_builder_open(&changed_builder, G_VARIANT_TYPE_DICTIONARY);
+			g_variant_builder_open(&changed_builder, G_VARIANT_TYPE_DICT_ENTRY);
+			g_variant_builder_add_value(&changed_builder, g_variant_new_string(name));
+			g_variant_builder_open(&changed_builder, G_VARIANT_TYPE_VARIANT);
+			g_variant_builder_add_value(&changed_builder, value);
+			g_variant_builder_close(&changed_builder); /* v */
+			g_variant_builder_close(&changed_builder); /* dict entry */
+			g_variant_builder_close(&changed_builder); /* dict */
+			g_variant_builder_close(&changed_builder); /* v */
+			/* as */
+			g_variant_builder_open(&changed_builder, G_VARIANT_TYPE_VARIANT);
+			g_variant_builder_add_value(&changed_builder, g_variant_new_array(G_VARIANT_TYPE_STRING, NULL, 0));
+			g_variant_builder_close(&changed_builder);
+
+			_dbus_mock_iface_org_freedesktop_dbus_mock_call_emit_signal_sync(proxy,
+			                                                                 "org.freedesktop.DBus.Properties",
+			                                                                 "PropertiesChanged",
+			                                                                 "sa{sv}as",
+			                                                                 g_variant_builder_end(&changed_builder),
+			                                                                 mock->priv->cancel,
+			                                                                 &local_error);
+
+			if (local_error != NULL) {
+				g_warning("Unable to emit properties changed: %s", local_error->message);
+				g_clear_error(&local_error);
+			}
+		}
 	}
 
 	/* It's updated, let's cache */
