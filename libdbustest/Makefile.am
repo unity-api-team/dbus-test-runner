@@ -85,7 +85,7 @@ pkgconfig_DATA = dbustest-$(API_VERSION).pc
 pkgconfigdir = $(libdir)/pkgconfig
 
 %-$(API_VERSION).pc: %.pc.in
-	sed \
+	$(AM_V_GEN) sed \
 		-e "s:\@apiversion\@:$(API_VERSION):" \
 		-e "s:\@libdir\@:$(libdir):" \
 		-e "s:\@includedir\@:$(includedir):" \
