@@ -3,4 +3,4 @@
 set -e 
 
 ./configure
-make check
+make check VERBOSE=1
