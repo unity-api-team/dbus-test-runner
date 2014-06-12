@@ -1,3 +1,22 @@
+dbus-test-runner (14.04.1+14.04.20140320-0ubuntu3) utopic; urgency=medium
+
+  * Add missing test-dep since build-deps from the build-needed restriction
+    might not be available per the autopkgtest spec.
+    - intltool
+    - pkg-config
+    - libdbus-glib-1-dev
+    - python3-dbusmock
+  * debian/test/with-bustle: Run tests with VERBOSE=1 so we get useful
+    information when they fail.
+
+ -- Iain Lane <iain.lane@canonical.com>  Fri, 02 May 2014 15:22:53 +0100
+
+dbus-test-runner (14.04.1+14.04.20140320-0ubuntu2) utopic; urgency=medium
+
+  * Add build-essential to dep8 dependencies.
+
+ -- Dimitri John Ledkov <xnox@ubuntu.com>  Fri, 02 May 2014 02:48:28 +0100
+
 dbus-test-runner (14.04.1+14.04.20140320-0ubuntu1) trusty; urgency=medium
 
   [ Ted Gould ]
