@@ -1,3 +1,11 @@
+dbus-test-runner (14.04.1+14.10.20140908-0ubuntu1) utopic; urgency=low
+
+  [ Ted Gould ]
+  * Drop gvfs-backends because no one can figure out why it is there.
+    (LP: #1296329)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 08 Sep 2014 18:24:50 +0000
+
 dbus-test-runner (14.04.1+14.04.20140320-0ubuntu3) utopic; urgency=medium
 
   * Add missing test-dep since build-deps from the build-needed restriction
