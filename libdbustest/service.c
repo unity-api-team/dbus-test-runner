@@ -684,4 +684,9 @@ void dbus_test_service_set_bus (DbusTestService * service, DbusTestServiceBus bu
 {
 	g_return_if_fail(DBUS_TEST_IS_SERVICE(service));
 	service->priv->bus_type = bus;
+
+	if (bus == DBUS_TEST_SERVICE_BUS_SYSTEM) {
+		g_free(service->priv->dbus_configfile);
+		service->priv->dbus_configfile = g_strdup(DEFAULT_SYSTEM_CONF);
+	}
 }
