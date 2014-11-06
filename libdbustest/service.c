@@ -616,6 +616,12 @@ dbus_test_service_add_task_with_priority (DbusTestService * service, DbusTestTas
 	g_return_if_fail(DBUS_TEST_IS_SERVICE(service));
 	g_return_if_fail(DBUS_TEST_IS_TASK(task));
 
+	/* Check to ensure that the task and the service match in thier
+	   goals for busness */
+	g_return_if_fail(service->priv->bus_type == DBUS_TEST_SERVICE_BUS_BOTH ||
+		dbus_test_task_get_bus(task) == DBUS_TEST_SERVICE_BUS_BOTH ||
+		dbus_test_task_get_bus(task) == service->priv->bus_type);
+
 	GQueue * queue = NULL;
 
 	switch (prio) {
