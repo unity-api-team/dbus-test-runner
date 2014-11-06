@@ -165,6 +165,12 @@ constructed (GObject * object)
 
 	paramval = "-m"; g_array_append_val(params, paramval);
 	paramval = "dbusmock"; g_array_append_val(params, paramval);
+
+	/* If we're set for system, go there, otherwise default to session */
+	if (dbus_test_task_get_bus(DBUS_TEST_TASK(self)) == DBUS_TEST_SERVICE_BUS_SYSTEM) {
+		paramval = "-s"; g_array_append_val(params, paramval);
+	}
+
 	g_array_append_val(params, self->priv->name);
 	paramval = "/"; g_array_append_val(params, paramval);
 	paramval = "com.canonical.DbusTest.DbusMock"; g_array_append_val(params, paramval);
