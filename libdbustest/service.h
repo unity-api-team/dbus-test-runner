@@ -57,6 +57,13 @@ typedef enum
 	DBUS_TEST_SERVICE_PRIORITY_LAST
 } DbusTestServicePriority;
 
+typedef enum
+{
+	DBUS_TEST_SERVICE_BUS_SESSION,
+	DBUS_TEST_SERVICE_BUS_SYSTEM,
+	DBUS_TEST_SERVICE_BUS_BOTH
+} DbusTestServiceBus;
+
 GType dbus_test_service_get_type (void);
 DbusTestService * dbus_test_service_new (const gchar * address);
 void dbus_test_service_start_tasks (DbusTestService * service);
@@ -69,6 +76,7 @@ void dbus_test_service_add_task_with_priority (DbusTestService * service, DbusTe
 void dbus_test_service_set_daemon (DbusTestService * service, const gchar * daemon);
 void dbus_test_service_set_conf_file (DbusTestService * service, const gchar * conffile);
 void dbus_test_service_set_keep_environment (DbusTestService * service, gboolean keep_env);
+void dbus_test_service_set_bus (DbusTestService * service, DbusTestServiceBus bus);
 
 G_END_DECLS
 

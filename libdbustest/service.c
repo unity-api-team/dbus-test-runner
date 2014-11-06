@@ -65,6 +65,8 @@ struct _DbusTestServicePrivate {
 
 	DbusTestWatchdog * watchdog;
 	guint watchdog_source;
+
+	DbusTestServiceBus bus_type;
 };
 
 #define SERVICE_CHANGE_HANDLER  "dbus-test-service-change-handler"
@@ -123,6 +125,8 @@ dbus_test_service_init (DbusTestService *self)
 	                                                         watchdog_ping,
 	                                                         g_object_ref(self->priv->watchdog),
 	                                                         g_object_unref);
+
+	self->priv->bus_type = DBUS_TEST_SERVICE_BUS_SESSION;
 
 	return;
 }
@@ -367,9 +371,22 @@ dbus_writes (GIOChannel * channel, GIOCondition condition, gpointer data)
 	if (service->priv->first_time) {
 		service->priv->first_time = FALSE;
 
-		g_setenv("DBUS_SESSION_BUS_ADDRESS", line, TRUE);
 		g_setenv("DBUS_STARTER_ADDRESS", line, TRUE);
-		g_setenv("DBUS_STARTER_BUS_TYPE", "session", TRUE);
+
+		if (service->priv->bus_type == DBUS_TEST_SERVICE_BUS_SESSION ||
+				service->priv->bus_type == DBUS_TEST_SERVICE_BUS_BOTH) {
+			g_setenv("DBUS_SESSION_BUS_ADDRESS", line, TRUE);
+			g_setenv("DBUS_STARTER_BUS_TYPE", "session", TRUE);
+		}
+
+		if (service->priv->bus_type == DBUS_TEST_SERVICE_BUS_SESSION ||
+				service->priv->bus_type == DBUS_TEST_SERVICE_BUS_BOTH) {
+			g_setenv("DBUS_SYSTEM_BUS_ADDRESS", line, TRUE);
+		}
+
+		if (service->priv->bus_type == DBUS_TEST_SERVICE_BUS_SESSION) {
+			g_setenv("DBUS_STARTER_BUS_TYPE", "system", TRUE);
+		}
 
 		if (service->priv->state == STATE_DAEMON_STARTING) {
 			g_main_loop_quit(service->priv->mainloop);
@@ -655,4 +672,10 @@ dbus_test_service_stop (DbusTestService * service)
 	g_return_if_fail(DBUS_TEST_IS_SERVICE(service));
 	g_main_loop_quit(service->priv->mainloop);
 	return;
+}
+
+void dbus_test_service_set_bus (DbusTestService * service, DbusTestServiceBus bus)
+{
+	g_return_if_fail(DBUS_TEST_IS_SERVICE(service));
+	service->priv->bus_type = bus;
 }
