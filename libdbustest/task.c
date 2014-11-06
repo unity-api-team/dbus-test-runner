@@ -36,6 +36,8 @@ struct _DbusTestTaskPrivate {
 
 	gboolean been_run;
 	gboolean wait_until_complete;
+
+	DbusTestServiceBus preferred_bus;
 };
 
 /* Signals */
@@ -99,6 +101,8 @@ dbus_test_task_init (DbusTestTask *self)
 
 	self->priv->been_run = FALSE;
 	self->priv->wait_until_complete = FALSE;
+
+	self->priv->preferred_bus = DBUS_TEST_SERVICE_BUS_BOTH;
 
 	return;
 }
@@ -383,4 +387,33 @@ dbus_test_task_get_wait_finished (DbusTestTask * task)
 	g_return_val_if_fail(DBUS_TEST_IS_TASK(task), FALSE);
 
 	return task->priv->wait_until_complete;
+}
+
+/**
+ * dbus_test_task_set_bus:
+ * @task: Task to get the bus from
+ * @bus: Preferred bus for this task
+ *
+ * Set which bus this task prefers to be on.
+ */
+void
+dbus_test_task_set_bus (DbusTestTask * task, DbusTestServiceBus bus)
+{
+	g_return_if_fail(DBUS_TEST_IS_TASK(task));
+
+	task->priv->preferred_bus = bus;
+}
+
+/**
+ * dbus_test_task_get_bus:
+ * @task: Task to get the bus from
+ *
+ * Check to see which bus this task prefers to be on.
+ */
+DbusTestServiceBus
+dbus_test_task_get_bus (DbusTestTask * task)
+{
+	g_return_val_if_fail(DBUS_TEST_IS_TASK(task), DBUS_TEST_SERVICE_BUS_BOTH);
+
+	return task->priv->preferred_bus;
 }
