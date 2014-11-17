@@ -23,6 +23,7 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <libdbustest/dbus-test.h>
 
+static DbusTestServiceBus bus_type = DBUS_TEST_SERVICE_BUS_SESSION;
 static gint max_wait = 30;
 static gboolean keep_env = FALSE;
 static DbusTestProcess * last_task = NULL;
@@ -30,6 +31,35 @@ static DbusTestService * service = NULL;
 static gboolean timeout = FALSE;
 
 #define NAME_SET "dbus-test-runner-name-set"
+G_DEFINE_QUARK("dbus-test-runner", dbus_test_runner);
+
+enum errors {
+	ERROR_ZERO,
+	ERROR_BUS_TYPE_SET_TWICE,
+	ERROR_BUS_TYPE_UNKNOWN,
+	ERROR_CNT
+};
+
+static gboolean
+option_bus_type (G_GNUC_UNUSED const gchar * arg, const gchar * value, G_GNUC_UNUSED gpointer data, GError ** error)
+{
+	if (bus_type != DBUS_TEST_SERVICE_BUS_SESSION) {
+		g_set_error_literal(error, dbus_test_runner_quark(), ERROR_BUS_TYPE_SET_TWICE, "Bus type set more than once");
+		return TRUE;
+	}
+
+	if (g_strcmp0(value, "session") == 0) {
+		bus_type = DBUS_TEST_SERVICE_BUS_SESSION;
+	} else if (g_strcmp0(value, "system") == 0) {
+		bus_type = DBUS_TEST_SERVICE_BUS_SYSTEM;
+	} else if (g_strcmp0(value, "both") == 0) {
+		bus_type = DBUS_TEST_SERVICE_BUS_BOTH;
+	} else {
+		g_set_error(error, dbus_test_runner_quark(), ERROR_BUS_TYPE_UNKNOWN, "Bus type '%s' unknown", value);
+	}
+
+	return TRUE;
+}
 
 static gboolean
 option_task (G_GNUC_UNUSED const gchar * arg, const gchar * value, G_GNUC_UNUSED gpointer data, G_GNUC_UNUSED GError ** error)
@@ -163,6 +193,7 @@ static GOptionEntry general_options[] = {
 	{"bustle-data",  'b',   0,                       G_OPTION_ARG_FILENAME,  &bustle_datafile, "A file to write out data from the bustle logger to.", "data_file"},
 	{"max-wait",     'm',   0,                       G_OPTION_ARG_INT,       &max_wait,        "The maximum amount of time the test runner will wait for the test to complete.  Default is 30 seconds.", "seconds"},
 	{"keep-env",     0,     0,                       G_OPTION_ARG_NONE,      &keep_env,        "Whether to propagate the execution environment to the dbus-server and all the services activated by it.  By default the environment is cleared.", NULL },
+	{"bus-type",     0,     0,                       G_OPTION_ARG_CALLBACK,  option_bus_type,  "Configures which buses are represented by the tool to the tasks. Default: session", "{session|system|both}" },
 	{ NULL, 0, 0, 0, NULL, NULL, NULL }
 };
 
@@ -188,6 +219,7 @@ main (int argc, char * argv[])
 #endif
 
 	service = dbus_test_service_new(NULL);
+	dbus_test_service_set_bus(service, bus_type);
 
 	context = g_option_context_new("- run multiple tasks under an independent DBus session bus");
 
