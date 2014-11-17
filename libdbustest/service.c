@@ -245,54 +245,81 @@ watchdog_ping (gpointer user_data)
 	return TRUE;
 }
 
-static void
-all_tasks_finished_helper (gpointer data, gpointer user_data)
+static gboolean
+all_tasks_finished_helper (G_GNUC_UNUSED DbusTestService * service, DbusTestTask * task, G_GNUC_UNUSED gpointer user_data)
 {
-	DbusTestTask * task = DBUS_TEST_TASK(data);
-	gboolean * all_finished = (gboolean *)user_data;
-
 	DbusTestTaskState state = dbus_test_task_get_state(task);
 	DbusTestTaskReturn ret  = dbus_test_task_get_return(task);
 
 	if (state != DBUS_TEST_TASK_STATE_FINISHED && (ret != DBUS_TEST_TASK_RETURN_IGNORE || dbus_test_task_get_wait_finished(task))) {
-		*all_finished = FALSE;
+		return FALSE;
 	}
 
-	return;
-}
-
-static void
-all_tasks_started_helper (gpointer data, gpointer user_data)
-{
-	DbusTestTask * task = DBUS_TEST_TASK(data);
-	gboolean * all_started = (gboolean *)user_data;
-
-	DbusTestTaskState state = dbus_test_task_get_state(task);
-
-	if (state == DBUS_TEST_TASK_STATE_INIT || state == DBUS_TEST_TASK_STATE_WAITING) {
-		*all_started = FALSE;
-	}
-
-	return;
+	return TRUE;
 }
 
 static gboolean
-all_tasks (DbusTestService * service, GFunc helper)
+all_tasks_started_helper (G_GNUC_UNUSED DbusTestService * service, DbusTestTask * task, G_GNUC_UNUSED gpointer user_data)
 {
-	gboolean breaknow = TRUE;
+	DbusTestTaskState state = dbus_test_task_get_state(task);
 
-	g_queue_foreach(&service->priv->tasks_first, helper, &breaknow);
-	if (!breaknow) {
+	if (state == DBUS_TEST_TASK_STATE_INIT || state == DBUS_TEST_TASK_STATE_WAITING) {
 		return FALSE;
 	}
 
-	g_queue_foreach(&service->priv->tasks_normal, helper, &breaknow);
-	if (!breaknow) {
+	return TRUE;
+}
+
+static gboolean
+all_tasks_bus_match (G_GNUC_UNUSED DbusTestService * service, G_GNUC_UNUSED DbusTestTask * task, G_GNUC_UNUSED gpointer user_data)
+{
+	return service->priv->bus_type == DBUS_TEST_SERVICE_BUS_BOTH ||
+		dbus_test_task_get_bus(task) == DBUS_TEST_SERVICE_BUS_BOTH ||
+		dbus_test_task_get_bus(task) == service->priv->bus_type;
+}
+
+typedef struct {
+	DbusTestService * service;
+	gboolean passing;
+	gpointer user_data;
+	gboolean (*func) (DbusTestService * service, DbusTestTask * task, gpointer data);
+} all_tasks_helper_data_t;
+
+static void
+all_tasks_helper (gpointer taskp, gpointer datap)
+{
+	all_tasks_helper_data_t * data = (all_tasks_helper_data_t *)datap;
+
+	if (!data->passing) {
+		/* Quick exit */
+		return;
+	}
+
+	data->passing = data->func(data->service, DBUS_TEST_TASK(taskp), data->user_data);
+}
+
+static gboolean
+all_tasks (DbusTestService * service, gboolean (*helper) (DbusTestService * service, DbusTestTask * task, gpointer user_data), gpointer user_data)
+{
+	all_tasks_helper_data_t data = {
+		.passing = TRUE,
+		.service = service,
+		.func = helper,
+		.user_data = user_data
+	};
+
+	g_queue_foreach(&service->priv->tasks_first, all_tasks_helper, &data);
+	if (!data.passing) {
 		return FALSE;
 	}
 
-	g_queue_foreach(&service->priv->tasks_last, helper, &breaknow);
-	if (!breaknow) {
+	g_queue_foreach(&service->priv->tasks_normal, all_tasks_helper, &data);
+	if (!data.passing) {
+		return FALSE;
+	}
+
+	g_queue_foreach(&service->priv->tasks_last, all_tasks_helper, &data);
+	if (!data.passing) {
 		return FALSE;
 	}
 
@@ -495,12 +522,13 @@ void
 dbus_test_service_start_tasks (DbusTestService * service)
 {
 	g_return_if_fail(DBUS_TEST_SERVICE(service));
+	g_return_if_fail(all_tasks(service, all_tasks_bus_match, NULL));
 
 	start_daemon(service);
 	g_return_if_fail(g_getenv("DBUS_SESSION_BUS_ADDRESS") != NULL);
 	g_return_if_fail(service->priv->state != STATE_DAEMON_FAILED);
 
-	if (all_tasks(service, all_tasks_started_helper)) {
+	if (all_tasks(service, all_tasks_started_helper, NULL)) {
 		/* If we have all started we can mark it as such as long
 		   as we understand where we could hit this case */
 		if (service->priv->state == STATE_INIT || service->priv->state == STATE_DAEMON_STARTED) {
@@ -523,12 +551,12 @@ dbus_test_service_start_tasks (DbusTestService * service)
 	}
 	g_queue_foreach(&service->priv->tasks_last, task_starter, NULL);
 
-	if (!all_tasks(service, all_tasks_started_helper)) {
+	if (!all_tasks(service, all_tasks_started_helper, NULL)) {
 		service->priv->state = STATE_STARTING;
 		g_main_loop_run(service->priv->mainloop);
 
 		/* This should never happen, but let's be sure */
-		g_return_if_fail(all_tasks(service, all_tasks_started_helper));
+		g_return_if_fail(all_tasks(service, all_tasks_started_helper, NULL));
 	}
 
 	service->priv->state = STATE_STARTED;
@@ -536,17 +564,10 @@ dbus_test_service_start_tasks (DbusTestService * service)
 	return;
 }
 
-static void
-all_tasks_passed_helper (gpointer data, gpointer user_data)
+static gboolean
+all_tasks_passed_helper (G_GNUC_UNUSED DbusTestService * service, DbusTestTask * task, G_GNUC_UNUSED gpointer user_data)
 {
-	DbusTestTask * task = DBUS_TEST_TASK(data);
-	gboolean * all_passed = (gboolean *)user_data;
-
-	if (!dbus_test_task_passed(task)) {
-		*all_passed = FALSE;
-	}
-
-	return;
+	return dbus_test_task_passed(task);
 }
 
 static int
@@ -556,7 +577,7 @@ get_status (DbusTestService * service)
 		return -1;
 	}
 
-	if (all_tasks(service, all_tasks_passed_helper)) {
+	if (all_tasks(service, all_tasks_passed_helper, NULL)) {
 		return 0;
 	} else {
 		return -1;
@@ -571,7 +592,7 @@ dbus_test_service_run (DbusTestService * service)
 	dbus_test_service_start_tasks(service);
 	g_return_val_if_fail(service->priv->state == STATE_STARTED, get_status(service));
 
-	if (all_tasks(service, all_tasks_finished_helper)) {
+	if (all_tasks(service, all_tasks_finished_helper, NULL)) {
 		return get_status(service);
 	}
 
@@ -579,7 +600,7 @@ dbus_test_service_run (DbusTestService * service)
 	g_main_loop_run(service->priv->mainloop);
 
 	/* This should never happen, but let's be sure */
-	g_return_val_if_fail(all_tasks(service, all_tasks_finished_helper), -1);
+	g_return_val_if_fail(all_tasks(service, all_tasks_finished_helper, NULL), -1);
 	service->priv->state = STATE_FINISHED;
 
 	return get_status(service);
@@ -591,12 +612,12 @@ task_state_changed (G_GNUC_UNUSED DbusTestTask * task, G_GNUC_UNUSED DbusTestTas
 	g_return_if_fail(DBUS_TEST_IS_SERVICE(user_data));
 	DbusTestService * service = DBUS_TEST_SERVICE(user_data);
 
-	if (service->priv->state == STATE_STARTING && all_tasks(service, all_tasks_started_helper)) {
+	if (service->priv->state == STATE_STARTING && all_tasks(service, all_tasks_started_helper, NULL)) {
 		g_main_loop_quit(service->priv->mainloop);
 		return;
 	}
 
-	if (service->priv->state == STATE_RUNNING && all_tasks(service, all_tasks_finished_helper)) {
+	if (service->priv->state == STATE_RUNNING && all_tasks(service, all_tasks_finished_helper, NULL)) {
 		g_main_loop_quit(service->priv->mainloop);
 		return;
 	}
@@ -617,10 +638,8 @@ dbus_test_service_add_task_with_priority (DbusTestService * service, DbusTestTas
 	g_return_if_fail(DBUS_TEST_IS_TASK(task));
 
 	/* Check to ensure that the task and the service match in thier
-	   goals for busness */
-	g_return_if_fail(service->priv->bus_type == DBUS_TEST_SERVICE_BUS_BOTH ||
-		dbus_test_task_get_bus(task) == DBUS_TEST_SERVICE_BUS_BOTH ||
-		dbus_test_task_get_bus(task) == service->priv->bus_type);
+	   goals for busness. Fail early. */
+	g_return_if_fail(all_tasks_bus_match(service, task, NULL));
 
 	GQueue * queue = NULL;
 
