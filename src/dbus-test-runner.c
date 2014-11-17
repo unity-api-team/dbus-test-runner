@@ -31,20 +31,12 @@ static DbusTestService * service = NULL;
 static gboolean timeout = FALSE;
 
 #define NAME_SET "dbus-test-runner-name-set"
-G_DEFINE_QUARK("dbus-test-runner", dbus_test_runner);
-
-enum errors {
-	ERROR_ZERO,
-	ERROR_BUS_TYPE_SET_TWICE,
-	ERROR_BUS_TYPE_UNKNOWN,
-	ERROR_CNT
-};
 
 static gboolean
 option_bus_type (G_GNUC_UNUSED const gchar * arg, const gchar * value, G_GNUC_UNUSED gpointer data, GError ** error)
 {
 	if (bus_type != DBUS_TEST_SERVICE_BUS_SESSION) {
-		g_set_error_literal(error, dbus_test_runner_quark(), ERROR_BUS_TYPE_SET_TWICE, "Bus type set more than once");
+		g_set_error_literal(error, G_OPTION_ERROR, G_OPTION_ERROR_BAD_VALUE, "Bus type set more than once");
 		return TRUE;
 	}
 
@@ -55,7 +47,7 @@ option_bus_type (G_GNUC_UNUSED const gchar * arg, const gchar * value, G_GNUC_UN
 	} else if (g_strcmp0(value, "both") == 0) {
 		bus_type = DBUS_TEST_SERVICE_BUS_BOTH;
 	} else {
-		g_set_error(error, dbus_test_runner_quark(), ERROR_BUS_TYPE_UNKNOWN, "Bus type '%s' unknown", value);
+		g_set_error(error, G_OPTION_ERROR, G_OPTION_ERROR_BAD_VALUE, "Bus type '%s' unknown", value);
 	}
 
 	return TRUE;
