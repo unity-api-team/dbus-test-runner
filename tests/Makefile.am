@@ -295,6 +295,31 @@ DISTCLEANFILES += \
 	test-wait-output.output-only \
 	test-wait-output.filtered
 
+TESTS += test-busses-base
+test-busses-base: Makefile.am
+	@echo "#!/bin/sh -e" > $@
+	@echo echo TEST: session >> $@
+	@echo $(DBUS_RUNNER) --bus-type session --task /bin/true >> $@
+	@echo echo TEST: system >> $@
+	@echo $(DBUS_RUNNER) --bus-type system --task /bin/true >> $@
+	@echo echo TEST: both >> $@
+	@echo $(DBUS_RUNNER) --bus-type both --task /bin/true >> $@
+	@echo echo TEST: session, session >> $@
+	@echo $(DBUS_RUNNER) --bus-type session --task /bin/true --task-bus=session >> $@
+	@echo echo TEST: session, both >> $@
+	@echo $(DBUS_RUNNER) --bus-type session --task /bin/true --task-bus=both >> $@
+	@echo echo TEST: system, system >> $@
+	@echo $(DBUS_RUNNER) --bus-type system --task /bin/true --task-bus=system >> $@
+	@echo echo TEST: system, both >> $@
+	@echo $(DBUS_RUNNER) --bus-type system --task /bin/true --task-bus=both >> $@
+	@echo echo TEST: both, session >> $@
+	@echo $(DBUS_RUNNER) --bus-type both --task /bin/true --task-bus=session >> $@
+	@echo echo TEST: both, system >> $@
+	@echo $(DBUS_RUNNER) --bus-type both --task /bin/true --task-bus=system >> $@
+	@echo echo TEST: both, both >> $@
+	@echo $(DBUS_RUNNER) --bus-type both --task /bin/true --task-bus=both >> $@
+	@chmod +x $@
+
 ###########################
 # libdbustest
 ###########################
