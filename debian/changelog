@@ -1,6 +1,8 @@
-dbus-test-runner (14.04.1+14.10.20140908-0ubuntu2) UNRELEASED; urgency=medium
+dbus-test-runner (15.04.0-0ubuntu1) UNRELEASED; urgency=medium
 
   * Adding support for emulating a system bus
+  * Moving configuration files to the library packages
+  * Add symbols checking to the library
 
  -- Ted Gould <ted@ubuntu.com>  Thu, 06 Nov 2014 14:00:21 -0600
 
