@@ -406,12 +406,12 @@ dbus_writes (GIOChannel * channel, GIOCondition condition, gpointer data)
 			g_setenv("DBUS_STARTER_BUS_TYPE", "session", TRUE);
 		}
 
-		if (service->priv->bus_type == DBUS_TEST_SERVICE_BUS_SESSION ||
+		if (service->priv->bus_type == DBUS_TEST_SERVICE_BUS_SYSTEM ||
 				service->priv->bus_type == DBUS_TEST_SERVICE_BUS_BOTH) {
 			g_setenv("DBUS_SYSTEM_BUS_ADDRESS", line, TRUE);
 		}
 
-		if (service->priv->bus_type == DBUS_TEST_SERVICE_BUS_SESSION) {
+		if (service->priv->bus_type != DBUS_TEST_SERVICE_BUS_SESSION) {
 			g_setenv("DBUS_STARTER_BUS_TYPE", "system", TRUE);
 		}
 
@@ -495,8 +495,15 @@ start_daemon (DbusTestService * service)
 	g_main_loop_run(service->priv->mainloop);
 
 	/* we should have a usable connection now, let's check */
-	gchar **tokens = g_strsplit (g_getenv ("DBUS_SESSION_BUS_ADDRESS"),
-	                             ",", 0);
+	const gchar * bus_address = NULL;
+	if (service->priv->bus_type == DBUS_TEST_SERVICE_BUS_SYSTEM) {
+		bus_address = g_getenv("DBUS_SYSTEM_BUS_ADDRESS");
+	} else {
+		bus_address = g_getenv("DBUS_SESSION_BUS_ADDRESS");
+	}
+	g_return_if_fail(bus_address != NULL);
+	gchar **tokens = g_strsplit (bus_address, ",", 0);
+
 	guint i;
 	gboolean is_valid = FALSE;
 	for (i = 0; i < g_strv_length (tokens); i++) {
@@ -525,7 +532,8 @@ dbus_test_service_start_tasks (DbusTestService * service)
 	g_return_if_fail(all_tasks(service, all_tasks_bus_match, NULL));
 
 	start_daemon(service);
-	g_return_if_fail(g_getenv("DBUS_SESSION_BUS_ADDRESS") != NULL);
+	g_return_if_fail(g_getenv("DBUS_SESSION_BUS_ADDRESS") != NULL ||
+		g_getenv("DBUS_SYSTEM_BUS_ADDRESS") != NULL);
 	g_return_if_fail(service->priv->state != STATE_DAEMON_FAILED);
 
 	if (all_tasks(service, all_tasks_started_helper, NULL)) {
