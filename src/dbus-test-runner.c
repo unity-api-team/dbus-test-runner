@@ -233,7 +233,6 @@ main (int argc, char * argv[])
 #endif
 
 	service = dbus_test_service_new(NULL);
-	dbus_test_service_set_bus(service, bus_type);
 
 	context = g_option_context_new("- run multiple tasks under an independent DBus session bus");
 
@@ -248,6 +247,8 @@ main (int argc, char * argv[])
 		g_error_free(error);
 		return 1;
 	}
+
+	dbus_test_service_set_bus(service, bus_type);
 
 	if (dbus_daemon != NULL) {
 		dbus_test_service_set_daemon(service, dbus_daemon);
