@@ -275,10 +275,10 @@ wait_for_found (G_GNUC_UNUSED GDBusConnection * connection, G_GNUC_UNUSED const 
 	task->priv->wait_task = 0;
 
 	DbusTestTaskClass * klass = DBUS_TEST_TASK_GET_CLASS(task);
+	task->priv->been_run = TRUE;
 	if (klass->run != NULL) {
 		klass->run(task);
 	} else {
-		task->priv->been_run = TRUE;
 		g_signal_emit(G_OBJECT(task), signals[STATE_CHANGED], 0, DBUS_TEST_TASK_STATE_FINISHED, NULL);
 	}
 
@@ -305,10 +305,10 @@ dbus_test_task_run (DbusTestTask * task)
 	}
 
 	DbusTestTaskClass * klass = DBUS_TEST_TASK_GET_CLASS(task);
+	task->priv->been_run = TRUE;
 	if (klass->run != NULL) {
 		klass->run(task);
 	} else {
-		task->priv->been_run = TRUE;
 		g_signal_emit(G_OBJECT(task), signals[STATE_CHANGED], 0, DBUS_TEST_TASK_STATE_FINISHED, NULL);
 	}
 
@@ -319,6 +319,7 @@ gboolean
 dbus_test_task_passed (DbusTestTask * task)
 {
 	g_return_val_if_fail(DBUS_TEST_IS_TASK(task), FALSE);
+	g_return_val_if_fail(task->priv->been_run, FALSE);
 
 	/* If we don't care, we always pass */
 	if (task->priv->return_type == DBUS_TEST_TASK_RETURN_IGNORE) {
