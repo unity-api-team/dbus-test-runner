@@ -318,6 +318,14 @@ test-busses-base: Makefile.am
 	@echo $(DBUS_RUNNER) --bus-type both --task /bin/true --task-bus=system >> $@
 	@echo echo TEST: both, both >> $@
 	@echo $(DBUS_RUNNER) --bus-type both --task /bin/true --task-bus=both >> $@
+	@echo echo TEST: verify session, session >> $@
+	@echo $(DBUS_RUNNER) --bus-type session --task gdbus --parameter call --parameter --session --parameter --dest --parameter org.freedesktop.DBus --parameter --object-path --parameter / --parameter --method --parameter org.freedesktop.DBus.GetId >> $@
+	@echo echo TEST: verify session, both >> $@
+	@echo $(DBUS_RUNNER) --bus-type both --task gdbus --parameter call --parameter --session --parameter --dest --parameter org.freedesktop.DBus --parameter --object-path --parameter / --parameter --method --parameter org.freedesktop.DBus.GetId >> $@
+	@echo echo TEST: verify system, system >> $@
+	@echo $(DBUS_RUNNER) --bus-type system --task gdbus --parameter call --parameter --system --parameter --dest --parameter org.freedesktop.DBus --parameter --object-path --parameter / --parameter --method --parameter org.freedesktop.DBus.GetId >> $@
+	@echo echo TEST: verify system, both >> $@
+	@echo $(DBUS_RUNNER) --bus-type both --task gdbus --parameter call --parameter --system --parameter --dest --parameter org.freedesktop.DBus --parameter --object-path --parameter / --parameter --method --parameter org.freedesktop.DBus.GetId >> $@
 	@chmod +x $@
 
 ###########################
