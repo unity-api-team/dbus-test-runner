@@ -1,5 +1,6 @@
 
 DBUS_RUNNER=$(top_builddir)/src/dbus-test-runner --dbus-config $(srcdir)/../data/session.conf
+DBUS_RUNNER_SYSTEM=$(top_builddir)/src/dbus-test-runner --dbus-config $(srcdir)/../data/system.conf
 TESTS = 
 DISTCLEANFILES = $(TESTS)
 XFAIL_TESTS =
@@ -301,7 +302,7 @@ test-busses-base: Makefile.am
 	@echo echo TEST: session >> $@
 	@echo $(DBUS_RUNNER) --bus-type session --task /bin/true >> $@
 	@echo echo TEST: system >> $@
-	@echo $(DBUS_RUNNER) --bus-type system --task /bin/true >> $@
+	@echo $(DBUS_RUNNER_SYSTEM) --bus-type system --task /bin/true >> $@
 	@echo echo TEST: both >> $@
 	@echo $(DBUS_RUNNER) --bus-type both --task /bin/true >> $@
 	@echo echo TEST: session, session >> $@
@@ -309,9 +310,9 @@ test-busses-base: Makefile.am
 	@echo echo TEST: session, both >> $@
 	@echo $(DBUS_RUNNER) --bus-type session --task /bin/true --task-bus=both >> $@
 	@echo echo TEST: system, system >> $@
-	@echo $(DBUS_RUNNER) --bus-type system --task /bin/true --task-bus=system >> $@
+	@echo $(DBUS_RUNNER_SYSTEM) --bus-type system --task /bin/true --task-bus=system >> $@
 	@echo echo TEST: system, both >> $@
-	@echo $(DBUS_RUNNER) --bus-type system --task /bin/true --task-bus=both >> $@
+	@echo $(DBUS_RUNNER_SYSTEM) --bus-type system --task /bin/true --task-bus=both >> $@
 	@echo echo TEST: both, session >> $@
 	@echo $(DBUS_RUNNER) --bus-type both --task /bin/true --task-bus=session >> $@
 	@echo echo TEST: both, system >> $@
@@ -323,7 +324,7 @@ test-busses-base: Makefile.am
 	@echo echo TEST: verify session, both >> $@
 	@echo $(DBUS_RUNNER) --bus-type both --task gdbus --parameter call --parameter --session --parameter --dest --parameter org.freedesktop.DBus --parameter --object-path --parameter / --parameter --method --parameter org.freedesktop.DBus.GetId >> $@
 	@echo echo TEST: verify system, system >> $@
-	@echo $(DBUS_RUNNER) --bus-type system --task gdbus --parameter call --parameter --system --parameter --dest --parameter org.freedesktop.DBus --parameter --object-path --parameter / --parameter --method --parameter org.freedesktop.DBus.GetId >> $@
+	@echo $(DBUS_RUNNER_SYSTEM) --bus-type system --task gdbus --parameter call --parameter --system --parameter --dest --parameter org.freedesktop.DBus --parameter --object-path --parameter / --parameter --method --parameter org.freedesktop.DBus.GetId >> $@
 	@echo echo TEST: verify system, both >> $@
 	@echo $(DBUS_RUNNER) --bus-type both --task gdbus --parameter call --parameter --system --parameter --dest --parameter org.freedesktop.DBus --parameter --object-path --parameter / --parameter --method --parameter org.freedesktop.DBus.GetId >> $@
 	@chmod +x $@
