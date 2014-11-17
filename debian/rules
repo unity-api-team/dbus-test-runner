@@ -11,6 +11,9 @@ override_dh_autoreconf:
 override_dh_auto_configure:
 	dh_auto_configure -- --disable-scrollkeeper
 
+override_dh_auto_test:
+	VERBOSE=1 dh_auto_test
+
 override_dh_install:
 	find debian/ -name \*.la -delete
 	find debian/ -name \*.a -delete
