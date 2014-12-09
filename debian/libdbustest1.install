@@ -1,2 +1,3 @@
 usr/lib/*/*.so.*
 usr/lib/*/dbus-test-runner/*
+usr/share

@@ -23,6 +23,7 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <libdbustest/dbus-test.h>
 
+static DbusTestServiceBus bus_type = DBUS_TEST_SERVICE_BUS_SESSION;
 static gint max_wait = 30;
 static gboolean keep_env = FALSE;
 static DbusTestProcess * last_task = NULL;
@@ -30,6 +31,27 @@ static DbusTestService * service = NULL;
 static gboolean timeout = FALSE;
 
 #define NAME_SET "dbus-test-runner-name-set"
+
+static gboolean
+option_bus_type (G_GNUC_UNUSED const gchar * arg, const gchar * value, G_GNUC_UNUSED gpointer data, GError ** error)
+{
+	if (bus_type != DBUS_TEST_SERVICE_BUS_SESSION) {
+		g_set_error_literal(error, G_OPTION_ERROR, G_OPTION_ERROR_BAD_VALUE, "Bus type set more than once");
+		return TRUE;
+	}
+
+	if (g_strcmp0(value, "session") == 0) {
+		bus_type = DBUS_TEST_SERVICE_BUS_SESSION;
+	} else if (g_strcmp0(value, "system") == 0) {
+		bus_type = DBUS_TEST_SERVICE_BUS_SYSTEM;
+	} else if (g_strcmp0(value, "both") == 0) {
+		bus_type = DBUS_TEST_SERVICE_BUS_BOTH;
+	} else {
+		g_set_error(error, G_OPTION_ERROR, G_OPTION_ERROR_BAD_VALUE, "Bus type '%s' unknown", value);
+	}
+
+	return TRUE;
+}
 
 static gboolean
 option_task (G_GNUC_UNUSED const gchar * arg, const gchar * value, G_GNUC_UNUSED gpointer data, G_GNUC_UNUSED GError ** error)
@@ -59,6 +81,27 @@ option_taskname (G_GNUC_UNUSED const gchar * arg, const gchar * value, G_GNUC_UN
 
 	g_object_set_data(G_OBJECT(last_task), NAME_SET, GINT_TO_POINTER(TRUE));
 	dbus_test_task_set_name(DBUS_TEST_TASK(last_task), value);
+	return TRUE;
+}
+
+static gboolean
+option_taskbus (G_GNUC_UNUSED const gchar * arg, const gchar * value, G_GNUC_UNUSED gpointer data, GError ** error)
+{
+	if (last_task == NULL) {
+		g_set_error(error, G_OPTION_ERROR, G_OPTION_ERROR_BAD_VALUE, "No task to put the name %s on.", value);
+		return FALSE;
+	}
+
+	if (g_strcmp0(value, "session") == 0) {
+		dbus_test_task_set_bus(DBUS_TEST_TASK(last_task), DBUS_TEST_SERVICE_BUS_SESSION);
+	} else if (g_strcmp0(value, "system") == 0) {
+		dbus_test_task_set_bus(DBUS_TEST_TASK(last_task), DBUS_TEST_SERVICE_BUS_SYSTEM);
+	} else if (g_strcmp0(value, "both") == 0) {
+		dbus_test_task_set_bus(DBUS_TEST_TASK(last_task), DBUS_TEST_SERVICE_BUS_BOTH);
+	} else {
+		g_set_error(error, G_OPTION_ERROR, G_OPTION_ERROR_BAD_VALUE, "Bus type '%s' unknown", value);
+	}
+
 	return TRUE;
 }
 
@@ -163,12 +206,14 @@ static GOptionEntry general_options[] = {
 	{"bustle-data",  'b',   0,                       G_OPTION_ARG_FILENAME,  &bustle_datafile, "A file to write out data from the bustle logger to.", "data_file"},
 	{"max-wait",     'm',   0,                       G_OPTION_ARG_INT,       &max_wait,        "The maximum amount of time the test runner will wait for the test to complete.  Default is 30 seconds.", "seconds"},
 	{"keep-env",     0,     0,                       G_OPTION_ARG_NONE,      &keep_env,        "Whether to propagate the execution environment to the dbus-server and all the services activated by it.  By default the environment is cleared.", NULL },
+	{"bus-type",     0,     0,                       G_OPTION_ARG_CALLBACK,  option_bus_type,  "Configures which buses are represented by the tool to the tasks. Default: session", "{session|system|both}" },
 	{ NULL, 0, 0, 0, NULL, NULL, NULL }
 };
 
 static GOptionEntry task_options[] = {
 	{"task",          't',  G_OPTION_FLAG_FILENAME,   G_OPTION_ARG_CALLBACK,  option_task,     "Defines a new task to run under our private DBus session.", "executable"},
 	{"task-name",     'n',  0,                        G_OPTION_ARG_CALLBACK,  option_taskname, "A string to label output from the previously defined task.  Defaults to taskN.", "name"},
+	{"task-bus",      0,    0,                        G_OPTION_ARG_CALLBACK,  option_taskbus,  "Configures which bus the task expects to connect to. Default: both", "{session|system|both}"},
 	{"ignore-return", 'r',  G_OPTION_FLAG_NO_ARG,     G_OPTION_ARG_CALLBACK,  option_noreturn, "Do not use the return value of the task to calculate whether the test passes or fails.", NULL},
 	{"invert-return", 'i',  G_OPTION_FLAG_NO_ARG,     G_OPTION_ARG_CALLBACK,  option_invert,   "Invert the return value of the task before calculating whether the test passes or fails.", NULL},
 	{"parameter",     'p',  0,                        G_OPTION_ARG_CALLBACK,  option_param,    "Add a parameter to the call of this utility.  May be called as many times as you'd like.", NULL},
@@ -202,6 +247,8 @@ main (int argc, char * argv[])
 		g_error_free(error);
 		return 1;
 	}
+
+	dbus_test_service_set_bus(service, bus_type);
 
 	if (dbus_daemon != NULL) {
 		dbus_test_service_set_daemon(service, dbus_daemon);

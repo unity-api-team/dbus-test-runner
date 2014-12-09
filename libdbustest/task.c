@@ -36,6 +36,8 @@ struct _DbusTestTaskPrivate {
 
 	gboolean been_run;
 	gboolean wait_until_complete;
+
+	DbusTestServiceBus preferred_bus;
 };
 
 /* Signals */
@@ -99,6 +101,8 @@ dbus_test_task_init (DbusTestTask *self)
 
 	self->priv->been_run = FALSE;
 	self->priv->wait_until_complete = FALSE;
+
+	self->priv->preferred_bus = DBUS_TEST_SERVICE_BUS_BOTH;
 
 	return;
 }
@@ -271,10 +275,10 @@ wait_for_found (G_GNUC_UNUSED GDBusConnection * connection, G_GNUC_UNUSED const 
 	task->priv->wait_task = 0;
 
 	DbusTestTaskClass * klass = DBUS_TEST_TASK_GET_CLASS(task);
+	task->priv->been_run = TRUE;
 	if (klass->run != NULL) {
 		klass->run(task);
 	} else {
-		task->priv->been_run = TRUE;
 		g_signal_emit(G_OBJECT(task), signals[STATE_CHANGED], 0, DBUS_TEST_TASK_STATE_FINISHED, NULL);
 	}
 
@@ -301,10 +305,10 @@ dbus_test_task_run (DbusTestTask * task)
 	}
 
 	DbusTestTaskClass * klass = DBUS_TEST_TASK_GET_CLASS(task);
+	task->priv->been_run = TRUE;
 	if (klass->run != NULL) {
 		klass->run(task);
 	} else {
-		task->priv->been_run = TRUE;
 		g_signal_emit(G_OBJECT(task), signals[STATE_CHANGED], 0, DBUS_TEST_TASK_STATE_FINISHED, NULL);
 	}
 
@@ -315,6 +319,7 @@ gboolean
 dbus_test_task_passed (DbusTestTask * task)
 {
 	g_return_val_if_fail(DBUS_TEST_IS_TASK(task), FALSE);
+	g_return_val_if_fail(task->priv->been_run, FALSE);
 
 	/* If we don't care, we always pass */
 	if (task->priv->return_type == DBUS_TEST_TASK_RETURN_IGNORE) {
@@ -383,4 +388,33 @@ dbus_test_task_get_wait_finished (DbusTestTask * task)
 	g_return_val_if_fail(DBUS_TEST_IS_TASK(task), FALSE);
 
 	return task->priv->wait_until_complete;
+}
+
+/**
+ * dbus_test_task_set_bus:
+ * @task: Task to get the bus from
+ * @bus: Preferred bus for this task
+ *
+ * Set which bus this task prefers to be on.
+ */
+void
+dbus_test_task_set_bus (DbusTestTask * task, DbusTestServiceBus bus)
+{
+	g_return_if_fail(DBUS_TEST_IS_TASK(task));
+
+	task->priv->preferred_bus = bus;
+}
+
+/**
+ * dbus_test_task_get_bus:
+ * @task: Task to get the bus from
+ *
+ * Check to see which bus this task prefers to be on.
+ */
+DbusTestServiceBus
+dbus_test_task_get_bus (DbusTestTask * task)
+{
+	g_return_val_if_fail(DBUS_TEST_IS_TASK(task), DBUS_TEST_SERVICE_BUS_BOTH);
+
+	return task->priv->preferred_bus;
 }

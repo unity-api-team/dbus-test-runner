@@ -31,6 +31,7 @@ Multi-Arch: same
 Depends: ${shlibs:Depends},
          ${misc:Depends},
 Recommends: python3-dbusmock,
+Conflicts: dbus-test-runner (<< 15.04.0)
 Description: Runs tests under a new DBus session
  A simple little executable for running a couple of programs under a 
  new DBus session.

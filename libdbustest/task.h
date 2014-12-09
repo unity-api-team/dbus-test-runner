@@ -74,6 +74,8 @@ struct _DbusTestTask {
 	DbusTestTaskPrivate * priv;
 };
 
+#include "service.h"
+
 GType dbus_test_task_get_type (void);
 DbusTestTask * dbus_test_task_new (void);
 
@@ -82,6 +84,7 @@ void dbus_test_task_set_name_spacing (DbusTestTask * task, glong chars);
 void dbus_test_task_set_wait_for (DbusTestTask * task, const gchar * dbus_name);
 void dbus_test_task_set_return (DbusTestTask * task, DbusTestTaskReturn ret);
 void dbus_test_task_set_wait_finished (DbusTestTask * task, gboolean wait_till_complete);
+void dbus_test_task_set_bus (DbusTestTask * task, DbusTestServiceBus bus);
 
 void dbus_test_task_print (DbusTestTask * task, const gchar * message);
 
@@ -90,6 +93,7 @@ DbusTestTaskReturn dbus_test_task_get_return (DbusTestTask * task);
 const gchar * dbus_test_task_get_name (DbusTestTask * task);
 const gchar * dbus_test_task_get_wait_for (DbusTestTask * task);
 gboolean dbus_test_task_get_wait_finished (DbusTestTask * task);
+DbusTestServiceBus dbus_test_task_get_bus (DbusTestTask * task);
 
 void dbus_test_task_run (DbusTestTask * task);
 
