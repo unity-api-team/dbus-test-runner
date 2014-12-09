@@ -1,8 +1,12 @@
 dbus-test-runner (15.04.0-0ubuntu1) UNRELEASED; urgency=medium
 
+  [ Ted Gould ]
   * Adding support for emulating a system bus
   * Moving configuration files to the library packages
   * Add symbols checking to the library
+
+  [ Ubuntu daily release ]
+  * debian/libdbustest1.symbols: auto-update to released version
 
  -- Ted Gould <ted@ubuntu.com>  Thu, 06 Nov 2014 14:00:21 -0600
 
