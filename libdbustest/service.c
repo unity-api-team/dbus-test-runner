@@ -271,7 +271,7 @@ all_tasks_started_helper (G_GNUC_UNUSED DbusTestService * service, DbusTestTask 
 }
 
 static gboolean
-all_tasks_bus_match (G_GNUC_UNUSED DbusTestService * service, G_GNUC_UNUSED DbusTestTask * task, G_GNUC_UNUSED gpointer user_data)
+all_tasks_bus_match (DbusTestService * service, DbusTestTask * task, G_GNUC_UNUSED gpointer user_data)
 {
 	return service->priv->bus_type == DBUS_TEST_SERVICE_BUS_BOTH ||
 		dbus_test_task_get_bus(task) == DBUS_TEST_SERVICE_BUS_BOTH ||
