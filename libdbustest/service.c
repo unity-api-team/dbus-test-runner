@@ -400,19 +400,20 @@ dbus_writes (GIOChannel * channel, GIOCondition condition, gpointer data)
 
 		g_setenv("DBUS_STARTER_ADDRESS", line, TRUE);
 
-		if (service->priv->bus_type == DBUS_TEST_SERVICE_BUS_SESSION ||
-				service->priv->bus_type == DBUS_TEST_SERVICE_BUS_BOTH) {
+		switch (service->priv->bus_type) {
+		case DBUS_TEST_SERVICE_BUS_SESSION:
 			g_setenv("DBUS_SESSION_BUS_ADDRESS", line, TRUE);
 			g_setenv("DBUS_STARTER_BUS_TYPE", "session", TRUE);
-		}
-
-		if (service->priv->bus_type == DBUS_TEST_SERVICE_BUS_SYSTEM ||
-				service->priv->bus_type == DBUS_TEST_SERVICE_BUS_BOTH) {
+			break;
+		case DBUS_TEST_SERVICE_BUS_SYSTEM:
 			g_setenv("DBUS_SYSTEM_BUS_ADDRESS", line, TRUE);
-		}
-
-		if (service->priv->bus_type != DBUS_TEST_SERVICE_BUS_SESSION) {
 			g_setenv("DBUS_STARTER_BUS_TYPE", "system", TRUE);
+			break;
+		case DBUS_TEST_SERVICE_BUS_BOTH:
+			g_setenv("DBUS_SESSION_BUS_ADDRESS", line, TRUE);
+			g_setenv("DBUS_SYSTEM_BUS_ADDRESS", line, TRUE);
+			g_setenv("DBUS_STARTER_BUS_TYPE", "session", TRUE);
+			break;
 		}
 
 		if (service->priv->state == STATE_DAEMON_STARTING) {
