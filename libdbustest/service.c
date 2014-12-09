@@ -711,10 +711,21 @@ dbus_test_service_stop (DbusTestService * service)
 void dbus_test_service_set_bus (DbusTestService * service, DbusTestServiceBus bus)
 {
 	g_return_if_fail(DBUS_TEST_IS_SERVICE(service));
+	g_return_if_fail(service->priv->dbus == 0); /* we can't change after we're running */
+
+	if (bus == DBUS_TEST_SERVICE_BUS_BOTH) {
+		g_warning("Setting bus to BOTH, which is typically only used as a default value.");
+	}
+
 	service->priv->bus_type = bus;
+	g_warn_if_fail(all_tasks(service, all_tasks_bus_match, NULL));
 
 	if (bus == DBUS_TEST_SERVICE_BUS_SYSTEM) {
 		g_free(service->priv->dbus_configfile);
 		service->priv->dbus_configfile = g_strdup(DEFAULT_SYSTEM_CONF);
+	} else {
+		/* BOTH and SESSION get the session config — for backwards compatibility there */
+		g_free(service->priv->dbus_configfile);
+		service->priv->dbus_configfile = g_strdup(DEFAULT_SESSION_CONF);
 	}
 }
