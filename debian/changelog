@@ -1,4 +1,4 @@
-dbus-test-runner (15.04.0-0ubuntu1) UNRELEASED; urgency=medium
+dbus-test-runner (15.04.0+15.04.20141209-0ubuntu1) vivid; urgency=medium
 
   [ Ted Gould ]
   * Adding support for emulating a system bus
@@ -8,7 +8,7 @@ dbus-test-runner (15.04.0-0ubuntu1) UNRELEASED; urgency=medium
   [ Ubuntu daily release ]
   * debian/libdbustest1.symbols: auto-update to released version
 
- -- Ted Gould <ted@ubuntu.com>  Thu, 06 Nov 2014 14:00:21 -0600
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 09 Dec 2014 22:32:31 +0000
 
 dbus-test-runner (14.04.1+14.10.20140908-0ubuntu1) utopic; urgency=low
 
