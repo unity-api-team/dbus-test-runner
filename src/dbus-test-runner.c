@@ -213,7 +213,7 @@ static GOptionEntry general_options[] = {
 static GOptionEntry task_options[] = {
 	{"task",          't',  G_OPTION_FLAG_FILENAME,   G_OPTION_ARG_CALLBACK,  option_task,     "Defines a new task to run under our private DBus session.", "executable"},
 	{"task-name",     'n',  0,                        G_OPTION_ARG_CALLBACK,  option_taskname, "A string to label output from the previously defined task.  Defaults to taskN.", "name"},
-	{"task-bus",      0,    0,                        G_OPTION_ARG_CALLBACK,  option_taskbus,  "Configures which bus the task expects to connect to.", "{session|system|both}"},
+	{"task-bus",      0,    0,                        G_OPTION_ARG_CALLBACK,  option_taskbus,  "Configures which bus the task expects to connect to. Default: both", "{session|system|both}"},
 	{"ignore-return", 'r',  G_OPTION_FLAG_NO_ARG,     G_OPTION_ARG_CALLBACK,  option_noreturn, "Do not use the return value of the task to calculate whether the test passes or fails.", NULL},
 	{"invert-return", 'i',  G_OPTION_FLAG_NO_ARG,     G_OPTION_ARG_CALLBACK,  option_invert,   "Invert the return value of the task before calculating whether the test passes or fails.", NULL},
 	{"parameter",     'p',  0,                        G_OPTION_ARG_CALLBACK,  option_param,    "Add a parameter to the call of this utility.  May be called as many times as you'd like.", NULL},
