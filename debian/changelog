@@ -1,3 +1,10 @@
+dbus-test-runner (15.04.0+15.04.20150120.1-0ubuntu1) vivid; urgency=low
+
+  [ David Riebenbauer ]
+  * Bump glib dependency to 2.34 (LP: #1111485)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 20 Jan 2015 22:26:48 +0000
+
 dbus-test-runner (15.04.0+15.04.20141209-0ubuntu1) vivid; urgency=medium
 
   [ Ted Gould ]
