@@ -28,6 +28,7 @@ struct _DbusTestTaskPrivate {
 	DbusTestTaskReturn return_type;
 
 	gchar * wait_for;
+	DbusTestServiceBus wait_for_bus;
 	guint wait_task;
 
 	gchar * name;
@@ -93,6 +94,7 @@ dbus_test_task_init (DbusTestTask *self)
 	self->priv->return_type = DBUS_TEST_TASK_RETURN_NORMAL;
 
 	self->priv->wait_for = NULL;
+	self->priv->wait_for_bus = DBUS_TEST_SERVICE_BUS_BOTH;
 	self->priv->wait_task = 0;
 
 	self->priv->name = g_strdup_printf("task-%d", task_count++);
@@ -187,15 +189,21 @@ dbus_test_task_set_name_spacing (DbusTestTask * task, glong chars)
 
 	return;
 }
-
 void
 dbus_test_task_set_wait_for (DbusTestTask * task, const gchar * dbus_name)
+{
+	return dbus_test_task_set_wait_for_bus(task, dbus_name, DBUS_TEST_SERVICE_BUS_BOTH);
+}
+
+void
+dbus_test_task_set_wait_for_bus (DbusTestTask * task, const gchar * dbus_name, DbusTestServiceBus bus)
 {
 	g_return_if_fail(DBUS_TEST_IS_TASK(task));
 
 	if (task->priv->wait_for != NULL) {
 		g_free(task->priv->wait_for);
 		task->priv->wait_for = NULL;
+		task->priv->wait_for_bus = DBUS_TEST_SERVICE_BUS_BOTH;
 	}
 
 	if (dbus_name == NULL) {
@@ -203,6 +211,7 @@ dbus_test_task_set_wait_for (DbusTestTask * task, const gchar * dbus_name)
 	}
 
 	task->priv->wait_for = g_strdup(dbus_name);
+	task->priv->wait_for_bus = bus;
 
 	return;
 }
@@ -293,7 +302,13 @@ dbus_test_task_run (DbusTestTask * task)
 	/* We're going to process the waiting at this level if we've been
 	   asked to do so */
 	if (task->priv->wait_for != NULL) {
-		task->priv->wait_task = g_bus_watch_name(G_BUS_TYPE_SESSION,
+		GBusType bustype = G_BUS_TYPE_SESSION;
+		if (task->priv->wait_for_bus == DBUS_TEST_SERVICE_BUS_BOTH &&
+				task->priv->preferred_bus == DBUS_TEST_SERVICE_BUS_SYSTEM) {
+			bustype = G_BUS_TYPE_SYSTEM;
+		}
+
+		task->priv->wait_task = g_bus_watch_name(bustype,
 		                                         task->priv->wait_for,
 		                                         G_BUS_NAME_WATCHER_FLAGS_NONE,
 		                                         wait_for_found,
