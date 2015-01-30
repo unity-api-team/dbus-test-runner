@@ -454,7 +454,17 @@ run (DbusTestTask * task)
 	DbusTestDbusMock * self = DBUS_TEST_DBUS_MOCK(task);
 
 	/* Grab the new bus */
-	self->priv->bus = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, NULL);
+	if (dbus_test_task_get_bus(DBUS_TEST_TASK(self)) == DBUS_TEST_SERVICE_BUS_SYSTEM) {
+		self->priv->bus = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, &error);
+	} else {
+		self->priv->bus = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, &error);
+	}
+
+	if (error != NULL) {
+		g_warning("Unable to get bus to start DBus Mock: %s", error->message);
+		g_error_free(error);
+		return;
+	}
 
 	/* Use the process code to get the process running */
 	DBUS_TEST_TASK_CLASS (dbus_test_dbus_mock_parent_class)->run (task);
