@@ -145,9 +145,6 @@ dbus_test_dbus_mock_init (DbusTestDbusMock *self)
 static void
 constructed (GObject * object)
 {
-	DbusTestDbusMock * self = DBUS_TEST_DBUS_MOCK(object);
-	const gchar * paramval = NULL;
-
 	if (mock_cnt == 0) {
 		dbus_test_task_set_name(DBUS_TEST_TASK(object), "DBusMock");
 	} else {
@@ -156,27 +153,6 @@ constructed (GObject * object)
 		g_free(name);
 	}
 	mock_cnt++;
-
-	/* Execute: python3 -m dbusmock $name / com.canonical.DbusTest.DbusMock */
-	g_object_set(object, "executable", "python3", NULL);
-
-	GArray * params = g_array_new(TRUE, TRUE, sizeof(gchar *));
-	/* NOTE: No free func, none of the memory is managed by the array */
-
-	paramval = "-m"; g_array_append_val(params, paramval);
-	paramval = "dbusmock"; g_array_append_val(params, paramval);
-
-	/* If we're set for system, go there, otherwise default to session */
-	if (dbus_test_task_get_bus(DBUS_TEST_TASK(self)) == DBUS_TEST_SERVICE_BUS_SYSTEM) {
-		paramval = "-s"; g_array_append_val(params, paramval);
-	}
-
-	g_array_append_val(params, self->priv->name);
-	paramval = "/"; g_array_append_val(params, paramval);
-	paramval = "com.canonical.DbusTest.DbusMock"; g_array_append_val(params, paramval);
-
-	g_object_set(object, "parameters", params, NULL);
-	g_array_unref(params);
 
 	return;
 }
@@ -446,6 +422,34 @@ got_name_owner (GObject * obj, G_GNUC_UNUSED GParamSpec * pspec, gpointer ploop)
 	return;
 }
 
+/* Configure the executable and parameters for the mock */
+static void
+configure_process (DbusTestDbusMock * self)
+{
+	const gchar * paramval = NULL;
+
+	/* Execute: python3 -m dbusmock $name / com.canonical.DbusTest.DbusMock */
+	g_object_set(G_OBJECT(self), "executable", "python3", NULL);
+
+	GArray * params = g_array_new(TRUE, TRUE, sizeof(gchar *));
+	/* NOTE: No free func, none of the memory is managed by the array */
+
+	paramval = "-m"; g_array_append_val(params, paramval);
+	paramval = "dbusmock"; g_array_append_val(params, paramval);
+
+	/* If we're set for system, go there, otherwise default to session */
+	if (dbus_test_task_get_bus(DBUS_TEST_TASK(self)) == DBUS_TEST_SERVICE_BUS_SYSTEM) {
+		paramval = "--system"; g_array_append_val(params, paramval);
+	}
+
+	g_array_append_val(params, self->priv->name);
+	paramval = "/"; g_array_append_val(params, paramval);
+	paramval = "com.canonical.DbusTest.DbusMock"; g_array_append_val(params, paramval);
+
+	g_object_set(G_OBJECT(self), "parameters", params, NULL);
+	g_array_unref(params);
+}
+
 /* Run the mock */
 static void
 run (DbusTestTask * task)
@@ -467,6 +471,7 @@ run (DbusTestTask * task)
 	}
 
 	/* Use the process code to get the process running */
+	configure_process(self);
 	DBUS_TEST_TASK_CLASS (dbus_test_dbus_mock_parent_class)->run (task);
 
 	/**** Initialize the DBus Mock instance ****/
