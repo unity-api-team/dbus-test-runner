@@ -82,6 +82,7 @@ DbusTestTask * dbus_test_task_new (void);
 void dbus_test_task_set_name (DbusTestTask * task, const gchar * name);
 void dbus_test_task_set_name_spacing (DbusTestTask * task, glong chars);
 void dbus_test_task_set_wait_for (DbusTestTask * task, const gchar * dbus_name);
+void dbus_test_task_set_wait_for_bus (DbusTestTask * task, const gchar * dbus_name, DbusTestServiceBus bus);
 void dbus_test_task_set_return (DbusTestTask * task, DbusTestTaskReturn ret);
 void dbus_test_task_set_wait_finished (DbusTestTask * task, gboolean wait_till_complete);
 void dbus_test_task_set_bus (DbusTestTask * task, DbusTestServiceBus bus);

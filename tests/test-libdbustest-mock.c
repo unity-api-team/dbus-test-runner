@@ -22,20 +22,22 @@ process_mainloop (const guint delay)
 	g_main_loop_unref (temploop);
 }
 
-#define SESSION_MAX_WAIT 10
+#define SESSION_MAX_WAIT 100
 
 /*
 * Waiting until the session bus shuts down
 */
+GDBusConnection * wait_for_close_ptr = NULL;
 static void
 wait_for_connection_close (GDBusConnection *connection)
 {
-	g_object_add_weak_pointer(G_OBJECT(connection), (gpointer) &connection);
+	wait_for_close_ptr = connection;
+	g_object_add_weak_pointer(G_OBJECT(connection), (gpointer) &wait_for_close_ptr);
 
 	g_object_unref (connection);
 
 	int wait_count;
-	for (wait_count = 0; connection != NULL && wait_count < SESSION_MAX_WAIT; wait_count++)
+	for (wait_count = 0; wait_for_close_ptr != NULL && wait_count < SESSION_MAX_WAIT; wait_count++)
 	{
 		process_mainloop(200);
 	}
@@ -61,6 +63,9 @@ test_basic (void)
 	DbusTestDbusMock * mock = dbus_test_dbus_mock_new("foo.test");
 	g_assert(mock != NULL);
 
+	dbus_test_service_add_task(service, DBUS_TEST_TASK(mock));
+	dbus_test_service_start_tasks(service);
+
 	gchar * dbusname = NULL;
 	g_object_get(mock, "dbus-name", &dbusname, NULL);
 	g_assert(g_strcmp0(dbusname, "foo.test") == 0);
@@ -70,9 +75,6 @@ test_basic (void)
 	g_object_get(mock, "executable", &exec, NULL);
 	g_assert(g_strcmp0(exec, "python3") == 0);
 	g_free(exec);
-
-	dbus_test_service_add_task(service, DBUS_TEST_TASK(mock));
-	dbus_test_service_start_tasks(service);
 
 	g_assert(dbus_test_task_get_state(DBUS_TEST_TASK(mock)) == DBUS_TEST_TASK_STATE_RUNNING);
 
@@ -522,6 +524,75 @@ test_running (void)
 }
 
 void
+test_running_system (void)
+{
+	DbusTestService * service = dbus_test_service_new(NULL);
+	g_assert(service != NULL);
+	dbus_test_service_set_bus(service, DBUS_TEST_SERVICE_BUS_SYSTEM);
+
+	dbus_test_service_set_conf_file(service, SESSION_CONF);
+
+	DbusTestDbusMock * mock = dbus_test_dbus_mock_new("foo.test");
+	g_assert(mock != NULL);
+	dbus_test_task_set_bus(DBUS_TEST_TASK(mock), DBUS_TEST_SERVICE_BUS_SYSTEM);
+
+	/* Startup the mock */
+	dbus_test_service_add_task(service, DBUS_TEST_TASK(mock));
+	dbus_test_service_start_tasks(service);
+
+	GDBusConnection * bus = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, NULL);
+	g_dbus_connection_set_exit_on_close(bus, FALSE);
+
+	/* Add the object */
+	DbusTestDbusMockObject * obj = dbus_test_dbus_mock_get_object(mock, "/test", "foo.test.interface", NULL);
+	g_assert(obj != NULL);
+
+	g_assert(dbus_test_dbus_mock_object_add_method(mock, obj,
+		"method1",
+		G_VARIANT_TYPE("s"),
+		G_VARIANT_TYPE("s"),
+		"ret = 'test'",
+		NULL));
+
+	GVariant * propret = NULL;
+	GVariant * testvar = NULL;
+	GError * error = NULL;
+
+	/* Check method */
+	propret = g_dbus_connection_call_sync(bus,
+		"foo.test",
+		"/test",
+		"foo.test.interface",
+		"method1",
+		g_variant_new("(s)", "testin"),
+		G_VARIANT_TYPE("(s)"),
+		G_DBUS_CALL_FLAGS_NONE,
+		-1,
+		NULL,
+		&error);
+
+	if (error != NULL) {
+		g_error("Unable to call method1: %s", error->message);
+		g_error_free(error);
+	}
+
+	g_assert(propret != NULL);
+	testvar = g_variant_new_string("test");
+	testvar = g_variant_new_tuple(&testvar, 1);
+	g_variant_ref_sink(testvar);
+	g_assert(g_variant_equal(propret, testvar));
+	g_variant_unref(testvar);
+
+	g_variant_unref(propret);
+
+	/* Clean up */
+	g_object_unref(mock);
+	g_object_unref(service);
+
+	wait_for_connection_close(bus);
+}
+
+void
 test_interfaces (void)
 {
 	DbusTestService * service = dbus_test_service_new(NULL);
@@ -637,6 +708,7 @@ test_libdbustest_mock_suite (void)
 	g_test_add_func ("/libdbustest/mock/methods",      test_methods);
 	g_test_add_func ("/libdbustest/mock/signals",      test_signals);
 	g_test_add_func ("/libdbustest/mock/running",      test_running);
+	g_test_add_func ("/libdbustest/mock/running-system", test_running_system);
 	g_test_add_func ("/libdbustest/mock/interfaces",   test_interfaces);
 
 	return;

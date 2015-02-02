@@ -120,6 +120,12 @@ test-param-only-wait: Makefile.am
 	@chmod +x $@
 XFAIL_TESTS += test-param-only-wait
 
+TESTS += test-param-wait-system
+test-param-wait-system: Makefile.am
+	@echo "#!/bin/sh" > $@
+	@echo $(DBUS_RUNNER) --bus-type=system --task ls --task-bus=system --wait-for org.test.test --task gdbus --parameter call --parameter --system --parameter --dest --parameter org.freedesktop.DBus --parameter --object-path --parameter / --parameter --method --parameter org.freedesktop.DBus.RequestName --parameter org.test.test --parameter 0 --task-bus=system >> $@
+	@chmod +x $@
+
 TESTS += test-param-multi-wait
 test-param-multi-wait: Makefile.am
 	@echo "#!/bin/sh" > $@
