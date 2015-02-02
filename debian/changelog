@@ -1,8 +1,12 @@
-dbus-test-runner (15.04.0+15.04.20150120.1-0ubuntu2) UNRELEASED; urgency=medium
+dbus-test-runner (15.04.0+15.04.20150202.3-0ubuntu1) vivid; urgency=medium
 
+  [ Ubuntu daily release ]
   * debian/libdbustest1.symbols: auto-update to released version
 
- -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 02 Feb 2015 17:38:05 +0000
+  [ Ted Gould ]
+  * Make watching the task use the same bus the task is on
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 02 Feb 2015 17:38:06 +0000
 
 dbus-test-runner (15.04.0+15.04.20150120.1-0ubuntu1) vivid; urgency=low
 
