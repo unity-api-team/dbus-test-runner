@@ -22,20 +22,22 @@ process_mainloop (const guint delay)
 	g_main_loop_unref (temploop);
 }
 
-#define SESSION_MAX_WAIT 10
+#define SESSION_MAX_WAIT 100
 
 /*
 * Waiting until the session bus shuts down
 */
+GDBusConnection * wait_for_close_ptr = NULL;
 static void
 wait_for_connection_close (GDBusConnection *connection)
 {
-	g_object_add_weak_pointer(G_OBJECT(connection), (gpointer) &connection);
+	wait_for_close_ptr = connection;
+	g_object_add_weak_pointer(G_OBJECT(connection), (gpointer) &wait_for_close_ptr);
 
 	g_object_unref (connection);
 
 	int wait_count;
-	for (wait_count = 0; connection != NULL && wait_count < SESSION_MAX_WAIT; wait_count++)
+	for (wait_count = 0; wait_for_close_ptr != NULL && wait_count < SESSION_MAX_WAIT; wait_count++)
 	{
 		process_mainloop(200);
 	}
