@@ -675,6 +675,45 @@ dbus_test_service_add_task_with_priority (DbusTestService * service, DbusTestTas
 	return;
 }
 
+/**
+ * @service: A #DbusTestService
+ * @task: Task to remove
+ *
+ * Removes a task from those managed by the service, it won't
+ * be checked for status or managed anymore by the service.
+ *
+ * Return Value: Whether the task was found and removed, FALSE if not found
+ */
+gboolean
+dbus_test_service_remove_task (DbusTestService * service, DbusTestTask * task)
+{
+	g_return_val_if_fail(DBUS_TEST_IS_SERVICE(service), FALSE);
+	g_return_val_if_fail(DBUS_TEST_IS_TASK(task), FALSE);
+
+	guint count = 0;
+	count += g_queue_remove_all(&service->priv->tasks_first, task);
+	count += g_queue_remove_all(&service->priv->tasks_normal, task);
+	count += g_queue_remove_all(&service->priv->tasks_last, task);
+
+	/* Checking the count here so that we can generate a warning. Guessing that
+	   this actually never happens, but it's easy to check */
+	if (count > 1) {
+		g_warning("Task '%s' was added to the service %d times!", dbus_test_task_get_name(task), count);
+	}
+
+	/* We're going to disconnect here even if count is zero because, well, it
+	   shouldn't hurt in that case and might be good for us. */
+	g_signal_handlers_disconnect_by_data(task, service);
+
+	/* If we've added it multiple times, we made multiple references, fix it. */
+	guint i;
+	for (i = 0; i < count; i++) {
+		g_object_unref(task);
+	}
+
+	return count > 0;
+}
+
 void
 dbus_test_service_set_daemon (DbusTestService * service, const gchar * daemon)
 {
