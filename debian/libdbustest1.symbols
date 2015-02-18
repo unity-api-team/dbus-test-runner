@@ -20,7 +20,7 @@ libdbustest.so.1 libdbustest1 #MINVER#
  dbus_test_service_add_task_with_priority@Base 15.04.0+15.04.20141209
  dbus_test_service_get_type@Base 15.04.0+15.04.20141209
  dbus_test_service_new@Base 15.04.0+15.04.20141209
- dbus_test_service_remove_task@Base 0replaceme
+ dbus_test_service_remove_task@Base 15.04.0+15.04.20150218
  dbus_test_service_run@Base 15.04.0+15.04.20141209
  dbus_test_service_set_bus@Base 15.04.0+15.04.20141209
  dbus_test_service_set_conf_file@Base 15.04.0+15.04.20141209
