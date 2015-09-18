@@ -76,7 +76,6 @@ Makefile
 po/Makefile.in
 libdbustest/Makefile
 src/Makefile
-data/Makefile
 tests/Makefile
 ])
 
