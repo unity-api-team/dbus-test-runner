@@ -51,7 +51,7 @@ static gboolean bustle_write_error      (GIOChannel *          channel,
                                          GIOCondition          condition,
                                          gpointer              data);
 
-G_DEFINE_TYPE (DbusTestBustle, dbus_test_bustle, DBUS_TEST_TYPE_TASK);
+G_DEFINE_TYPE (DbusTestBustle, dbus_test_bustle, DBUS_TEST_TYPE_TASK)
 
 static void
 dbus_test_bustle_class_init (DbusTestBustleClass *klass)
@@ -114,7 +114,7 @@ dbus_test_bustle_dispose (GObject *object)
 
 	if (bustler->priv->stderr != NULL) {
 		while (G_IO_IN & g_io_channel_get_buffer_condition(bustler->priv->stderr)) {
-			bustle_write_error(bustler->priv->stderr, 0 /* unused */, bustler);
+			bustle_write_error(bustler->priv->stderr, (GIOCondition)0 /* unused */, bustler);
 		}
 
 		g_clear_pointer(&bustler->priv->stderr, g_io_channel_unref);
@@ -248,7 +248,7 @@ process_run (DbusTestTask * task)
 	                         bustle_monitor, /* argv */
 	                         NULL, /* envp */
 	                         /* G_SPAWN_SEARCH_PATH | G_SPAWN_STDERR_TO_DEV_NULL, */ /* flags */
-	                         G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD, /* flags */
+	                         (GSpawnFlags)(G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD), /* flags */
 	                         NULL, /* child setup func */
 	                         NULL, /* child setup data */
 	                         &bustler->priv->pid, /* PID */
@@ -279,7 +279,7 @@ process_run (DbusTestTask * task)
 
 	bustler->priv->stderr = g_io_channel_unix_new(bustle_stderr_num);
 	g_io_add_watch(bustler->priv->stderr,
-	               G_IO_IN | G_IO_HUP | G_IO_ERR, /* conditions */
+	               (GIOCondition)(G_IO_IN | G_IO_HUP | G_IO_ERR), /* conditions */
 	               bustle_write_error, /* func */
 	               bustler); /* func data */
 

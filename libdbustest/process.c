@@ -64,7 +64,7 @@ static void set_property                 (GObject * object,
                                           const GValue * value,
                                           GParamSpec * pspec);
 
-G_DEFINE_TYPE (DbusTestProcess, dbus_test_process, DBUS_TEST_TYPE_TASK);
+G_DEFINE_TYPE (DbusTestProcess, dbus_test_process, DBUS_TEST_TYPE_TASK)
 
 static void
 dbus_test_process_class_init (DbusTestProcessClass *klass)
@@ -83,13 +83,13 @@ dbus_test_process_class_init (DbusTestProcessClass *klass)
 	                                                     "Executable Name",
 	                                                     "The executable being run by the process object",
 	                                                     "", /* default */
-	                                                     G_PARAM_STATIC_STRINGS | G_PARAM_READWRITE));
+	                                                     (GParamFlags)(G_PARAM_STATIC_STRINGS | G_PARAM_READWRITE)));
 	g_object_class_install_property (object_class, PROP_PARAMETERS,
 	                                 g_param_spec_boxed("parameters",
 	                                                    "Parameters",
 	                                                    "Parameters to pass to the executable",
 	                                                    G_TYPE_ARRAY,
-	                                                    G_PARAM_STATIC_STRINGS | G_PARAM_READWRITE));
+	                                                    (GParamFlags)(G_PARAM_STATIC_STRINGS | G_PARAM_READWRITE)));
 
 	DbusTestTaskClass * task_class = DBUS_TEST_TASK_CLASS(klass);
 
@@ -194,7 +194,7 @@ dbus_test_process_finalize (GObject *object)
 
 /* Get a property */
 static void
-get_property (GObject * object, guint property_id, G_GNUC_UNUSED GValue * value, GParamSpec * pspec)
+get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec)
 {
 	DbusTestProcess * self = DBUS_TEST_PROCESS(object);
 
@@ -214,7 +214,7 @@ get_property (GObject * object, guint property_id, G_GNUC_UNUSED GValue * value,
 
 /* Set a property */
 static void
-set_property (GObject * object, guint property_id, G_GNUC_UNUSED const GValue * value, GParamSpec * pspec)
+set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec)
 {
 	if (get_state(DBUS_TEST_TASK(object)) == DBUS_TEST_TASK_STATE_RUNNING) {
 		g_warning("Can't set properties on a running process");
@@ -324,7 +324,7 @@ process_run (DbusTestTask * task)
 	g_spawn_async_with_pipes(current_dir,
 	                         argv, /* argv */
 	                         NULL, /* envp */
-	                         G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD, /* flags */
+	                         (GSpawnFlags)(G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD), /* flags */
 	                         NULL, /* child setup func */
 	                         NULL, /* child setup data */
 							 &(process->priv->pid), /* PID */
@@ -352,7 +352,7 @@ process_run (DbusTestTask * task)
 	process->priv->io_chan = g_io_channel_unix_new(proc_stdout);
 	g_io_channel_set_buffer_size(process->priv->io_chan, 10 * 1024 * 1024); /* 10 MB should be enough for anyone */
 	process->priv->io_watch = g_io_add_watch(process->priv->io_chan,
-	                                         G_IO_IN | G_IO_HUP | G_IO_ERR, /* conditions */
+	                                         (GIOCondition)(G_IO_IN | G_IO_HUP | G_IO_ERR), /* conditions */
 	                                         proc_writes, /* func */
 	                                         process); /* func data */
 

@@ -15,7 +15,7 @@ static void dbus_test_watchdog_class_init (DbusTestWatchdogClass *klass);
 static void dbus_test_watchdog_init       (DbusTestWatchdog *self);
 static void dbus_test_watchdog_finalize   (GObject *object);
 
-G_DEFINE_TYPE (DbusTestWatchdog, dbus_test_watchdog, G_TYPE_OBJECT);
+G_DEFINE_TYPE (DbusTestWatchdog, dbus_test_watchdog, G_TYPE_OBJECT)
 
 /* Initialize class */
 static void
@@ -32,7 +32,7 @@ dbus_test_watchdog_class_init (DbusTestWatchdogClass *klass)
 
 /* Initialize instance data */
 static void
-dbus_test_watchdog_init (G_GNUC_UNUSED DbusTestWatchdog *self)
+dbus_test_watchdog_init (DbusTestWatchdog *self)
 {
 	self->priv = DBUS_TEST_WATCHDOG_GET_PRIVATE(self);
 

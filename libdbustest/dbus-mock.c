@@ -96,8 +96,8 @@ static void object_free                    (gpointer data);
 static void method_free                    (gpointer data);
 static void property_free                  (gpointer data);
 
-G_DEFINE_TYPE (DbusTestDbusMock, dbus_test_dbus_mock, DBUS_TEST_TYPE_PROCESS);
-G_DEFINE_QUARK("dbus-test-dbus-mock", _dbus_mock);
+G_DEFINE_TYPE (DbusTestDbusMock, dbus_test_dbus_mock, DBUS_TEST_TYPE_PROCESS)
+G_DEFINE_QUARK("dbus-test-dbus-mock", _dbus_mock)
 
 /* Initialize Class */
 static void
@@ -118,7 +118,7 @@ dbus_test_dbus_mock_class_init (DbusTestDbusMockClass *klass)
 	                                                     "DBus Name",
 	                                                     "The well known name for dbusmock on the session bus",
 	                                                     "com.canonical.DBusTestRunner.DBusMock", /* default */
-	                                                     G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE));
+	                                                     (GParamFlags)(G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE)));
 
 	DbusTestTaskClass * tclass = DBUS_TEST_TASK_CLASS(klass);
 
@@ -350,7 +350,7 @@ install_object (DbusTestDbusMock * mock, DbusTestDbusMockObject * object, GError
 
 		if (add_object) {
 			proxy = _dbus_mock_iface_org_freedesktop_dbus_mock_proxy_new_sync(mock->priv->bus,
-				G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES | G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START,
+				(GDBusProxyFlags)(G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES | G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START),
 				mock->priv->name,
 				object->object_path, /* path */
 				mock->priv->cancel,
@@ -478,7 +478,7 @@ run (DbusTestTask * task)
 
 	/* Zero, Setup the proxy */
 	self->priv->proxy = _dbus_mock_iface_org_freedesktop_dbus_mock_proxy_new_sync(self->priv->bus,
-		G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES | G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START,
+		(GDBusProxyFlags)(G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES | G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START),
 		self->priv->name,
 		"/", /* path */
 		self->priv->cancel,
@@ -517,7 +517,6 @@ run (DbusTestTask * task)
 	/* Second, Install Objects */
 	GList * lobj = self->priv->objects;
 	for (lobj = self->priv->objects; lobj != NULL; lobj = g_list_next(lobj)) {
-		GError * error = NULL;
 
 		DbusTestDbusMockObject * obj = (DbusTestDbusMockObject *)lobj->data;
 		install_object(self, obj, &error);
@@ -666,7 +665,7 @@ call_free (gpointer pcall)
  * Return value: Whether it was registered successfully
  */
 gboolean
-dbus_test_dbus_mock_object_add_method (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * method, const GVariantType * inparams, const GVariantType * outparams, const gchar * python_code, G_GNUC_UNUSED GError ** error)
+dbus_test_dbus_mock_object_add_method (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * method, const GVariantType * inparams, const GVariantType * outparams, const gchar * python_code, GError ** error)
 {
 	g_return_val_if_fail(DBUS_TEST_IS_DBUS_MOCK(mock), FALSE);
 	g_return_val_if_fail(obj != NULL, FALSE);
@@ -942,7 +941,7 @@ get_obj_property (DbusTestDbusMockObject * obj, const gchar * name)
  * Return value: Whether it was added
  */
 gboolean
-dbus_test_dbus_mock_object_add_property (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * name, const GVariantType * type, GVariant * value, G_GNUC_UNUSED GError ** error)
+dbus_test_dbus_mock_object_add_property (DbusTestDbusMock * mock, DbusTestDbusMockObject * obj, const gchar * name, const GVariantType * type, GVariant * value, GError ** error)
 {
 	g_return_val_if_fail(DBUS_TEST_IS_DBUS_MOCK(mock), FALSE);
 	g_return_val_if_fail(obj != NULL, FALSE);

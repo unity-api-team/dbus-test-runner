@@ -38,15 +38,15 @@ enum {
 
 static GParamSpec * properties[PROP_LAST];
 
-typedef enum _ServiceState ServiceState;
-enum _ServiceState {
+typedef enum _ServiceState {
 	STATE_INIT,
 	STATE_BUS_STARTED,
 	STATE_STARTING,
 	STATE_STARTED,
 	STATE_RUNNING,
 	STATE_FINISHED
-};
+}
+ServiceState;
 
 struct _DbusTestServicePrivate {
 	GQueue tasks_first;
@@ -77,7 +77,7 @@ static void dbus_test_service_dispose    (GObject *object);
 static void dbus_test_service_get_property(GObject *object, guint property_id, GValue *value, GParamSpec *pspec);
 static void dbus_test_service_set_property(GObject *object, guint property_id, const GValue *value, GParamSpec *pspec);
 
-G_DEFINE_TYPE (DbusTestService, dbus_test_service, G_TYPE_OBJECT);
+G_DEFINE_TYPE (DbusTestService, dbus_test_service, G_TYPE_OBJECT)
 
 static void
 dbus_test_service_class_init (DbusTestServiceClass *klass)
@@ -97,9 +97,9 @@ dbus_test_service_class_init (DbusTestServiceClass *klass)
 	                                                  "Test DBus",
 	                                                  "Test DBus",
 	                                                  G_TYPE_TEST_DBUS,
-                                                          G_PARAM_READWRITE |
-                                                          G_PARAM_CONSTRUCT_ONLY |
-                                                          G_PARAM_STATIC_STRINGS);
+                                                          (GParamFlags)(G_PARAM_READWRITE |
+                                                                        G_PARAM_CONSTRUCT_ONLY |
+                                                                        G_PARAM_STATIC_STRINGS));
 
 	g_object_class_install_properties (object_class, PROP_LAST, properties);
 
@@ -511,7 +511,7 @@ task_state_changed (G_GNUC_UNUSED DbusTestTask * task, G_GNUC_UNUSED DbusTestTas
 void
 dbus_test_service_add_task (DbusTestService * service, DbusTestTask * task)
 {
-	return dbus_test_service_add_task_with_priority(service, task, DBUS_TEST_SERVICE_PRIORITY_NORMAL);
+	dbus_test_service_add_task_with_priority(service, task, DBUS_TEST_SERVICE_PRIORITY_NORMAL);
 }
 
 void

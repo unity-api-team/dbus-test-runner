@@ -55,7 +55,7 @@ static void dbus_test_task_init       (DbusTestTask *self);
 static void dbus_test_task_dispose    (GObject *object);
 static void dbus_test_task_finalize   (GObject *object);
 
-G_DEFINE_TYPE (DbusTestTask, dbus_test_task, G_TYPE_OBJECT);
+G_DEFINE_TYPE (DbusTestTask, dbus_test_task, G_TYPE_OBJECT)
 
 static guint signals[LAST_SIGNAL] = {0};
 
@@ -192,7 +192,7 @@ dbus_test_task_set_name_spacing (DbusTestTask * task, glong chars)
 void
 dbus_test_task_set_wait_for (DbusTestTask * task, const gchar * dbus_name)
 {
-	return dbus_test_task_set_wait_for_bus(task, dbus_name, DBUS_TEST_SERVICE_BUS_BOTH);
+	dbus_test_task_set_wait_for_bus(task, dbus_name, DBUS_TEST_SERVICE_BUS_BOTH);
 }
 
 void
