@@ -59,7 +59,6 @@ struct _DbusTestServicePrivate {
 	GTestDBus * test_dbus;
 	gboolean test_dbus_started_here;
 
-	gboolean first_time;
 	gboolean keep_env;
 
 	DbusTestServiceBus bus_type;
@@ -118,7 +117,6 @@ dbus_test_service_init (DbusTestService *self)
 	self->priv->mainloop = g_main_loop_new(NULL, FALSE);
 	self->priv->state = STATE_INIT;
 
-	self->priv->first_time = TRUE;
 	self->priv->keep_env = FALSE;
 
 	self->priv->bus_type = DBUS_TEST_SERVICE_BUS_SESSION;
