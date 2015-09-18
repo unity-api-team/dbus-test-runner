@@ -1,6 +1,6 @@
 
-DBUS_RUNNER=$(top_builddir)/src/dbus-test-runner --dbus-config $(srcdir)/../data/session.conf
-DBUS_RUNNER_SYSTEM=$(top_builddir)/src/dbus-test-runner --dbus-config $(srcdir)/../data/system.conf
+DBUS_RUNNER=$(top_builddir)/src/dbus-test-runner
+DBUS_RUNNER_SYSTEM=$(top_builddir)/src/dbus-test-runner
 TESTS = 
 DISTCLEANFILES = $(TESTS)
 XFAIL_TESTS =
