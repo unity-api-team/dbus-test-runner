@@ -75,7 +75,6 @@ void dbus_test_service_add_task_with_priority (DbusTestService * service, DbusTe
 gboolean dbus_test_service_remove_task (DbusTestService * service, DbusTestTask * task);
 
 void dbus_test_service_set_daemon (DbusTestService * service, const gchar * daemon);
-void dbus_test_service_set_conf_file (DbusTestService * service, const gchar * conffile);
 void dbus_test_service_set_keep_environment (DbusTestService * service, gboolean keep_env);
 void dbus_test_service_set_bus (DbusTestService * service, DbusTestServiceBus bus);
 

@@ -58,7 +58,6 @@ struct _DbusTestServicePrivate {
 	GIOChannel * dbus_io;
 	guint dbus_io_watch;
 	gchar * dbus_daemon;
-	gchar * dbus_configfile;
 
 	gboolean first_time;
 	gboolean keep_env;
@@ -114,7 +113,6 @@ dbus_test_service_init (DbusTestService *self)
 	self->priv->dbus_io = NULL;
 	self->priv->dbus_io_watch = 0;
 	self->priv->dbus_daemon = g_strdup("dbus-daemon");
-	self->priv->dbus_configfile = g_strdup(DEFAULT_SESSION_CONF);
 
 	self->priv->first_time = TRUE;
 	self->priv->keep_env = FALSE;
@@ -216,8 +214,6 @@ dbus_test_service_finalize (GObject *object)
 
 	g_free(self->priv->dbus_daemon);
 	self->priv->dbus_daemon = NULL;
-	g_free(self->priv->dbus_configfile);
-	self->priv->dbus_configfile = NULL;
 
 	G_OBJECT_CLASS (dbus_test_service_parent_class)->finalize (object);
 	return;
@@ -461,7 +457,7 @@ start_daemon (DbusTestService * service)
 	GError * error = NULL;
 	gchar * blank[1] = {NULL};
 	gchar * current_dir = g_get_current_dir();
-	gchar * dbus_startup[] = {service->priv->dbus_daemon, "--config-file", service->priv->dbus_configfile, "--print-address", NULL};
+	gchar * dbus_startup[] = {service->priv->dbus_daemon, "--print-address", NULL};
 	g_spawn_async_with_pipes(current_dir,
 	                         dbus_startup, /* argv */
 	                         service->priv->keep_env ? NULL : blank, /* envp */
@@ -724,15 +720,6 @@ dbus_test_service_set_daemon (DbusTestService * service, const gchar * daemon)
 }
 
 void
-dbus_test_service_set_conf_file (DbusTestService * service, const gchar * conffile)
-{
-	g_return_if_fail(DBUS_TEST_IS_SERVICE(service));
-	g_free(service->priv->dbus_configfile);
-	service->priv->dbus_configfile = g_strdup(conffile);
-	return;
-}
-
-void
 dbus_test_service_set_keep_environment (DbusTestService * service, gboolean keep_env)
 {
 	g_return_if_fail(DBUS_TEST_IS_SERVICE(service));
@@ -758,13 +745,4 @@ void dbus_test_service_set_bus (DbusTestService * service, DbusTestServiceBus bu
 
 	service->priv->bus_type = bus;
 	g_warn_if_fail(all_tasks(service, all_tasks_bus_match, NULL));
-
-	if (bus == DBUS_TEST_SERVICE_BUS_SYSTEM) {
-		g_free(service->priv->dbus_configfile);
-		service->priv->dbus_configfile = g_strdup(DEFAULT_SYSTEM_CONF);
-	} else {
-		/* BOTH and SESSION get the session config — for backwards compatibility there */
-		g_free(service->priv->dbus_configfile);
-		service->priv->dbus_configfile = g_strdup(DEFAULT_SESSION_CONF);
-	}
 }

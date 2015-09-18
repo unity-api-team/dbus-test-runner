@@ -35,8 +35,6 @@ libdbustest_la_CFLAGS = \
 	$(COVERAGE_CFLAGS) \
 	-I$(top_srcdir) \
 	-I$(builddir) \
-	-DDEFAULT_SESSION_CONF="\"$(datadir)/dbus-test-runner/session.conf\"" \
-	-DDEFAULT_SYSTEM_CONF="\"$(datadir)/dbus-test-runner/system.conf\"" \
 	-DBUSTLE_DUAL_MONITOR="\"$(pkgdatadir)/dbus-test-bustle-handler\"" \
 	-DWATCHDOG="\"$(pkglibexecdir)/dbus-test-watchdog\"" \
 	-DG_LOG_DOMAIN=\"libdbustest\" \

@@ -1,5 +1,4 @@
 SUBDIRS = \
-	data \
 	libdbustest \
 	src \
 	tests \

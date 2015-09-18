@@ -194,14 +194,12 @@ max_wait_hit (G_GNUC_UNUSED gpointer user_data)
 	return FALSE;
 }
 
-static gchar * dbus_configfile = NULL;
 static gchar * dbus_daemon = NULL;
 static gchar * bustle_cmd = NULL;
 static gchar * bustle_datafile = NULL;
 
 static GOptionEntry general_options[] = {
 	{"dbus-daemon",  0,     0,                       G_OPTION_ARG_FILENAME,  &dbus_daemon,     "Path to the DBus deamon to use.  Defaults to 'dbus-daemon'.", "executable"},
-	{"dbus-config",  'd',   0,                       G_OPTION_ARG_FILENAME,  &dbus_configfile, "Configuration file for newly created DBus server.  Defaults to '" DEFAULT_SESSION_CONF "'.", "config_file"},
 	{"bustle-monitor", 0,   0,                       G_OPTION_ARG_FILENAME,  &bustle_cmd,      "Path to the Bustle DBus Monitor to use.  Defaults to 'bustle-dbus-monitor'.", "executable"},
 	{"bustle-data",  'b',   0,                       G_OPTION_ARG_FILENAME,  &bustle_datafile, "A file to write out data from the bustle logger to.", "data_file"},
 	{"max-wait",     'm',   0,                       G_OPTION_ARG_INT,       &max_wait,        "The maximum amount of time the test runner will wait for the test to complete.  Default is 30 seconds.", "seconds"},
@@ -252,10 +250,6 @@ main (int argc, char * argv[])
 
 	if (dbus_daemon != NULL) {
 		dbus_test_service_set_daemon(service, dbus_daemon);
-	}
-
-	if (dbus_configfile != NULL) {
-		dbus_test_service_set_conf_file(service, dbus_configfile);
 	}
 
 	if (bustle_datafile != NULL) {
