@@ -94,9 +94,9 @@ dbus_test_service_class_init (DbusTestServiceClass *klass)
 	                                                  "Test DBus",
 	                                                  "Test DBus",
 	                                                  G_TYPE_TEST_DBUS,
-                                                          (GParamFlags)(G_PARAM_READWRITE |
-                                                                        G_PARAM_CONSTRUCT_ONLY |
-                                                                        G_PARAM_STATIC_STRINGS));
+	                                                  (GParamFlags)(G_PARAM_READWRITE |
+	                                                                G_PARAM_CONSTRUCT_ONLY |
+	                                                                G_PARAM_STATIC_STRINGS));
 
 	g_object_class_install_properties (object_class, PROP_LAST, properties);
 
@@ -169,10 +169,7 @@ dbus_test_service_dispose (GObject *object)
 }
 
 static void
-dbus_test_service_get_property (GObject     *o,
-                                guint        property_id,
-                                GValue      *value,
-                                GParamSpec  *pspec)
+dbus_test_service_get_property (GObject *o, guint property_id, GValue *value, GParamSpec *pspec)
 {
 	DbusTestService * self = DBUS_TEST_SERVICE (o);
 
@@ -187,10 +184,7 @@ dbus_test_service_get_property (GObject     *o,
 }
 
 static void
-dbus_test_service_set_property (GObject       *o,
-                                guint          property_id,
-                                const GValue  *value,
-                                GParamSpec    *pspec)
+dbus_test_service_set_property (GObject *o, guint property_id, const GValue *value, GParamSpec *pspec)
 {
 	DbusTestService * self = DBUS_TEST_SERVICE (o);
 
