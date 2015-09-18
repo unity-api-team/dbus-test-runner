@@ -72,8 +72,8 @@ struct _DbusTestServicePrivate {
 
 static void dbus_test_service_class_init (DbusTestServiceClass *klass);
 static void dbus_test_service_init       (DbusTestService *self);
+static void dbus_test_service_constructed(GObject *object);
 static void dbus_test_service_dispose    (GObject *object);
-static void dbus_test_service_finalize   (GObject *object);
 static void dbus_test_service_get_property(GObject *object, guint property_id, GValue *value, GParamSpec *pspec);
 static void dbus_test_service_set_property(GObject *object, guint property_id, const GValue *value, GParamSpec *pspec);
 
@@ -87,19 +87,19 @@ dbus_test_service_class_init (DbusTestServiceClass *klass)
 	g_type_class_add_private (klass, sizeof (DbusTestServicePrivate));
 
 	object_class->dispose = dbus_test_service_dispose;
-	object_class->finalize = dbus_test_service_finalize;
+	object_class->constructed = dbus_test_service_constructed;
 	object_class->get_property = dbus_test_service_get_property;
 	object_class->set_property = dbus_test_service_set_property;
 
 	properties[PROP_0] = NULL;
 
-	properties[PROP_MAX_USERS] = g_param_spec_uint ("test-dbus",
-	                                                "Test DBus",
-	                                                "Test DBus",
-	                                                G_TEST_DBUS,
-                                                        G_PARAM_READABLE |
-                                                        G_PARAM_CONSTRUCT_ONLY |
-                                                        G_PARAM_STATIC_STRINGS);
+	properties[PROP_TEST_DBUS] = g_param_spec_object ("test-dbus",
+	                                                  "Test DBus",
+	                                                  "Test DBus",
+	                                                  G_TYPE_TEST_DBUS,
+                                                          G_PARAM_READWRITE |
+                                                          G_PARAM_CONSTRUCT_ONLY |
+                                                          G_PARAM_STATIC_STRINGS);
 
 	g_object_class_install_properties (object_class, PROP_LAST, properties);
 
@@ -162,6 +162,7 @@ dbus_test_service_dispose (GObject *object)
 	}
 
 	if (self->priv->test_dbus_started_here) {
+		self->priv->test_dbus_started_here = FALSE;
 		g_test_dbus_down (self->priv->test_dbus);
 	}
 
@@ -174,32 +175,21 @@ dbus_test_service_dispose (GObject *object)
 }
 
 static void
-dbus_test_service_finalize (GObject *object)
-{
-	g_return_if_fail(DBUS_TEST_IS_SERVICE(object));
-	DbusTestService * self = DBUS_TEST_SERVICE(object);
-
-	G_OBJECT_CLASS (dbus_test_service_parent_class)->finalize (object);
-	return;
-}
-
-static void
 dbus_test_service_get_property (GObject     *o,
                                 guint        property_id,
                                 GValue      *value,
                                 GParamSpec  *pspec)
 {
-  DBusTestService * self = DBUS_TEST_SERVICE (o);
+	DbusTestService * self = DBUS_TEST_SERVICE (o);
 
-  switch (property_id)
-    {
-      case PROP_MAX_USERS:
-        g_value_set_object (value, self->priv->test_dbus);
-        break;
+	switch (property_id) {
+	case PROP_TEST_DBUS:
+		g_value_set_object (value, self->priv->test_dbus);
+		break;
 
-      default:
-        G_OBJECT_WARN_INVALID_PROPERTY_ID (o, property_id, pspec);
-    }
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID (o, property_id, pspec);
+	}
 }
 
 static void
@@ -208,25 +198,40 @@ dbus_test_service_set_property (GObject       *o,
                                 const GValue  *value,
                                 GParamSpec    *pspec)
 {
-  DBusTestService * self = DBUS_TEST_SERVICE (o);
+	DbusTestService * self = DBUS_TEST_SERVICE (o);
 
-  switch (property_id)
-    {
-      case PROP_TEST_DBUS:
-        self->priv->test_dbus = g_value_dup_object(value);
-        break;
+	switch (property_id) {
+	case PROP_TEST_DBUS:
+		g_warn_if_fail(self->priv->test_dbus == NULL);
+		self->priv->test_dbus = g_value_dup_object(value);
+		break;
 
-      default:
-        G_OBJECT_WARN_INVALID_PROPERTY_ID (o, property_id, pspec);
-    }
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID (o, property_id, pspec);
+	}
 }
 
-DbusTestService *
-dbus_test_service_new (GTestDBus * optional_test_dbus)
+static void
+dbus_test_service_constructed (GObject *o)
 {
-	DbusTestService * service = g_object_new(DBUS_TEST_TYPE_SERVICE,
-	                                         "test-dbus", optional_test_dbus,
-	                                         NULL);
+	DbusTestService * self = DBUS_TEST_SERVICE (o);
+
+	/* if the user didn't provide a GTestDBus, create one ourselves */
+	if (self->priv->test_dbus == NULL) {
+		self->priv->test_dbus = g_test_dbus_new(G_TEST_DBUS_NONE);
+	}
+}
+
+
+DbusTestService *
+dbus_test_service_new (GTestDBus * test_dbus)
+{
+	DbusTestService * service;
+
+	if (test_dbus == NULL)
+		service = g_object_new(DBUS_TEST_TYPE_SERVICE, NULL);
+	else
+		service = g_object_new(DBUS_TEST_TYPE_SERVICE, "test-dbus", test_dbus, NULL);
 
 	return service;
 }
@@ -364,12 +369,6 @@ task_starter (gpointer data, G_GNUC_UNUSED gpointer user_data)
 }
 
 static void
-dbus_child_setup ()
-{
-	setpgrp();
-}
-
-static void
 ensure_bus_started (DbusTestService * service)
 {
 	GTestDBus* test_dbus = service->priv->test_dbus;
@@ -377,7 +376,7 @@ ensure_bus_started (DbusTestService * service)
 	g_return_if_fail (test_dbus != NULL);
 
 	/* ensure the bus is up... */
-	const gboolean bus_is_up = g_test_dbus_get_bus_address(test_dbus) == NULL;
+	const gboolean bus_is_up = g_test_dbus_get_bus_address(test_dbus) != NULL;
 	if (!bus_is_up) {
 		g_test_dbus_up (test_dbus);
 		service->priv->test_dbus_started_here = TRUE;
@@ -400,10 +399,10 @@ ensure_bus_started (DbusTestService * service)
 			g_setenv("DBUS_SYSTEM_BUS_ADDRESS", address, TRUE);
 			g_setenv("DBUS_STARTER_BUS_TYPE", "session", TRUE);
 			break;
-		}
 	}
 
 	service->priv->state = STATE_BUS_STARTED;
+
 	return;
 }
 
@@ -607,7 +606,7 @@ dbus_test_service_stop (DbusTestService * service)
 void dbus_test_service_set_bus (DbusTestService * service, DbusTestServiceBus bus)
 {
 	g_return_if_fail(DBUS_TEST_IS_SERVICE(service));
-	g_return_if_fail(service->priv->dbus == 0); /* we can't change after we're running */
+	g_return_if_fail(service->priv->state < STATE_BUS_STARTED); /* we can't change after the bus is started */
 
 	if (bus == DBUS_TEST_SERVICE_BUS_BOTH) {
 		g_warning("Setting bus to BOTH, which is typically only used as a default value.");

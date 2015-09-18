@@ -24,7 +24,7 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 #error "Please include #include <libdbustest/dbus-test.h> only"
 #endif
 
-#include <glib-object.h>
+#include <gio/gio.h>
 
 #include "task.h"
 
