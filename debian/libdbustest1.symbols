@@ -5,6 +5,7 @@ libdbustest.so.1 libdbustest1 #MINVER#
  dbus_test_dbus_mock_get_object@Base 15.04.0+15.04.20141209
  dbus_test_dbus_mock_get_type@Base 15.04.0+15.04.20141209
  dbus_test_dbus_mock_new@Base 15.04.0+15.04.20141209
+ dbus_test_dbus_mock_new_from_template@Base 0replaceme
  dbus_test_dbus_mock_object_add_method@Base 15.04.0+15.04.20141209
  dbus_test_dbus_mock_object_add_property@Base 15.04.0+15.04.20141209
  dbus_test_dbus_mock_object_check_method_call@Base 15.04.0+15.04.20141209
