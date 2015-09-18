@@ -30,6 +30,7 @@ typedef struct _MockObjectMethod MockObjectMethod;
 
 struct _DbusTestDbusMockPrivate {
 	gchar * name;
+	gchar * template_pathname;
 	_DbusMockIfaceOrgFreedesktopDBusMock * proxy;
 	/* Entries of DbusTestDbusMockObject */
 	GList * objects;
@@ -65,8 +66,11 @@ struct _MockObjectMethod {
 enum {
 	PROP_0,
 	PROP_DBUS_NAME,
+	PROP_TEMPLATE_PATHNAME,
 	NUM_PROPS
 };
+
+static GParamSpec * properties[PROP_LAST];
 
 enum {
 	ERROR_METHOD_NOT_FOUND,
@@ -113,12 +117,25 @@ dbus_test_dbus_mock_class_init (DbusTestDbusMockClass *klass)
 	object_class->set_property = set_property;
 	object_class->constructed = constructed;
 
-	g_object_class_install_property (object_class, PROP_DBUS_NAME,
-	                                 g_param_spec_string("dbus-name",
-	                                                     "DBus Name",
-	                                                     "The well known name for dbusmock on the session bus",
-	                                                     "com.canonical.DBusTestRunner.DBusMock", /* default */
-	                                                     (GParamFlags)(G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE)));
+        properties[PROP_0] = NULL;
+
+        properties[PROP_DBUS_NAME] g_param_spec_string("dbus-name",
+	                                               "DBus Name",
+	                                               "The well known name for dbusmock on the session bus",
+	                                               "com.canonical.DBusTestRunner.DBusMock", /* default */
+	                                               (GParamFlags)(G_PARAM_STATIC_STRINGS |
+                                                                     G_PARAM_CONSTRUCT_ONLY |
+                                                                     G_PARAM_READWRITE));
+
+        properties[PROP_DBUS_NAME] g_param_spec_string("template-pathname",
+	                                               "Template Pathname",
+	                                               "If using a dbusmock template, the full pathname for its file",
+	                                               NULL, /* default */
+	                                               (GParamFlags)(G_PARAM_STATIC_STRINGS |
+                                                                     G_PARAM_CONSTRUCT_ONLY |
+                                                                     G_PARAM_READWRITE));
+
+        g_object_class_install_properties (object_class, PROP_LAST, properties);
 
 	DbusTestTaskClass * tclass = DBUS_TEST_TASK_CLASS(klass);
 
@@ -202,6 +219,9 @@ get_property (GObject * object, guint property_id, GValue * value, GParamSpec * 
 	case PROP_DBUS_NAME:
 		g_value_set_string(value, self->priv->name);
 		break;
+	case PROP_TEMPLATE_PATHNAME:
+		g_value_set_string(value, self->priv->template_pathname);
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
 	}
@@ -219,6 +239,10 @@ set_property (GObject * object, guint property_id, const GValue * value, GParamS
 	case PROP_DBUS_NAME:
 		g_free(self->priv->name);
 		self->priv->name = g_value_dup_string(value);
+		break;
+	case PROP_TEMPLATE_PATHNAME:
+		g_free(self->priv->template_pathname);
+		self->priv->template_pathname = g_value_dup_string(value);
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
@@ -442,9 +466,14 @@ configure_process (DbusTestDbusMock * self)
 		paramval = "--system"; g_array_append_val(params, paramval);
 	}
 
-	g_array_append_val(params, self->priv->name);
-	paramval = "/"; g_array_append_val(params, paramval);
-	paramval = "com.canonical.DbusTest.DbusMock"; g_array_append_val(params, paramval);
+	if (self->priv->template_pathname != NULL) {
+		paramval = "--template"; g_array_append_val(params, paramval);
+		paramval = self->priv->template_pathname; g_array_append_val(params, paramval);
+	} else {
+		g_array_append_val(params, self->priv->name);
+		paramval = "/"; g_array_append_val(params, paramval);
+		paramval = "com.canonical.DbusTest.DbusMock"; g_array_append_val(params, paramval);
+	}
 
 	g_object_set(G_OBJECT(self), "parameters", params, NULL);
 	g_array_unref(params);
@@ -547,6 +576,29 @@ dbus_test_dbus_mock_new (const gchar * bus_name)
 
 	DbusTestDbusMock * mock = g_object_new(DBUS_TEST_TYPE_DBUS_MOCK,
 	                                       "dbus-name", bus_name,
+	                                       NULL);
+
+	return mock;
+}
+
+/**
+ * dbus_test_dbus_mock_new:
+ * @bus_name: The name dbus mock should get on the bus
+ *
+ * Creates a new dbus mock process with the given dbusmock template.
+ * As with dbus_test_dbus_mock_new(), this function doesn't start
+ * the process -- it queues up a mock to be started when the DBusTest
+ * framework is run.
+ *
+ * Return value: A new dbus mock instance
+ */
+DbusTestDbusMock *
+dbus_test_dbus_mock_new_from_template (const gchar * template_pathname)
+{
+	g_return_val_if_fail(tepmlate_pathname != NULL, NULL);
+
+	DbusTestDbusMock * mock = g_object_new(DBUS_TEST_TYPE_DBUS_MOCK,
+	                                       "template-pathname", bus_name,
 	                                       NULL);
 
 	return mock;

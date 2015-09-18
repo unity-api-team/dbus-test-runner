@@ -61,6 +61,7 @@ GType dbus_test_dbus_mock_get_type (void);
 
 DbusTestDbusMock *          dbus_test_dbus_mock_new                       (const gchar *             bus_name);
 
+DbusTestDbusMock *          dbus_test_dbus_mock_new_from_template         (const char *              template_pathname);
 
 /* Object stuff */
 
