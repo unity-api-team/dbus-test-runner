@@ -58,8 +58,6 @@ test_basic (void)
 	DbusTestService * service = dbus_test_service_new(NULL);
 	g_assert(service != NULL);
 
-	dbus_test_service_set_conf_file(service, SESSION_CONF);
-
 	DbusTestDbusMock * mock = dbus_test_dbus_mock_new("foo.test");
 	g_assert(mock != NULL);
 
@@ -102,8 +100,6 @@ test_properties (void)
 {
 	DbusTestService * service = dbus_test_service_new(NULL);
 	g_assert(service != NULL);
-
-	dbus_test_service_set_conf_file(service, SESSION_CONF);
 
 	DbusTestDbusMock * mock = dbus_test_dbus_mock_new("foo.test");
 	g_assert(mock != NULL);
@@ -275,8 +271,6 @@ test_methods (void)
 	DbusTestService * service = dbus_test_service_new(NULL);
 	g_assert(service != NULL);
 
-	dbus_test_service_set_conf_file(service, SESSION_CONF);
-
 	DbusTestDbusMock * mock = dbus_test_dbus_mock_new("foo.test");
 	g_assert(mock != NULL);
 
@@ -359,8 +353,6 @@ test_signals (void)
 	DbusTestService * service = dbus_test_service_new(NULL);
 	g_assert(service != NULL);
 
-	dbus_test_service_set_conf_file(service, SESSION_CONF);
-
 	DbusTestDbusMock * mock = dbus_test_dbus_mock_new("foo.test");
 	g_assert(mock != NULL);
 
@@ -429,8 +421,6 @@ test_running (void)
 {
 	DbusTestService * service = dbus_test_service_new(NULL);
 	g_assert(service != NULL);
-
-	dbus_test_service_set_conf_file(service, SESSION_CONF);
 
 	DbusTestDbusMock * mock = dbus_test_dbus_mock_new("foo.test");
 	g_assert(mock != NULL);
@@ -530,8 +520,6 @@ test_running_system (void)
 	g_assert(service != NULL);
 	dbus_test_service_set_bus(service, DBUS_TEST_SERVICE_BUS_SYSTEM);
 
-	dbus_test_service_set_conf_file(service, SESSION_CONF);
-
 	DbusTestDbusMock * mock = dbus_test_dbus_mock_new("foo.test");
 	g_assert(mock != NULL);
 	dbus_test_task_set_bus(DBUS_TEST_TASK(mock), DBUS_TEST_SERVICE_BUS_SYSTEM);
@@ -597,8 +585,6 @@ test_interfaces (void)
 {
 	DbusTestService * service = dbus_test_service_new(NULL);
 	g_assert(service != NULL);
-
-	dbus_test_service_set_conf_file(service, SESSION_CONF);
 
 	DbusTestDbusMock * mock = dbus_test_dbus_mock_new("foo.test");
 	g_assert(mock != NULL);

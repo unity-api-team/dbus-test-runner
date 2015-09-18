@@ -8,8 +8,6 @@ test_env_var (void)
 	DbusTestService * service = dbus_test_service_new(NULL);
 	g_assert(service != NULL);
 
-	dbus_test_service_set_conf_file(service, SESSION_CONF);
-
 	g_unsetenv("DBUS_SESSION_BUS_ADDRESS");
 	dbus_test_service_start_tasks(service);
 	g_assert(g_getenv("DBUS_SESSION_BUS_ADDRESS") != NULL);
@@ -23,8 +21,6 @@ test_task_start (void)
 {
 	DbusTestService * service = dbus_test_service_new(NULL);
 	g_assert(service != NULL);
-
-	dbus_test_service_set_conf_file(service, SESSION_CONF);
 
 	DbusTestTask * task = dbus_test_task_new();
 	g_assert(task != NULL);
@@ -45,8 +41,6 @@ test_task_wait (void)
 {
 	DbusTestService * service = dbus_test_service_new(NULL);
 	g_assert(service != NULL);
-
-	dbus_test_service_set_conf_file(service, SESSION_CONF);
 
 	DbusTestTask * task = dbus_test_task_new();
 	g_assert(task != NULL);
