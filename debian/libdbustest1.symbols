@@ -23,7 +23,6 @@ libdbustest.so.1 libdbustest1 #MINVER#
  dbus_test_service_remove_task@Base 15.04.0+15.04.20150218
  dbus_test_service_run@Base 15.04.0+15.04.20141209
  dbus_test_service_set_bus@Base 15.04.0+15.04.20141209
- dbus_test_service_set_daemon@Base 15.04.0+15.04.20141209
  dbus_test_service_set_keep_environment@Base 15.04.0+15.04.20141209
  dbus_test_service_start_tasks@Base 15.04.0+15.04.20141209
  dbus_test_service_stop@Base 15.04.0+15.04.20141209

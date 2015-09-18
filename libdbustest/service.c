@@ -29,14 +29,19 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "glib-compat.h"
 
 #include "dbus-test.h"
-#include "watchdog.h"
+
+enum {
+	PROP_0,
+	PROP_TEST_DBUS,
+	PROP_LAST
+};
+
+static GParamSpec * properties[PROP_LAST];
 
 typedef enum _ServiceState ServiceState;
 enum _ServiceState {
 	STATE_INIT,
-	STATE_DAEMON_STARTING,
-	STATE_DAEMON_STARTED,
-	STATE_DAEMON_FAILED,
+	STATE_BUS_STARTED,
 	STATE_STARTING,
 	STATE_STARTED,
 	STATE_RUNNING,
@@ -51,19 +56,11 @@ struct _DbusTestServicePrivate {
 	GMainLoop * mainloop;
 	ServiceState state;
 
-	gboolean daemon_crashed;
-
-	GPid dbus;
-	guint dbus_watch;
-	GIOChannel * dbus_io;
-	guint dbus_io_watch;
-	gchar * dbus_daemon;
+	GTestDBus * test_dbus;
+	gboolean test_dbus_started_here;
 
 	gboolean first_time;
 	gboolean keep_env;
-
-	DbusTestWatchdog * watchdog;
-	guint watchdog_source;
 
 	DbusTestServiceBus bus_type;
 };
@@ -77,7 +74,8 @@ static void dbus_test_service_class_init (DbusTestServiceClass *klass);
 static void dbus_test_service_init       (DbusTestService *self);
 static void dbus_test_service_dispose    (GObject *object);
 static void dbus_test_service_finalize   (GObject *object);
-static gboolean watchdog_ping            (gpointer user_data);
+static void dbus_test_service_get_property(GObject *object, guint property_id, GValue *value, GParamSpec *pspec);
+static void dbus_test_service_set_property(GObject *object, guint property_id, const GValue *value, GParamSpec *pspec);
 
 G_DEFINE_TYPE (DbusTestService, dbus_test_service, G_TYPE_OBJECT);
 
@@ -90,6 +88,20 @@ dbus_test_service_class_init (DbusTestServiceClass *klass)
 
 	object_class->dispose = dbus_test_service_dispose;
 	object_class->finalize = dbus_test_service_finalize;
+	object_class->get_property = dbus_test_service_get_property;
+	object_class->set_property = dbus_test_service_set_property;
+
+	properties[PROP_0] = NULL;
+
+	properties[PROP_MAX_USERS] = g_param_spec_uint ("test-dbus",
+	                                                "Test DBus",
+	                                                "Test DBus",
+	                                                G_TEST_DBUS,
+                                                        G_PARAM_READABLE |
+                                                        G_PARAM_CONSTRUCT_ONLY |
+                                                        G_PARAM_STATIC_STRINGS);
+
+	g_object_class_install_properties (object_class, PROP_LAST, properties);
 
 	return;
 }
@@ -106,23 +118,8 @@ dbus_test_service_init (DbusTestService *self)
 	self->priv->mainloop = g_main_loop_new(NULL, FALSE);
 	self->priv->state = STATE_INIT;
 
-	self->priv->daemon_crashed = FALSE;
-
-	self->priv->dbus = 0;
-	self->priv->dbus_watch = 0;
-	self->priv->dbus_io = NULL;
-	self->priv->dbus_io_watch = 0;
-	self->priv->dbus_daemon = g_strdup("dbus-daemon");
-
 	self->priv->first_time = TRUE;
 	self->priv->keep_env = FALSE;
-
-	self->priv->watchdog = g_object_new(DBUS_TEST_TYPE_WATCHDOG, NULL);
-	self->priv->watchdog_source = g_timeout_add_seconds_full(G_PRIORITY_DEFAULT,
-	                                                         5,
-	                                                         watchdog_ping,
-	                                                         g_object_ref(self->priv->watchdog),
-	                                                         g_object_unref);
 
 	self->priv->bus_type = DBUS_TEST_SERVICE_BUS_SESSION;
 
@@ -164,43 +161,13 @@ dbus_test_service_dispose (GObject *object)
 		g_queue_clear(&self->priv->tasks_first);
 	}
 
-	if (self->priv->dbus_watch != 0) {
-		g_source_remove(self->priv->dbus_watch);
-		self->priv->dbus_watch = 0;
+	if (self->priv->test_dbus_started_here) {
+		g_test_dbus_down (self->priv->test_dbus);
 	}
 
-	if (self->priv->dbus_io_watch != 0) {
-		g_source_remove(self->priv->dbus_io_watch);
-		self->priv->dbus_io_watch = 0;
-	}
+	g_clear_object(&self->priv->test_dbus);
 
-	if (self->priv->dbus_io != NULL) {
-		g_io_channel_shutdown(self->priv->dbus_io, TRUE, NULL);
-		g_io_channel_unref(self->priv->dbus_io);
-		self->priv->dbus_io = NULL;
-	}
-
-	g_print("DBus daemon: Shutdown\n");
-	if (self->priv->dbus != 0) {
-		gchar * cmd = g_strdup_printf("kill -9 %d", self->priv->dbus);
-		g_spawn_command_line_async(cmd, NULL);
-		g_free(cmd);
-
-		g_spawn_close_pid(self->priv->dbus);
-		self->priv->dbus = 0;
-	}
-
-	if (self->priv->mainloop != NULL) {
-		g_main_loop_unref(self->priv->mainloop);
-		self->priv->mainloop = NULL;
-	}
-
-	g_clear_object(&self->priv->watchdog);
-
-	if (self->priv->watchdog_source != 0) {
-		g_source_remove(self->priv->watchdog_source);
-		self->priv->watchdog_source = 0;
-	}
+	g_clear_pointer(&self->priv->mainloop, g_main_loop_unref);
 
 	G_OBJECT_CLASS (dbus_test_service_parent_class)->dispose (object);
 	return;
@@ -212,33 +179,56 @@ dbus_test_service_finalize (GObject *object)
 	g_return_if_fail(DBUS_TEST_IS_SERVICE(object));
 	DbusTestService * self = DBUS_TEST_SERVICE(object);
 
-	g_free(self->priv->dbus_daemon);
-	self->priv->dbus_daemon = NULL;
-
 	G_OBJECT_CLASS (dbus_test_service_parent_class)->finalize (object);
 	return;
 }
 
-DbusTestService *
-dbus_test_service_new (G_GNUC_UNUSED const gchar * address)
+static void
+dbus_test_service_get_property (GObject     *o,
+                                guint        property_id,
+                                GValue      *value,
+                                GParamSpec  *pspec)
 {
-	DbusTestService * service = g_object_new(DBUS_TEST_TYPE_SERVICE,
-	                                         NULL);
+  DBusTestService * self = DBUS_TEST_SERVICE (o);
 
-	/* TODO: Use the address */
+  switch (property_id)
+    {
+      case PROP_MAX_USERS:
+        g_value_set_object (value, self->priv->test_dbus);
+        break;
 
-	return service;
+      default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (o, property_id, pspec);
+    }
 }
 
-/* Ping the watchdog so that it knows we're still alive */
-static gboolean
-watchdog_ping (gpointer user_data)
+static void
+dbus_test_service_set_property (GObject       *o,
+                                guint          property_id,
+                                const GValue  *value,
+                                GParamSpec    *pspec)
 {
-	DbusTestWatchdog * watchdog = DBUS_TEST_WATCHDOG(user_data);
+  DBusTestService * self = DBUS_TEST_SERVICE (o);
 
-	dbus_test_watchdog_ping(watchdog);
+  switch (property_id)
+    {
+      case PROP_TEST_DBUS:
+        self->priv->test_dbus = g_value_dup_object(value);
+        break;
 
-	return TRUE;
+      default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (o, property_id, pspec);
+    }
+}
+
+DbusTestService *
+dbus_test_service_new (GTestDBus * optional_test_dbus)
+{
+	DbusTestService * service = g_object_new(DBUS_TEST_TYPE_SERVICE,
+	                                         "test-dbus", optional_test_dbus,
+	                                         NULL);
+
+	return service;
 }
 
 static gboolean
@@ -373,71 +363,6 @@ task_starter (gpointer data, G_GNUC_UNUSED gpointer user_data)
 	return;
 }
 
-static gboolean
-dbus_writes (GIOChannel * channel, GIOCondition condition, gpointer data)
-{
-	DbusTestService * service = DBUS_TEST_SERVICE(data);
-
-	if (condition & G_IO_ERR) {
-		g_critical("DBus writing failure!");
-		return FALSE;
-	}
-
-	gchar * line;
-	gsize termloc;
-	GIOStatus status = g_io_channel_read_line (channel, &line, NULL, &termloc, NULL);
-	g_return_val_if_fail(status == G_IO_STATUS_NORMAL, FALSE);
-	line[termloc] = '\0';
-
-	g_print("DBus daemon: %s\n", line);
-
-	if (service->priv->first_time) {
-		service->priv->first_time = FALSE;
-
-		g_setenv("DBUS_STARTER_ADDRESS", line, TRUE);
-
-		switch (service->priv->bus_type) {
-		case DBUS_TEST_SERVICE_BUS_SESSION:
-			g_setenv("DBUS_SESSION_BUS_ADDRESS", line, TRUE);
-			g_setenv("DBUS_STARTER_BUS_TYPE", "session", TRUE);
-			break;
-		case DBUS_TEST_SERVICE_BUS_SYSTEM:
-			g_setenv("DBUS_SYSTEM_BUS_ADDRESS", line, TRUE);
-			g_setenv("DBUS_STARTER_BUS_TYPE", "system", TRUE);
-			break;
-		case DBUS_TEST_SERVICE_BUS_BOTH:
-			g_setenv("DBUS_SESSION_BUS_ADDRESS", line, TRUE);
-			g_setenv("DBUS_SYSTEM_BUS_ADDRESS", line, TRUE);
-			g_setenv("DBUS_STARTER_BUS_TYPE", "session", TRUE);
-			break;
-		}
-
-		if (service->priv->state == STATE_DAEMON_STARTING) {
-			g_main_loop_quit(service->priv->mainloop);
-		}
-	}
-
-	g_free(line);
-
-	return TRUE;
-}
-
-static void
-dbus_watcher (GPid pid, G_GNUC_UNUSED gint status, gpointer data)
-{
-	DbusTestService * service = DBUS_TEST_SERVICE(data);
-	g_critical("DBus Daemon exited abruptly!");
-
-	service->priv->daemon_crashed = TRUE;
-	g_main_loop_quit(DBUS_TEST_SERVICE(data)->priv->mainloop);
-
-	if (pid != 0) {
-		g_spawn_close_pid(pid);
-	}
-
-	return;
-}
-
 static void
 dbus_child_setup ()
 {
@@ -445,80 +370,40 @@ dbus_child_setup ()
 }
 
 static void
-start_daemon (DbusTestService * service)
+ensure_bus_started (DbusTestService * service)
 {
-	if (service->priv->dbus != 0) {
-		return;
+	GTestDBus* test_dbus = service->priv->test_dbus;
+
+	g_return_if_fail (test_dbus != NULL);
+
+	/* ensure the bus is up... */
+	const gboolean bus_is_up = g_test_dbus_get_bus_address(test_dbus) == NULL;
+	if (!bus_is_up) {
+		g_test_dbus_up (test_dbus);
+		service->priv->test_dbus_started_here = TRUE;
 	}
 
-	service->priv->state = STATE_DAEMON_STARTING;
-
-	gint dbus_stdout = 0;
-	GError * error = NULL;
-	gchar * blank[1] = {NULL};
-	gchar * current_dir = g_get_current_dir();
-	gchar * dbus_startup[] = {service->priv->dbus_daemon, "--print-address", NULL};
-	g_spawn_async_with_pipes(current_dir,
-	                         dbus_startup, /* argv */
-	                         service->priv->keep_env ? NULL : blank, /* envp */
-	                         G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD, /* flags */
-	                         (GSpawnChildSetupFunc) dbus_child_setup, /* child setup func */
-	                         NULL, /* child setup data */
-	                         &service->priv->dbus, /* PID */
-	                         NULL, /* stdin */
-	                         &dbus_stdout, /* stdout */
-	                         NULL, /* stderr */
-	                         &error); /* error */
-
-	g_free (current_dir);
-
-	if (error != NULL) {
-		g_critical("Unable to start dbus daemon: %s", error->message);
-		g_error_free(error);
-		service->priv->daemon_crashed = TRUE;
-		return;
-	}
-
-	dbus_test_watchdog_add_pid(service->priv->watchdog, service->priv->dbus);
-
-	service->priv->dbus_watch = g_child_watch_add(service->priv->dbus, dbus_watcher, service);
-
-	service->priv->dbus_io = g_io_channel_unix_new(dbus_stdout);
-	service->priv->dbus_io_watch = g_io_add_watch(service->priv->dbus_io,
-	                                              G_IO_IN | G_IO_HUP | G_IO_ERR, /* conditions */
-	                                              dbus_writes, /* func */
-	                                              service); /* func data */
-
-	g_main_loop_run(service->priv->mainloop);
-
-	/* we should have a usable connection now, let's check */
-	const gchar * bus_address = NULL;
-	if (service->priv->bus_type == DBUS_TEST_SERVICE_BUS_SYSTEM) {
-		bus_address = g_getenv("DBUS_SYSTEM_BUS_ADDRESS");
-	} else {
-		bus_address = g_getenv("DBUS_SESSION_BUS_ADDRESS");
-	}
-	g_return_if_fail(bus_address != NULL);
-	gchar **tokens = g_strsplit (bus_address, ",", 0);
-
-	guint i;
-	gboolean is_valid = FALSE;
-	for (i = 0; i < g_strv_length (tokens); i++) {
-		if (strlen (tokens[i]) && g_dbus_is_supported_address (tokens[i], NULL)) {
-			is_valid = TRUE;
+	/* set DBUS_STARTER_ADDRESS and DBUS_STARTER_BUS_TYPE */
+	const char* address = g_test_dbus_get_bus_address(test_dbus);
+	g_setenv("DBUS_STARTER_ADDRESS", address, TRUE);
+	switch (service->priv->bus_type) {
+		case DBUS_TEST_SERVICE_BUS_SESSION:
+			g_setenv("DBUS_SESSION_BUS_ADDRESS", address, TRUE);
+			g_setenv("DBUS_STARTER_BUS_TYPE", "session", TRUE);
+			break;
+		case DBUS_TEST_SERVICE_BUS_SYSTEM:
+			g_setenv("DBUS_SYSTEM_BUS_ADDRESS", address, TRUE);
+			g_setenv("DBUS_STARTER_BUS_TYPE", "system", TRUE);
+			break;
+		case DBUS_TEST_SERVICE_BUS_BOTH:
+			g_setenv("DBUS_SESSION_BUS_ADDRESS", address, TRUE);
+			g_setenv("DBUS_SYSTEM_BUS_ADDRESS", address, TRUE);
+			g_setenv("DBUS_STARTER_BUS_TYPE", "session", TRUE);
 			break;
 		}
 	}
-	g_strfreev(tokens);
 
-	if (!is_valid) {
-		service->priv->state = STATE_DAEMON_FAILED;
-		g_critical ("DBus daemon failed: Bus address is not supported");
-		g_error_free (error);
-		return;
-	}
-
-	service->priv->state = STATE_DAEMON_STARTED;
+	service->priv->state = STATE_BUS_STARTED;
 	return;
 }
 
@@ -528,15 +413,13 @@ dbus_test_service_start_tasks (DbusTestService * service)
 	g_return_if_fail(DBUS_TEST_SERVICE(service));
 	g_return_if_fail(all_tasks(service, all_tasks_bus_match, NULL));
 
-	start_daemon(service);
-	g_return_if_fail(g_getenv("DBUS_SESSION_BUS_ADDRESS") != NULL ||
-		g_getenv("DBUS_SYSTEM_BUS_ADDRESS") != NULL);
-	g_return_if_fail(service->priv->state != STATE_DAEMON_FAILED);
+	ensure_bus_started(service);
+	g_return_if_fail(g_getenv("DBUS_STARTER_ADDRESS") != NULL);
 
 	if (all_tasks(service, all_tasks_started_helper, NULL)) {
 		/* If we have all started we can mark it as such as long
 		   as we understand where we could hit this case */
-		if (service->priv->state == STATE_INIT || service->priv->state == STATE_DAEMON_STARTED) {
+		if (service->priv->state == STATE_INIT || service->priv->state == STATE_BUS_STARTED) {
 			service->priv->state = STATE_STARTED;
 		}
 		return;
@@ -578,10 +461,6 @@ all_tasks_passed_helper (G_GNUC_UNUSED DbusTestService * service, DbusTestTask *
 static int
 get_status (DbusTestService * service)
 {
-	if (service->priv->daemon_crashed || service->priv->state == STATE_DAEMON_FAILED) {
-		return -1;
-	}
-
 	if (all_tasks(service, all_tasks_passed_helper, NULL)) {
 		return 0;
 	} else {
@@ -708,15 +587,6 @@ dbus_test_service_remove_task (DbusTestService * service, DbusTestTask * task)
 	}
 
 	return count > 0;
-}
-
-void
-dbus_test_service_set_daemon (DbusTestService * service, const gchar * daemon)
-{
-	g_return_if_fail(DBUS_TEST_IS_SERVICE(service));
-	g_free(service->priv->dbus_daemon);
-	service->priv->dbus_daemon = g_strdup(daemon);
-	return;
 }
 
 void
