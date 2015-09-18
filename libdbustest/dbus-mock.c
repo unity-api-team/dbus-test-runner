@@ -70,7 +70,7 @@ enum {
 	NUM_PROPS
 };
 
-static GParamSpec * properties[PROP_LAST];
+static GParamSpec * properties[NUM_PROPS];
 
 enum {
 	ERROR_METHOD_NOT_FOUND,
@@ -119,23 +119,21 @@ dbus_test_dbus_mock_class_init (DbusTestDbusMockClass *klass)
 
         properties[PROP_0] = NULL;
 
-        properties[PROP_DBUS_NAME] g_param_spec_string("dbus-name",
-	                                               "DBus Name",
-	                                               "The well known name for dbusmock on the session bus",
-	                                               "com.canonical.DBusTestRunner.DBusMock", /* default */
-	                                               (GParamFlags)(G_PARAM_STATIC_STRINGS |
-                                                                     G_PARAM_CONSTRUCT_ONLY |
-                                                                     G_PARAM_READWRITE));
+        properties[PROP_DBUS_NAME] = g_param_spec_string(
+		"dbus-name",
+		"DBus Name",
+		"The well known name for dbusmock on the session bus",
+		"com.canonical.DBusTestRunner.DBusMock", /* default */
+		(GParamFlags)(G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE));
 
-        properties[PROP_DBUS_NAME] g_param_spec_string("template-pathname",
-	                                               "Template Pathname",
-	                                               "If using a dbusmock template, the full pathname for its file",
-	                                               NULL, /* default */
-	                                               (GParamFlags)(G_PARAM_STATIC_STRINGS |
-                                                                     G_PARAM_CONSTRUCT_ONLY |
-                                                                     G_PARAM_READWRITE));
+        properties[PROP_TEMPLATE_PATHNAME] = g_param_spec_string(
+		"template-pathname",
+		"Template Pathname",
+		"If using a dbusmock template, the full pathname for its file",
+		NULL, /* default */
+		(GParamFlags)(G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE));
 
-        g_object_class_install_properties (object_class, PROP_LAST, properties);
+        g_object_class_install_properties (object_class, NUM_PROPS, properties);
 
 	DbusTestTaskClass * tclass = DBUS_TEST_TASK_CLASS(klass);
 
@@ -595,10 +593,11 @@ dbus_test_dbus_mock_new (const gchar * bus_name)
 DbusTestDbusMock *
 dbus_test_dbus_mock_new_from_template (const gchar * template_pathname)
 {
-	g_return_val_if_fail(tepmlate_pathname != NULL, NULL);
+	g_return_val_if_fail(template_pathname != NULL, NULL);
+	g_return_val_if_fail(*template_pathname != '\0', NULL);
 
 	DbusTestDbusMock * mock = g_object_new(DBUS_TEST_TYPE_DBUS_MOCK,
-	                                       "template-pathname", bus_name,
+	                                       "template-pathname", template_pathname,
 	                                       NULL);
 
 	return mock;
