@@ -74,7 +74,6 @@ void dbus_test_service_add_task (DbusTestService * service, DbusTestTask * task)
 void dbus_test_service_add_task_with_priority (DbusTestService * service, DbusTestTask * task, DbusTestServicePriority prio);
 gboolean dbus_test_service_remove_task (DbusTestService * service, DbusTestTask * task);
 
-void dbus_test_service_set_keep_environment (DbusTestService * service, gboolean keep_env);
 void dbus_test_service_set_bus (DbusTestService * service, DbusTestServiceBus bus);
 
 G_END_DECLS

@@ -59,8 +59,6 @@ struct _DbusTestServicePrivate {
 	GTestDBus * test_dbus;
 	gboolean test_dbus_started_here;
 
-	gboolean keep_env;
-
 	DbusTestServiceBus bus_type;
 };
 
@@ -116,8 +114,6 @@ dbus_test_service_init (DbusTestService *self)
 
 	self->priv->mainloop = g_main_loop_new(NULL, FALSE);
 	self->priv->state = STATE_INIT;
-
-	self->priv->keep_env = FALSE;
 
 	self->priv->bus_type = DBUS_TEST_SERVICE_BUS_SESSION;
 
@@ -584,13 +580,6 @@ dbus_test_service_remove_task (DbusTestService * service, DbusTestTask * task)
 	}
 
 	return count > 0;
-}
-
-void
-dbus_test_service_set_keep_environment (DbusTestService * service, gboolean keep_env)
-{
-	g_return_if_fail(DBUS_TEST_IS_SERVICE(service));
-	service->priv->keep_env = keep_env;
 }
 
 void

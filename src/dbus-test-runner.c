@@ -25,7 +25,6 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 static DbusTestServiceBus bus_type = DBUS_TEST_SERVICE_BUS_SESSION;
 static gint max_wait = 30;
-static gboolean keep_env = FALSE;
 static DbusTestProcess * last_task = NULL;
 static DbusTestService * service = NULL;
 static gboolean timeout = FALSE;
@@ -201,7 +200,6 @@ static GOptionEntry general_options[] = {
 	{"bustle-monitor", 0,   0,                       G_OPTION_ARG_FILENAME,  &bustle_cmd,      "Path to the Bustle DBus Monitor to use.  Defaults to 'bustle-dbus-monitor'.", "executable"},
 	{"bustle-data",  'b',   0,                       G_OPTION_ARG_FILENAME,  &bustle_datafile, "A file to write out data from the bustle logger to.", "data_file"},
 	{"max-wait",     'm',   0,                       G_OPTION_ARG_INT,       &max_wait,        "The maximum amount of time the test runner will wait for the test to complete.  Default is 30 seconds.", "seconds"},
-	{"keep-env",     0,     0,                       G_OPTION_ARG_NONE,      &keep_env,        "Whether to propagate the execution environment to the dbus-server and all the services activated by it.  By default the environment is cleared.", NULL },
 	{"bus-type",     0,     0,                       G_OPTION_ARG_CALLBACK,  option_bus_type,  "Configures which buses are represented by the tool to the tasks. Default: session", "{session|system|both}" },
 	{ NULL, 0, 0, 0, NULL, NULL, NULL }
 };
@@ -261,8 +259,6 @@ main (int argc, char * argv[])
 	if (max_wait > 0) {
 		g_timeout_add_seconds(max_wait, max_wait_hit, NULL);
 	}
-
-	dbus_test_service_set_keep_environment(service, keep_env);
 
 	/* These should all be in the service now */
 	if (last_task != NULL) {
