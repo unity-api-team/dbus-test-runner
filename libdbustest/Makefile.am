@@ -1,8 +1,8 @@
 
 lib_LTLIBRARIES = libdbustest.la
 
-ABI_VERSION = 1
-API_VERSION = 1
+ABI_VERSION = 2
+API_VERSION = 2
 
 AM_CFLAGS = -Wall
 
