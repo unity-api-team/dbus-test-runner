@@ -239,12 +239,9 @@ dbus_test_service_set_property (GObject *o, guint property_id, const GValue *val
  *
  * Creates a new DbusTestService.
  *
- * Specify an external addr when you want to integrate libdbustest
- * with an already-running bus. See also dbus_test_service_new_with_test_bus()
- * for GTestDBus integration.
- *
- * If external_bus_address is NULL, DbusTestService will create and manage
- * the life cycle of its own test dbus.
+ * The most common use case is for DbusTestService to create and manage
+ * its own test bus. To use an externally-managed bus instead, pass its
+ * address in the external_bus_address agument.
  *
  * Return Value: (transfer full): A new DbusTestService
  */
@@ -266,8 +263,7 @@ dbus_test_service_new (const gchar* external_bus_address)
  * @mock: A #DbusTestDbusMock instance
  * @test_bus: An externally-owned GTestDBus
  *
- * Creates a new DbusTestService. Instead of creating its own bus,
- * the specified test_bus will be used.
+ * Creates a new DbusTestService with uses the specified GTestDBus.
  *
  * Return Value: (transfer full): A new DbusTestService
  */
@@ -430,11 +426,11 @@ ensure_bus_is_up (DbusTestService * service)
 	DbusTestServicePrivate * priv = get_priv(service);
 
 	if (priv->external_bus_address != NULL) {
-		/* if the client specified an already-running bus,
-		   we don't have to do any process management */
+		/* if the client specified an externally-managed bus,
+		   we don't have to start anything here... */
 		address = priv->external_bus_address;
 	} else {
-		/* if the user didn't provide a GTestDBus, create our own */
+		/* if the client didn't provide a GTestDBus, create our own */
 		if (priv->test_dbus == NULL)
 			priv->test_dbus = g_test_dbus_new (G_TEST_DBUS_NONE);
 
