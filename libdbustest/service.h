@@ -65,7 +65,8 @@ typedef enum
 } DbusTestServiceBus;
 
 GType dbus_test_service_get_type (void);
-DbusTestService * dbus_test_service_new (GTestDBus * test_bus_or_null);
+DbusTestService * dbus_test_service_new (const char* external_bus_addr);
+DbusTestService * dbus_test_service_new_with_test_bus(GTestDBus * test_bus);
 void dbus_test_service_start_tasks (DbusTestService * service);
 int dbus_test_service_run (DbusTestService * service);
 void dbus_test_service_stop (DbusTestService * service);

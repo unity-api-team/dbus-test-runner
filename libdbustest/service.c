@@ -32,6 +32,7 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 enum {
 	PROP_0,
+	PROP_ADDRESS,
 	PROP_TEST_DBUS,
 	PROP_LAST
 };
@@ -56,6 +57,8 @@ struct _DbusTestServicePrivate {
 	GMainLoop * mainloop;
 	ServiceState state;
 
+	gchar * external_bus_address;
+
 	GTestDBus * test_dbus;
 	gboolean test_dbus_started_here;
 
@@ -69,8 +72,8 @@ struct _DbusTestServicePrivate {
 
 static void dbus_test_service_class_init (DbusTestServiceClass *klass);
 static void dbus_test_service_init       (DbusTestService *self);
-static void dbus_test_service_constructed(GObject *object);
 static void dbus_test_service_dispose    (GObject *object);
+static void dbus_test_service_finalize   (GObject *object);
 static void dbus_test_service_get_property(GObject *object, guint property_id, GValue *value, GParamSpec *pspec);
 static void dbus_test_service_set_property(GObject *object, guint property_id, const GValue *value, GParamSpec *pspec);
 
@@ -84,19 +87,29 @@ dbus_test_service_class_init (DbusTestServiceClass *klass)
 	g_type_class_add_private (klass, sizeof (DbusTestServicePrivate));
 
 	object_class->dispose = dbus_test_service_dispose;
-	object_class->constructed = dbus_test_service_constructed;
+	object_class->finalize = dbus_test_service_finalize;
 	object_class->get_property = dbus_test_service_get_property;
 	object_class->set_property = dbus_test_service_set_property;
 
 	properties[PROP_0] = NULL;
 
-	properties[PROP_TEST_DBUS] = g_param_spec_object ("test-dbus",
-	                                                  "Test DBus",
-	                                                  "Test DBus",
-	                                                  G_TYPE_TEST_DBUS,
-	                                                  (GParamFlags)(G_PARAM_READWRITE |
-	                                                                G_PARAM_CONSTRUCT_ONLY |
-	                                                                G_PARAM_STATIC_STRINGS));
+	properties[PROP_TEST_DBUS] = g_param_spec_object (
+		"test-dbus",
+		"Test DBus",
+		"Externally-owned test dbus. (Optional)",
+		G_TYPE_TEST_DBUS,
+		(GParamFlags)(G_PARAM_READWRITE |
+		              G_PARAM_CONSTRUCT_ONLY |
+		              G_PARAM_STATIC_STRINGS));
+
+	properties[PROP_ADDRESS] = g_param_spec_string (
+		"external-bus-address",
+		"External Bus Address",
+		"Address of externally-managed DBus for service to run on. (Optional)",
+		NULL,
+		(GParamFlags)(G_PARAM_READWRITE |
+		              G_PARAM_CONSTRUCT_ONLY |
+		              G_PARAM_STATIC_STRINGS));
 
 	g_object_class_install_properties (object_class, PROP_LAST, properties);
 
@@ -134,6 +147,41 @@ task_unref (gpointer data, G_GNUC_UNUSED gpointer user_data)
 	return;
 }
 
+#if 0
+static void
+stop_bus (DbusTestService * self)
+{
+	const GBusType type = service->priv->bus_type == DBUS_TEST_SERVICE_BUS_SYSTEM
+		? G_BUS_TYPE_SYSTEM
+		: G_BUS_TYPE_SESSION;
+	GDBusConnection *bus = g_bus_get_sync(bus_type, NULL, NULL);
+	GWeakRef wref;
+
+	if (bus != NULL) {
+	g_weak_ref_init (&wref, bus);
+	g_object_unref(bus);
+	g_test_dbus_stop (self->priv->test_dbus);
+
+	unsigned int cleartry = 0;
+	for(;;) {
+		GObject *o = g_weak_ref_get(&wref);
+		const gboolean done = (o == NULL) || (cleartry >= 100);
+		if (!done) {
+			g_print("%d", (int)G_OBJECT(o)->ref_count);
+			g_usleep(G_USEC_PER_SEC/10);
+			while (g_main_pending())
+				g_main_iteration(TRUE);
+			++cleartry;
+		}
+		g_clear_object(&o);
+		if (done) {
+			break;
+		}
+	}
+}
+#endif
+
+
 static void
 dbus_test_service_dispose (GObject *object)
 {
@@ -169,11 +217,24 @@ dbus_test_service_dispose (GObject *object)
 }
 
 static void
+dbus_test_service_finalize (GObject *object)
+{
+	g_return_if_fail(DBUS_TEST_IS_SERVICE(object));
+	DbusTestService * self = DBUS_TEST_SERVICE(object);
+
+	g_clear_pointer(&self->priv->external_bus_address, g_free);
+}
+
+static void
 dbus_test_service_get_property (GObject *o, guint property_id, GValue *value, GParamSpec *pspec)
 {
 	DbusTestService * self = DBUS_TEST_SERVICE (o);
 
 	switch (property_id) {
+	case PROP_ADDRESS:
+		g_value_set_string (value, self->priv->external_bus_address);
+		break;
+
 	case PROP_TEST_DBUS:
 		g_value_set_object (value, self->priv->test_dbus);
 		break;
@@ -189,6 +250,11 @@ dbus_test_service_set_property (GObject *o, guint property_id, const GValue *val
 	DbusTestService * self = DBUS_TEST_SERVICE (o);
 
 	switch (property_id) {
+	case PROP_ADDRESS:
+		g_free(self->priv->external_bus_address);
+		self->priv->external_bus_address = g_value_dup_string(value);
+		break;
+
 	case PROP_TEST_DBUS:
 		g_warn_if_fail(self->priv->test_dbus == NULL);
 		self->priv->test_dbus = g_value_dup_object(value);
@@ -199,30 +265,59 @@ dbus_test_service_set_property (GObject *o, guint property_id, const GValue *val
 	}
 }
 
-static void
-dbus_test_service_constructed (GObject *o)
-{
-	DbusTestService * self = DBUS_TEST_SERVICE (o);
-
-	/* if the user didn't provide a GTestDBus, create one ourselves */
-	if (self->priv->test_dbus == NULL) {
-		self->priv->test_dbus = g_test_dbus_new(G_TEST_DBUS_NONE);
-	}
-}
-
-
+/**
+ * dbus_test_service_new:
+ * @mock: A #DbusTestDbusMock instance
+ * @external_bus_address: Address of an externally-managed bus, or NULL
+ *
+ * Creates a new DbusTestService.
+ *
+ * Specify an external addr when you want to integrate libdbustest
+ * with an already-running bus. See also dbus_test_service_new_with_test_bus()
+ * for GTestDBus integration.
+ *
+ * If external_bus_address is NULL, DbusTestService will create and manage
+ * the life cycle of its own test dbus.
+ *
+ * Return Value: (transfer full): A new DbusTestService
+ */
 DbusTestService *
-dbus_test_service_new (GTestDBus * test_dbus)
+dbus_test_service_new (const gchar* external_bus_address)
 {
 	DbusTestService * service;
 
-	if (test_dbus == NULL)
-		service = g_object_new(DBUS_TEST_TYPE_SERVICE, NULL);
+	if (external_bus_address && *external_bus_address)
+		service = g_object_new(DBUS_TEST_TYPE_SERVICE, "external-bus-address", external_bus_address, NULL);
 	else
-		service = g_object_new(DBUS_TEST_TYPE_SERVICE, "test-dbus", test_dbus, NULL);
+		service = g_object_new(DBUS_TEST_TYPE_SERVICE, NULL);
 
 	return service;
 }
+
+/**
+ * dbus_test_service_new_test_bus:
+ * @mock: A #DbusTestDbusMock instance
+ * @test_bus: An externally-owned GTestDBus
+ *
+ * Creates a new DbusTestService. Instead of creating its own bus,
+ * the specified test_bus will be used.
+ *
+ * Return Value: (transfer full): A new DbusTestService
+ */
+DbusTestService *
+dbus_test_service_new_with_test_bus (GTestDBus * test_dbus)
+{
+	g_return_val_if_fail(test_dbus != NULL, NULL);
+	g_return_val_if_fail(G_IS_TEST_DBUS(test_dbus), NULL);
+
+	DbusTestService * service = g_object_new(DBUS_TEST_TYPE_SERVICE, "test-dbus", test_dbus, NULL);
+
+	return service;
+}
+
+/***
+****
+***/
 
 static gboolean
 all_tasks_finished_helper (G_GNUC_UNUSED DbusTestService * service, DbusTestTask * task, G_GNUC_UNUSED gpointer user_data)
@@ -357,21 +452,31 @@ task_starter (gpointer data, G_GNUC_UNUSED gpointer user_data)
 }
 
 static void
-ensure_bus_started (DbusTestService * service)
+ensure_bus_is_up (DbusTestService * service)
 {
 	GTestDBus* test_dbus = service->priv->test_dbus;
+	const gchar* address = NULL;
 
-	g_return_if_fail (test_dbus != NULL);
+	if (service->priv->external_bus_address != NULL) {
+		/* if the client specified an already-running bus,
+		   we don't have to do any process management */
+		address = service->priv->external_bus_address;
+	} else {
+		/* if the user didn't provide a GTestDBus, create our own */
+		if (service->priv->test_dbus == NULL)
+			service->priv->test_dbus = g_test_dbus_new (G_TEST_DBUS_NONE);
 
-	/* ensure the bus is up... */
-	const gboolean bus_is_up = g_test_dbus_get_bus_address(test_dbus) != NULL;
-	if (!bus_is_up) {
-		g_test_dbus_up (test_dbus);
-		service->priv->test_dbus_started_here = TRUE;
+		/* start the test dbus */
+		const gboolean bus_is_up = g_test_dbus_get_bus_address(service->priv->test_dbus) != NULL;
+		if (!bus_is_up) {
+			g_test_dbus_up (service->priv->test_dbus);
+			service->priv->test_dbus_started_here = TRUE;
+		}
+
+		address = g_test_dbus_get_bus_address(test_dbus);
 	}
 
-	/* set DBUS_STARTER_ADDRESS and DBUS_STARTER_BUS_TYPE */
-	const char* address = g_test_dbus_get_bus_address(test_dbus);
+	/* set the environment variables */
 	g_setenv("DBUS_STARTER_ADDRESS", address, TRUE);
 	switch (service->priv->bus_type) {
 		case DBUS_TEST_SERVICE_BUS_SESSION:
@@ -400,7 +505,7 @@ dbus_test_service_start_tasks (DbusTestService * service)
 	g_return_if_fail(DBUS_TEST_SERVICE(service));
 	g_return_if_fail(all_tasks(service, all_tasks_bus_match, NULL));
 
-	ensure_bus_started(service);
+	ensure_bus_is_up(service);
 	g_return_if_fail(g_getenv("DBUS_STARTER_ADDRESS") != NULL);
 
 	if (all_tasks(service, all_tasks_started_helper, NULL)) {
