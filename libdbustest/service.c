@@ -49,7 +49,7 @@ typedef enum _ServiceState {
 }
 ServiceState;
 
-struct _DbusTestServicePrivate {
+typedef struct DbusTestServicePrivate {
 	GQueue tasks_first;
 	GQueue tasks_normal;
 	GQueue tasks_last;
@@ -63,7 +63,8 @@ struct _DbusTestServicePrivate {
 	gboolean test_dbus_started_here;
 
 	DbusTestServiceBus bus_type;
-};
+}
+DbusTestServicePrivate;
 
 #define SERVICE_CHANGE_HANDLER  "dbus-test-service-change-handler"
 
@@ -77,7 +78,10 @@ static void dbus_test_service_finalize   (GObject *object);
 static void dbus_test_service_get_property(GObject *object, guint property_id, GValue *value, GParamSpec *pspec);
 static void dbus_test_service_set_property(GObject *object, guint property_id, const GValue *value, GParamSpec *pspec);
 
-G_DEFINE_TYPE (DbusTestService, dbus_test_service, G_TYPE_OBJECT)
+G_DEFINE_TYPE_WITH_PRIVATE(DbusTestService, dbus_test_service, G_TYPE_OBJECT)
+
+#define get_priv(service) ((DbusTestServicePrivate*)dbus_test_service_get_instance_private(service))
+
 
 static void
 dbus_test_service_class_init (DbusTestServiceClass *klass)
@@ -119,16 +123,16 @@ dbus_test_service_class_init (DbusTestServiceClass *klass)
 static void
 dbus_test_service_init (DbusTestService *self)
 {
-	self->priv = DBUS_TEST_SERVICE_GET_PRIVATE(self);
+	DbusTestServicePrivate * priv = get_priv(self);
 
-	g_queue_init(&self->priv->tasks_first);
-	g_queue_init(&self->priv->tasks_normal);
-	g_queue_init(&self->priv->tasks_last);
+	g_queue_init(&priv->tasks_first);
+	g_queue_init(&priv->tasks_normal);
+	g_queue_init(&priv->tasks_last);
 
-	self->priv->mainloop = g_main_loop_new(NULL, FALSE);
-	self->priv->state = STATE_INIT;
+	priv->mainloop = g_main_loop_new(NULL, FALSE);
+	priv->state = STATE_INIT;
 
-	self->priv->bus_type = DBUS_TEST_SERVICE_BUS_SESSION;
+	priv->bus_type = DBUS_TEST_SERVICE_BUS_SESSION;
 
 	return;
 }
@@ -147,70 +151,36 @@ task_unref (gpointer data, G_GNUC_UNUSED gpointer user_data)
 	return;
 }
 
-#if 0
-static void
-stop_bus (DbusTestService * self)
-{
-	const GBusType type = service->priv->bus_type == DBUS_TEST_SERVICE_BUS_SYSTEM
-		? G_BUS_TYPE_SYSTEM
-		: G_BUS_TYPE_SESSION;
-	GDBusConnection *bus = g_bus_get_sync(bus_type, NULL, NULL);
-	GWeakRef wref;
-
-	if (bus != NULL) {
-	g_weak_ref_init (&wref, bus);
-	g_object_unref(bus);
-	g_test_dbus_stop (self->priv->test_dbus);
-
-	unsigned int cleartry = 0;
-	for(;;) {
-		GObject *o = g_weak_ref_get(&wref);
-		const gboolean done = (o == NULL) || (cleartry >= 100);
-		if (!done) {
-			g_print("%d", (int)G_OBJECT(o)->ref_count);
-			g_usleep(G_USEC_PER_SEC/10);
-			while (g_main_pending())
-				g_main_iteration(TRUE);
-			++cleartry;
-		}
-		g_clear_object(&o);
-		if (done) {
-			break;
-		}
-	}
-}
-#endif
-
 
 static void
 dbus_test_service_dispose (GObject *object)
 {
 	g_return_if_fail(DBUS_TEST_IS_SERVICE(object));
-	DbusTestService * self = DBUS_TEST_SERVICE(object);
+	DbusTestServicePrivate * priv = get_priv(DBUS_TEST_SERVICE(object));
 
-	if (!g_queue_is_empty(&self->priv->tasks_last)) {
-		g_queue_foreach(&self->priv->tasks_last, task_unref, NULL);
-		g_queue_clear(&self->priv->tasks_last);
+	if (!g_queue_is_empty(&priv->tasks_last)) {
+		g_queue_foreach(&priv->tasks_last, task_unref, NULL);
+		g_queue_clear(&priv->tasks_last);
 	}
 
-	if (!g_queue_is_empty(&self->priv->tasks_normal)) {
-		g_queue_foreach(&self->priv->tasks_normal, task_unref, NULL);
-		g_queue_clear(&self->priv->tasks_normal);
+	if (!g_queue_is_empty(&priv->tasks_normal)) {
+		g_queue_foreach(&priv->tasks_normal, task_unref, NULL);
+		g_queue_clear(&priv->tasks_normal);
 	}
 
-	if (!g_queue_is_empty(&self->priv->tasks_first)) {
-		g_queue_foreach(&self->priv->tasks_first, task_unref, NULL);
-		g_queue_clear(&self->priv->tasks_first);
+	if (!g_queue_is_empty(&priv->tasks_first)) {
+		g_queue_foreach(&priv->tasks_first, task_unref, NULL);
+		g_queue_clear(&priv->tasks_first);
 	}
 
-	if (self->priv->test_dbus_started_here) {
-		self->priv->test_dbus_started_here = FALSE;
-		g_test_dbus_down (self->priv->test_dbus);
+	if (priv->test_dbus_started_here) {
+		priv->test_dbus_started_here = FALSE;
+		g_test_dbus_down (priv->test_dbus);
 	}
 
-	g_clear_object(&self->priv->test_dbus);
+	g_clear_object(&priv->test_dbus);
 
-	g_clear_pointer(&self->priv->mainloop, g_main_loop_unref);
+	g_clear_pointer(&priv->mainloop, g_main_loop_unref);
 
 	G_OBJECT_CLASS (dbus_test_service_parent_class)->dispose (object);
 	return;
@@ -220,23 +190,23 @@ static void
 dbus_test_service_finalize (GObject *object)
 {
 	g_return_if_fail(DBUS_TEST_IS_SERVICE(object));
-	DbusTestService * self = DBUS_TEST_SERVICE(object);
+	DbusTestServicePrivate * priv = get_priv(DBUS_TEST_SERVICE(object));
 
-	g_clear_pointer(&self->priv->external_bus_address, g_free);
+	g_clear_pointer(&priv->external_bus_address, g_free);
 }
 
 static void
 dbus_test_service_get_property (GObject *o, guint property_id, GValue *value, GParamSpec *pspec)
 {
-	DbusTestService * self = DBUS_TEST_SERVICE (o);
+	DbusTestServicePrivate * priv = get_priv(DBUS_TEST_SERVICE(o));
 
 	switch (property_id) {
 	case PROP_ADDRESS:
-		g_value_set_string (value, self->priv->external_bus_address);
+		g_value_set_string (value, priv->external_bus_address);
 		break;
 
 	case PROP_TEST_DBUS:
-		g_value_set_object (value, self->priv->test_dbus);
+		g_value_set_object (value, priv->test_dbus);
 		break;
 
 	default:
@@ -247,17 +217,17 @@ dbus_test_service_get_property (GObject *o, guint property_id, GValue *value, GP
 static void
 dbus_test_service_set_property (GObject *o, guint property_id, const GValue *value, GParamSpec *pspec)
 {
-	DbusTestService * self = DBUS_TEST_SERVICE (o);
+	DbusTestServicePrivate * priv = get_priv(DBUS_TEST_SERVICE(o));
 
 	switch (property_id) {
 	case PROP_ADDRESS:
-		g_free(self->priv->external_bus_address);
-		self->priv->external_bus_address = g_value_dup_string(value);
+		g_free(priv->external_bus_address);
+		priv->external_bus_address = g_value_dup_string(value);
 		break;
 
 	case PROP_TEST_DBUS:
-		g_warn_if_fail(self->priv->test_dbus == NULL);
-		self->priv->test_dbus = g_value_dup_object(value);
+		g_warn_if_fail(priv->test_dbus == NULL);
+		priv->test_dbus = g_value_dup_object(value);
 		break;
 
 	default:
@@ -347,9 +317,11 @@ all_tasks_started_helper (G_GNUC_UNUSED DbusTestService * service, DbusTestTask 
 static gboolean
 all_tasks_bus_match (DbusTestService * service, DbusTestTask * task, G_GNUC_UNUSED gpointer user_data)
 {
-	return service->priv->bus_type == DBUS_TEST_SERVICE_BUS_BOTH ||
+	DbusTestServicePrivate * priv = get_priv(service);
+
+	return priv->bus_type == DBUS_TEST_SERVICE_BUS_BOTH ||
 		dbus_test_task_get_bus(task) == DBUS_TEST_SERVICE_BUS_BOTH ||
-		dbus_test_task_get_bus(task) == service->priv->bus_type;
+		dbus_test_task_get_bus(task) == priv->bus_type;
 }
 
 typedef struct {
@@ -375,6 +347,8 @@ all_tasks_helper (gpointer taskp, gpointer datap)
 static gboolean
 all_tasks (DbusTestService * service, gboolean (*helper) (DbusTestService * service, DbusTestTask * task, gpointer user_data), gpointer user_data)
 {
+	DbusTestServicePrivate * priv = get_priv(service);
+
 	all_tasks_helper_data_t data = {
 		.passing = TRUE,
 		.service = service,
@@ -382,17 +356,17 @@ all_tasks (DbusTestService * service, gboolean (*helper) (DbusTestService * serv
 		.user_data = user_data
 	};
 
-	g_queue_foreach(&service->priv->tasks_first, all_tasks_helper, &data);
+	g_queue_foreach(&priv->tasks_first, all_tasks_helper, &data);
 	if (!data.passing) {
 		return FALSE;
 	}
 
-	g_queue_foreach(&service->priv->tasks_normal, all_tasks_helper, &data);
+	g_queue_foreach(&priv->tasks_normal, all_tasks_helper, &data);
 	if (!data.passing) {
 		return FALSE;
 	}
 
-	g_queue_foreach(&service->priv->tasks_last, all_tasks_helper, &data);
+	g_queue_foreach(&priv->tasks_last, all_tasks_helper, &data);
 	if (!data.passing) {
 		return FALSE;
 	}
@@ -428,15 +402,16 @@ task_get_name_length (gpointer data, gpointer user_data)
 static void
 normalize_name_lengths (DbusTestService * service)
 {
+	DbusTestServicePrivate * priv = get_priv(service);
 	glong length = 0;
 
-	g_queue_foreach(&service->priv->tasks_first, task_get_name_length, &length);
-	g_queue_foreach(&service->priv->tasks_normal, task_get_name_length, &length);
-	g_queue_foreach(&service->priv->tasks_last, task_get_name_length, &length);
+	g_queue_foreach(&priv->tasks_first, task_get_name_length, &length);
+	g_queue_foreach(&priv->tasks_normal, task_get_name_length, &length);
+	g_queue_foreach(&priv->tasks_last, task_get_name_length, &length);
 
-	g_queue_foreach(&service->priv->tasks_first, task_set_name_length, &length);
-	g_queue_foreach(&service->priv->tasks_normal, task_set_name_length, &length);
-	g_queue_foreach(&service->priv->tasks_last, task_set_name_length, &length);
+	g_queue_foreach(&priv->tasks_first, task_set_name_length, &length);
+	g_queue_foreach(&priv->tasks_normal, task_set_name_length, &length);
+	g_queue_foreach(&priv->tasks_last, task_set_name_length, &length);
 
 	return;
 }
@@ -454,31 +429,31 @@ task_starter (gpointer data, G_GNUC_UNUSED gpointer user_data)
 static void
 ensure_bus_is_up (DbusTestService * service)
 {
-	GTestDBus* test_dbus = service->priv->test_dbus;
 	const gchar* address = NULL;
+	DbusTestServicePrivate * priv = get_priv(service);
 
-	if (service->priv->external_bus_address != NULL) {
+	if (priv->external_bus_address != NULL) {
 		/* if the client specified an already-running bus,
 		   we don't have to do any process management */
-		address = service->priv->external_bus_address;
+		address = priv->external_bus_address;
 	} else {
 		/* if the user didn't provide a GTestDBus, create our own */
-		if (service->priv->test_dbus == NULL)
-			service->priv->test_dbus = g_test_dbus_new (G_TEST_DBUS_NONE);
+		if (priv->test_dbus == NULL)
+			priv->test_dbus = g_test_dbus_new (G_TEST_DBUS_NONE);
 
 		/* start the test dbus */
-		const gboolean bus_is_up = g_test_dbus_get_bus_address(service->priv->test_dbus) != NULL;
+		const gboolean bus_is_up = g_test_dbus_get_bus_address(priv->test_dbus) != NULL;
 		if (!bus_is_up) {
-			g_test_dbus_up (service->priv->test_dbus);
-			service->priv->test_dbus_started_here = TRUE;
+			g_test_dbus_up (priv->test_dbus);
+			priv->test_dbus_started_here = TRUE;
 		}
 
-		address = g_test_dbus_get_bus_address(test_dbus);
+		address = g_test_dbus_get_bus_address(priv->test_dbus);
 	}
 
 	/* set the environment variables */
 	g_setenv("DBUS_STARTER_ADDRESS", address, TRUE);
-	switch (service->priv->bus_type) {
+	switch (priv->bus_type) {
 		case DBUS_TEST_SERVICE_BUS_SESSION:
 			g_setenv("DBUS_SESSION_BUS_ADDRESS", address, TRUE);
 			g_setenv("DBUS_STARTER_BUS_TYPE", "session", TRUE);
@@ -494,7 +469,7 @@ ensure_bus_is_up (DbusTestService * service)
 			break;
 	}
 
-	service->priv->state = STATE_BUS_STARTED;
+	priv->state = STATE_BUS_STARTED;
 
 	return;
 }
@@ -502,8 +477,10 @@ ensure_bus_is_up (DbusTestService * service)
 void
 dbus_test_service_start_tasks (DbusTestService * service)
 {
-	g_return_if_fail(DBUS_TEST_SERVICE(service));
+	g_return_if_fail(DBUS_TEST_IS_SERVICE(service));
 	g_return_if_fail(all_tasks(service, all_tasks_bus_match, NULL));
+
+	DbusTestServicePrivate * priv = get_priv(service);
 
 	ensure_bus_is_up(service);
 	g_return_if_fail(g_getenv("DBUS_STARTER_ADDRESS") != NULL);
@@ -511,35 +488,35 @@ dbus_test_service_start_tasks (DbusTestService * service)
 	if (all_tasks(service, all_tasks_started_helper, NULL)) {
 		/* If we have all started we can mark it as such as long
 		   as we understand where we could hit this case */
-		if (service->priv->state == STATE_INIT || service->priv->state == STATE_BUS_STARTED) {
-			service->priv->state = STATE_STARTED;
+		if (priv->state == STATE_INIT || priv->state == STATE_BUS_STARTED) {
+			priv->state = STATE_STARTED;
 		}
 		return;
 	}
 
 	normalize_name_lengths(service);
 
-	g_queue_foreach(&service->priv->tasks_first, task_starter, NULL);
-	if (!g_queue_is_empty(&service->priv->tasks_first)) {
+	g_queue_foreach(&priv->tasks_first, task_starter, NULL);
+	if (!g_queue_is_empty(&priv->tasks_first)) {
 		g_usleep(100000);
 	}
 
-	g_queue_foreach(&service->priv->tasks_normal, task_starter, NULL);
+	g_queue_foreach(&priv->tasks_normal, task_starter, NULL);
 
-	if (!g_queue_is_empty(&service->priv->tasks_last)) {
+	if (!g_queue_is_empty(&priv->tasks_last)) {
 		g_usleep(100000);
 	}
-	g_queue_foreach(&service->priv->tasks_last, task_starter, NULL);
+	g_queue_foreach(&priv->tasks_last, task_starter, NULL);
 
 	if (!all_tasks(service, all_tasks_started_helper, NULL)) {
-		service->priv->state = STATE_STARTING;
-		g_main_loop_run(service->priv->mainloop);
+		priv->state = STATE_STARTING;
+		g_main_loop_run(priv->mainloop);
 
 		/* This should never happen, but let's be sure */
 		g_return_if_fail(all_tasks(service, all_tasks_started_helper, NULL));
 	}
 
-	service->priv->state = STATE_STARTED;
+	priv->state = STATE_STARTED;
 
 	return;
 }
@@ -563,38 +540,41 @@ get_status (DbusTestService * service)
 int
 dbus_test_service_run (DbusTestService * service)
 {
-	g_return_val_if_fail(DBUS_TEST_SERVICE(service), -1);
+	g_return_val_if_fail(DBUS_TEST_IS_SERVICE(service), -1);
+
+	DbusTestServicePrivate * priv = get_priv(service);
 
 	dbus_test_service_start_tasks(service);
-	g_return_val_if_fail(service->priv->state == STATE_STARTED, get_status(service));
+	g_return_val_if_fail(priv->state == STATE_STARTED, get_status(service));
 
 	if (all_tasks(service, all_tasks_finished_helper, NULL)) {
 		return get_status(service);
 	}
 
-	service->priv->state = STATE_RUNNING;
-	g_main_loop_run(service->priv->mainloop);
+	priv->state = STATE_RUNNING;
+	g_main_loop_run(priv->mainloop);
 
 	/* This should never happen, but let's be sure */
 	g_return_val_if_fail(all_tasks(service, all_tasks_finished_helper, NULL), -1);
-	service->priv->state = STATE_FINISHED;
+	priv->state = STATE_FINISHED;
 
 	return get_status(service);
 }
 
 static void
-task_state_changed (G_GNUC_UNUSED DbusTestTask * task, G_GNUC_UNUSED DbusTestTaskState state, gpointer user_data)
+task_state_changed (G_GNUC_UNUSED DbusTestTask * task, G_GNUC_UNUSED DbusTestTaskState state, gpointer gservice)
 {
-	g_return_if_fail(DBUS_TEST_IS_SERVICE(user_data));
-	DbusTestService * service = DBUS_TEST_SERVICE(user_data);
+	g_return_if_fail(DBUS_TEST_IS_SERVICE(gservice));
+	DbusTestService * service = DBUS_TEST_SERVICE(gservice);
+	DbusTestServicePrivate * priv = get_priv(service);
 
-	if (service->priv->state == STATE_STARTING && all_tasks(service, all_tasks_started_helper, NULL)) {
-		g_main_loop_quit(service->priv->mainloop);
+	if (priv->state == STATE_STARTING && all_tasks(service, all_tasks_started_helper, NULL)) {
+		g_main_loop_quit(priv->mainloop);
 		return;
 	}
 
-	if (service->priv->state == STATE_RUNNING && all_tasks(service, all_tasks_finished_helper, NULL)) {
-		g_main_loop_quit(service->priv->mainloop);
+	if (priv->state == STATE_RUNNING && all_tasks(service, all_tasks_finished_helper, NULL)) {
+		g_main_loop_quit(priv->mainloop);
 		return;
 	}
 
@@ -617,17 +597,18 @@ dbus_test_service_add_task_with_priority (DbusTestService * service, DbusTestTas
 	   goals for busness. Fail early. */
 	g_return_if_fail(all_tasks_bus_match(service, task, NULL));
 
+	DbusTestServicePrivate * priv = get_priv(service);
 	GQueue * queue = NULL;
 
 	switch (prio) {
 	case DBUS_TEST_SERVICE_PRIORITY_FIRST:
-		queue = &service->priv->tasks_first;
+		queue = &priv->tasks_first;
 		break;
 	case DBUS_TEST_SERVICE_PRIORITY_NORMAL:
-		queue = &service->priv->tasks_normal;
+		queue = &priv->tasks_normal;
 		break;
 	case DBUS_TEST_SERVICE_PRIORITY_LAST:
-		queue = &service->priv->tasks_last;
+		queue = &priv->tasks_last;
 		break;
 	default:
 		g_assert_not_reached();
@@ -657,10 +638,12 @@ dbus_test_service_remove_task (DbusTestService * service, DbusTestTask * task)
 	g_return_val_if_fail(DBUS_TEST_IS_SERVICE(service), FALSE);
 	g_return_val_if_fail(DBUS_TEST_IS_TASK(task), FALSE);
 
+	DbusTestServicePrivate * priv = get_priv(service);
+
 	guint count = 0;
-	count += g_queue_remove_all(&service->priv->tasks_first, task);
-	count += g_queue_remove_all(&service->priv->tasks_normal, task);
-	count += g_queue_remove_all(&service->priv->tasks_last, task);
+	count += g_queue_remove_all(&priv->tasks_first, task);
+	count += g_queue_remove_all(&priv->tasks_normal, task);
+	count += g_queue_remove_all(&priv->tasks_last, task);
 
 	/* Checking the count here so that we can generate a warning. Guessing that
 	   this actually never happens, but it's easy to check */
@@ -685,19 +668,24 @@ void
 dbus_test_service_stop (DbusTestService * service)
 {
 	g_return_if_fail(DBUS_TEST_IS_SERVICE(service));
-	g_main_loop_quit(service->priv->mainloop);
+
+	DbusTestServicePrivate * priv = get_priv(service);
+	g_main_loop_quit(priv->mainloop);
+
 	return;
 }
 
 void dbus_test_service_set_bus (DbusTestService * service, DbusTestServiceBus bus)
 {
 	g_return_if_fail(DBUS_TEST_IS_SERVICE(service));
-	g_return_if_fail(service->priv->state < STATE_BUS_STARTED); /* we can't change after the bus is started */
+
+	DbusTestServicePrivate * priv = get_priv(service);
+	g_return_if_fail(priv->state < STATE_BUS_STARTED); /* we can't change after the bus is started */
 
 	if (bus == DBUS_TEST_SERVICE_BUS_BOTH) {
 		g_warning("Setting bus to BOTH, which is typically only used as a default value.");
 	}
 
-	service->priv->bus_type = bus;
+	priv->bus_type = bus;
 	g_warn_if_fail(all_tasks(service, all_tasks_bus_match, NULL));
 }

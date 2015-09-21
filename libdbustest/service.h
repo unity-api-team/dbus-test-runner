@@ -39,7 +39,6 @@ G_BEGIN_DECLS
 
 typedef struct _DbusTestService         DbusTestService;
 typedef struct _DbusTestServiceClass    DbusTestServiceClass;
-typedef struct _DbusTestServicePrivate  DbusTestServicePrivate;
 
 struct _DbusTestServiceClass {
 	GObjectClass parent_class;
@@ -47,7 +46,6 @@ struct _DbusTestServiceClass {
 
 struct _DbusTestService {
 	GObject parent;
-	DbusTestServicePrivate * priv;
 };
 
 typedef enum
