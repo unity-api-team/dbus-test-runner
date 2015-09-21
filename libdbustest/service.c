@@ -68,9 +68,6 @@ DbusTestServicePrivate;
 
 #define SERVICE_CHANGE_HANDLER  "dbus-test-service-change-handler"
 
-#define DBUS_TEST_SERVICE_GET_PRIVATE(o) \
-(G_TYPE_INSTANCE_GET_PRIVATE ((o), DBUS_TEST_TYPE_SERVICE, DbusTestServicePrivate))
-
 static void dbus_test_service_class_init (DbusTestServiceClass *klass);
 static void dbus_test_service_init       (DbusTestService *self);
 static void dbus_test_service_dispose    (GObject *object);
