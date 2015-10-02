@@ -1,3 +1,10 @@
+dbus-test-runner (15.04.0+15.10.20151002-0ubuntu1) wily; urgency=medium
+
+  [ Lars Uebernickel ]
+  * test-param-wait-system: fix race between tasks
+
+ -- Iain Lane <iain@orangesquash.org.uk>  Fri, 02 Oct 2015 17:10:06 +0000
+
 dbus-test-runner (15.04.0+15.04.20150218-0ubuntu2) wily; urgency=medium
 
   * debian/tests/control: bustle-pcap has been split out into its own package.
