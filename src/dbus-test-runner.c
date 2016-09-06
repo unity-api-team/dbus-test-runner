@@ -24,7 +24,7 @@ with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <libdbustest/dbus-test.h>
 
 static DbusTestServiceBus bus_type = DBUS_TEST_SERVICE_BUS_SESSION;
-static gint max_wait = 30;
+static gint max_wait = 60;
 static gboolean keep_env = FALSE;
 static DbusTestProcess * last_task = NULL;
 static DbusTestService * service = NULL;

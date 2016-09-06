@@ -44,7 +44,7 @@ restart_handler (void)
 		g_source_remove(timer);
 	}
 
-	timer = g_timeout_add_seconds(30, destroy_everyone, NULL);
+	timer = g_timeout_add_seconds(60, destroy_everyone, NULL);
 
 	return;
 }
