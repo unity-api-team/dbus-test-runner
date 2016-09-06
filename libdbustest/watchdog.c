@@ -78,7 +78,7 @@ dbus_test_watchdog_add_pid (DbusTestWatchdog * watchdog, GPid pid)
 	
 	GError * error = NULL;
 
-	/* Spawn the watchdog, we now have 30 secs */
+	/* Spawn the watchdog, we now have 60 secs */
 	g_spawn_async (NULL, /* cwd */
 	               argv,
 	               NULL, /* env */
