@@ -1,3 +1,9 @@
+dbus-test-runner (15.04.0+16.10.20160906-0ubuntu1) yakkety; urgency=medium
+
+  * Adjusting all the waits to be 60 seconds
+
+ -- Ted Gould <ted@gould.cx>  Tue, 06 Sep 2016 14:33:59 +0000
+
 dbus-test-runner (15.04.0+15.10.20151002-0ubuntu1) wily; urgency=medium
 
   [ Lars Uebernickel ]
