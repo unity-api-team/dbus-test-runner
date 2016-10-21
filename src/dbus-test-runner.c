@@ -204,7 +204,7 @@ static GOptionEntry general_options[] = {
 	{"dbus-config",  'd',   0,                       G_OPTION_ARG_FILENAME,  &dbus_configfile, "Configuration file for newly created DBus server.  Defaults to '" DEFAULT_SESSION_CONF "'.", "config_file"},
 	{"bustle-monitor", 0,   0,                       G_OPTION_ARG_FILENAME,  &bustle_cmd,      "Path to the Bustle DBus Monitor to use.  Defaults to 'bustle-dbus-monitor'.", "executable"},
 	{"bustle-data",  'b',   0,                       G_OPTION_ARG_FILENAME,  &bustle_datafile, "A file to write out data from the bustle logger to.", "data_file"},
-	{"max-wait",     'm',   0,                       G_OPTION_ARG_INT,       &max_wait,        "The maximum amount of time the test runner will wait for the test to complete.  Default is 30 seconds.", "seconds"},
+	{"max-wait",     'm',   0,                       G_OPTION_ARG_INT,       &max_wait,        "The maximum amount of time the test runner will wait for the test to complete.  Default is 60 seconds.", "seconds"},
 	{"keep-env",     0,     0,                       G_OPTION_ARG_NONE,      &keep_env,        "Whether to propagate the execution environment to the dbus-server and all the services activated by it.  By default the environment is cleared.", NULL },
 	{"bus-type",     0,     0,                       G_OPTION_ARG_CALLBACK,  option_bus_type,  "Configures which buses are represented by the tool to the tasks. Default: session", "{session|system|both}" },
 	{ NULL, 0, 0, 0, NULL, NULL, NULL }
